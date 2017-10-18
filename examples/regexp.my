@@ -1,0 +1,43 @@
+let ax = 10
+let bx = 5
+let cx = ax / bx  # math divide
+println(cx)
+let mx = (ax + bx) / 2.5 # math divide
+println(mx)
+
+let px = 2.5 + bx / 2.5 //math divide
+println(px)
+
+let ix = 8
+ix /= 4  # math divide
+println(ix)
+
+let a = [1,2,3,4,5]
+aa = a[4] / bx # math divide
+println(aa)
+
+# test regexp literal(regexp)
+let ww = /\d+/.match("12") //regular expression
+println(ww)  # true
+if (ww) {
+    println("matched!")
+}
+else {
+    println("Not matched!")
+}
+
+let srcStr = "abc 12 def 34"
+let destStr = /\d+/.replace(srcStr, "TT")
+println(destStr)  # "abc TT def TT"
+
+let regex = /\d+\t/.match("abc 123	mnj")
+if (regex) {println("regex matched")}
+
+let arr = / /.split("ba na za")
+if (len(arr) > 0) {
+	print("Result is ", / /.split("ba na za")[0])
+	println()
+}
+else {
+	println("Not splitted")
+}

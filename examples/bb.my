@@ -1,0 +1,144 @@
+# Test numbrer plus assignment
+num = 10
+num += 10 + 15.6
+num += 20
+println(num)
+
+# Test string plus assignment
+str = "Hello "
+str += "world! "
+str += [1,2,3]
+println(str)
+
+# Test array plus assignment
+arr = []
+arr += 1
+arr += 10.5
+arr += [1,2,3]
+arr += {"key"=>"value"}
+println(arr)
+
+# Test array compare
+arr1 = [1,10.5,[1,2,3], {"key"=>"value"}]
+println(arr1)
+if arr == arr1 { //support ARRAY compare
+	println("arr1 = arr")
+} else {
+	println("arr1 != arr")
+}
+
+//Support hash "+=", "-="
+hash = {}
+hash += {"key1"=>"value1"}
+hash += {"key2"=>"value2"}
+hash += {5 =>"five"}
+println(hash)
+hash -= "key2"
+hash -= 5
+println(hash)
+
+#Testing `fmt` module
+i = 108
+f = 25.383
+b=true
+s = "Hello, world"
+aArr = [1, 2, 3, 4, "a", "b"]
+aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
+
+# Use '%v (value)' to print variable value, '%_' to print the variable's type
+fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
+fmt.printf("i=[%_], b=[%t], f=[%f], aArr=%_, aHash=%_, s=[%s] \n", i, b, f, aArr, aHash, s)
+
+# Test fmt module's sprintf function
+sp = fmt.sprintf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
+fmt.printf("sp=%s", sp)
+
+fmt.fprintf(stdout, "Hello %s\n", "world")
+
+#Testing `logger` module
+##Log to stdout
+log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
+
+log.printf("Hello, %s\n", "logger")
+fmt.printf("Logger: flags =<%d>, prefix=<%s>\n", log.flags(), log.prefix())
+
+##Log to file
+file = newFile("./logger.log", "a+")
+log.setOutput(file)
+for i in 1..5 {
+  log.printf("这是第<%d>个\n", i)
+}
+
+//for loop is an expression, not statement, so it could be assigned to a variable
+let plus_one = for i in [1,2,3,4] { i + 1 }
+fmt.println(plus_one)
+
+# Underscore support for `int` and `float` type
+let pi = 3.14_159_265
+fmt.println(pi)
+
+// Test for range operator(..)
+for i in "m".."a" {
+  println('i={i}')
+}
+
+# Test pipe operator(|>)
+x = ["hello", "world"] |> strings.join(" ") |> strings.upper() |> strings.lower() |> strings.title()
+printf("x=<%s>\n", x)
+
+let add = fn(x,y) { return x + y }
+let pow = fn(x) { return x ** 2}
+let subtract = fn(x) { return x - 1}
+
+let mm = add(1,2) |> pow() |> subtract()
+printf("mm=%d\n", mm)
+
+pp = "123456"[2]
+printf("pp=%s\n\n", pp)
+
+for idx, v in "abcd" {
+    printf("idx=%d, v=%s\n", idx, v)
+}
+println()
+
+//"for k, v in xxx" not support array, `k` is index
+for idx, v in ["a", "b", "c", "d"] {
+    printf("idx=%d, v=%s\n", idx, v)
+}
+println()
+
+//"for i in xxx",default index is `$_`
+for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_ is the index
+    printf("idx=%d, v=%s\n", $_, item)
+}
+println()
+
+//"for i in xx..xx",default index is `$_`
+for item in 10..20 where $_ % 2 == 0 { //$_ is the index
+    printf("idx=%d, v=%d\n", $_, item)
+}
+
+//Test for 'sort' module
+sortedFloats = sort.sortFloats([12.0, 10.0, 8.2, 8.3, 9.5], sort.Descending)
+printf("sortedFloats=%v\n", sortedFloats)
+if sort.floatsAreSorted(sortedFloats, sort.Descending) {
+    printf("sortedFloats is sorted!\n\n")
+} else {
+    printf("sortedFloats is not sorted!\n\n")
+}
+
+sortedInts = sort.sortInts([12, 10, 8, 7, 9])
+printf("sortedInts=%v\n", sortedInts)
+if sort.intsAreSorted(sortedInts) {
+    printf("sortedInts is sorted!\n\n")
+} else {
+    printf("sortedInts is not sorted!\n\n")
+}
+
+sortedStrs = sort.sortStrings(["sawtooth", "rand", "stagger", "plateau", "shuffle"], sort.CaseInsensitiveAscending)
+printf("sortedStrs=%v\n", sortedStrs)
+if sort.stringsAreSorted(sortedStrs, sort.CaseInsensitiveAscending) {
+    printf("sortedStrs is sorted!\n\n")
+} else {
+    printf("sortedStrs is not sorted!\n\n")
+}

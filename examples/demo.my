@@ -1,0 +1,455 @@
+//#!/usr/bin/monkey
+# Using 'let'(optional) to declare variable
+# functio as a first-class object
+let add  =  fn(x,y){
+    defer println("I'm defer1")
+    println("I'm in add")
+    defer println("I'm defer2")
+    return x + y 
+}
+println(add(2,2))
+
+# array plus
+let n =[1,2] + [3,4] + fn() { return [5,6] }()
+println(n)
+
+let complex = {
+   "add" => fn(x, y) { return fn(z) {x + y + z } }, #function with closure
+   "sub" => fn(x, y) { x - y },
+   "other" => [1,2,3,4]
+}
+println(complex["add"](1,2)(3))
+println(complex["sub"](10, 2))
+println(complex["other"][2])
+
+# array slice
+let warr = [1+1,3,fn(x) { x + 1}(2),"abc","def"]
+println("Array Slice")
+println(warr[0:4])
+
+# loop support, all support break and continue
+# c language like for, but must contain all three parts
+let lp = 0
+for (lp=0;lp<5;lp++) {
+    if (lp > 4) { break }
+    if (lp == 2) { continue }
+    println('lp is {lp}')
+}
+
+let ij = 5
+for ij in range(10) {
+    println('ij = {ij}')
+}
+
+# for x in arr <where expr> {}
+let a = [1,2,3,4]
+for i in a where i % 2 != 0 {
+    println(i)
+}
+
+# for k,v in hs <where expr> {}
+let hs = {"a" => 1, 
+          "b" => 2,
+          "c" => 3,
+          "d" => 4,
+          "e" => 5,
+          "f" => 6,
+          "g" => 7}
+for k, v in hs where v % 2 == 0 {
+    println('{k} : {v}')
+}
+
+ij = 9
+for { # forever loop
+    ij =  ij + 2
+    if (ij > 20) { break }
+    println('ij = ({ij})')
+}
+
+
+# 'grep' and 'map' like perl's grep and map
+let sourceArr = [2,4,6,8,10,12]
+println('Source Arr is {sourceArr}')
+
+let m = grep  $_ > 5, sourceArr
+println('m is {m}')
+
+let cp = map $_ * 2 , sourceArr
+println('cp is {cp}')
+
+let fields = {
+                "animal"   => "dog",
+                "building" => "house",
+                "colour"   => "red",
+                "fruit"    => "apple"
+             }
+let pattern = `animal|fruit`
+# =~(match), !~(unmatch)
+let values = map { fields[$_] } grep { $_ =~ pattern } fields.keys()
+println(values)
+
+# test grep & map
+let mm = [1,2,3,4,5,6,7,8,9,10]
+println('before mm={mm}')
+mm = mm.grep(fn(x) {  //test for grep
+  x % 2 == 0
+}).map(fn(x) {  # test for map
+  x = x * 2
+})
+println('after mm={mm}')
+
+# single quotes
+println('power(2**3) is {2**3}')
+
+# 'case' support
+let testStr = "123"
+case testStr in { //in(exact/partial match), is(only exact match)
+    "abc","mno"  { println("testStr is 'abc' or 'mno'") }
+    "def"        { println("testStr is 'def'") }
+    `\d+`        { println("testStr contains digit") } #regexp match
+    else         { println("testStr not matched") }
+}
+
+# try/catch/finally support
+let exceptStr = "SUMERROR"
+try {
+    let th = 1 + 2
+    if (th == 3) { throw  exceptStr }
+}
+catch "OTHERERROR" {
+    println("Catched OTHERERROR")
+}
+catch exceptStr {
+    println("matched is SUMERROR")
+}
+catch {
+    println("Catched ALL")
+}
+finally {
+    println("Finally running")
+}
+
+# multiple variable assignment
+let d1 = "Hello World", d2 = [1,2,3], d3 = (3+1-2)*5, w1 = fn(x,y) { x + y }
+println(d1)
+println(d2)
+println(d3)
+println(w1(1,2))
+
+# support utf8
+let 姓="黄", 名="海峰", 问候="您好！"
+println(姓, 名, 问候)
+println('{姓}{名}, {问候}')
+let 五 = 5
+let 二 = 2
+let 七 = 五 + 二
+println(七)
+
+let 调试 = fn (x) { println(x) }
+调试("Hello 调试 function!")
+
+# regexp support(/regexp/)
+let ww = /\d+/.match("12") //regular expression
+println(ww)  # true
+if (ww) {
+    println("matched!")
+}
+else {
+    println("Not matched!")
+}
+
+let srcStr = "abc 12 def 34"
+let destStr = /\d+/.replace(srcStr, "TT")
+println(destStr)  # "abc TT def TT"
+
+let regex = /\d+\t/.match("abc 123	mnj")
+if (regex) {println("regex matched")}
+
+# some other examples
+let aFloat = 1.02E3, aInt = 0x80, aStr = "0x80", u1 = 1+5<<2*3, u2 = 100+20>>2*2
+println('aFloat={aFloat}, aInt={aInt}, aStr={int(aStr)}, u1={u1}, u2={u2}')
+
+let aBin = 0b10101, aBinStr="0b10101"
+println('aBin={aBin}, aBinStr={int(aBinStr)}')
+
+let subs = "Hello World".substr(6, 10)
+println(subs)
+
+let kk = 5.1 + " hello"
+print("kk is ", kk)
+println("")
+
+let yu1 = "hello ", yu2 = "world!", yu3 = 123, yu4 = [1,2,3,4], yu5 = {"a"=>10, "b"=>"test"}, yu6 = fn(x){ x + 1 }
+printf("%s    %s    %d    %s    %s    %s\n", yu1, yu2, yu3, yu4, yu5, yu6)  # use '%s' only
+printf("%s\n", "おはようございます")
+
+# if-else support
+let ps = 10
+if (ps >5  and ps <12) { 
+  println("5<ps<12")
+}
+else {
+  println("ps<=5 or ps > 12")
+}
+
+//New : added support for ternary expression
+let ter = (ps == 10) ?  
+                      ((3 + 5 * 2) ?  //Note：we need to add '(', or the parser will report error
+                                   [1,2,3,4] + [5,6,7,8]
+                                   :
+                                   1)
+                     : fn(x) { x * 2} (ps) 
+println('ter is "{ter}"')
+
+
+//New : added support for .. loop
+println("for i in 1..5\t:")
+for i in 1..5 {
+  println('i={i}')
+}
+
+println("\nfor i in 5..1 where i > 2 :")
+for i in fn(x){ x+1 }(4)..fn(x){ x+1 }(0) where i > 2 {
+  if (i == 3) { continue }
+  println('i={i}')
+}
+
+//`for`, `while` is a expression, so it could be passed to a variable
+let c1 = 10
+let cc1 = while (c1>3) {  c1-- }
+println("\ncc1 = ", cc1)
+
+# Added support for 'defer' function(2017-06-29)
+let multi  =  fn(x,y){ 
+    defer println("I'm defer1")
+    println("I'm in multi")
+    defer println("I'm defer2")
+    return x * y 
+}
+println(multi(2,2))
+
+# Added support for 'channel' and 'spawn'(2017-06-30)
+let aChan1 = chan()
+spawn fn() {
+    let message = aChan1.recv()
+    println('channel received message=<{message}>')
+}()
+aChan1.send("Hello Channel!")
+
+# spawn and 'chan' example 2
+let aa = [7, 2, 8, -9, 4, 0]
+let nn = len(aa) / 2
+let aChan2 = chan()
+
+let cc = fn(aArr, c) {
+    let total = 0
+
+    for v in aArr {
+        total = total + v
+    }
+    c.send(total)
+}
+
+spawn cc(aa[:nn], aChan2)
+spawn cc(aa[nn:], aChan2)
+println("Channel receving...")
+let x = aChan2.recv()
+let y = aChan2.recv()
+println('x={x}, y={y}')
+
+# Added support for 'assert'(2017-06-30)
+assert(42 / 7 == 8 - 2)
+assert([1,2,3,4]==[1,2,3,4])
+assert(true)
+assert(!false)
+
+if ([].empty()) {
+    println("array is empty")
+}
+else {
+    println("bad")
+}
+
+for k in {"animal" => "dog", "building" => "house"}.keys() {
+    println('k={k}')
+}
+
+
+let xxxxx = "黄H海H峰Hello黄　　　   ".trim().split("H")
+println('xxxxx={xxxxx}')
+
+let xxxxx1 = "黄H海H峰Hello黄"
+for i in xxxxx1[0:3] {
+  println('i={i}')
+}
+
+let yyy1 = "黄H海H峰Hello黄"
+let yyy2 = map {
+    let v = $_ //save $_
+    if ($_ =~ `H`) {
+       $_ = "M"
+    } else {
+       $_ = v
+    }
+} yyy1
+println('yyy2 is {yyy2}')
+
+# Test for "os" module functions
+println(os.args())
+println(os.getenv("PATH"))
+println(os.getwd())
+println(os.runCmd("find", ".", "-name", `\*.my`))
+//os.copyFile("./xx.my", "./demo.my")
+
+//Below will not get expected result, WHY?
+//I tried using go language，same problem, not know why
+//spawn fn() {
+//    println(os.runCmd("find", ".", "-name", `\*.my`))
+//}()
+
+
+# Test for "math" module functions
+let abs = math.abs(-12.123)
+println(abs)
+
+let pow = math.pow(2,5)
+println(pow)
+
+# Test json marshal & unmarshal
+let hsJson = {"key1" =>10,
+          "key2" =>"Hello Json %s %s Module",
+          "key3" => 15.8912,
+          "key4" => [1,2,3.5, "Hello"],
+          "key5" => true,
+          "key6" => {"subkey1"=>12, "subkey2"=>"Json"},
+          "key7" => fn(x,y){x+y}(1,2)
+}
+let hashStr = json.marshal(hsJson) //same as `json.toJson(hsJson)`
+println(json.indent(hashStr, "  "))
+
+let hsJson1 = json.unmarshal(hashStr)
+println(hsJson1)
+
+
+let arrJson = [1,2.3,"HHF",[],{ "key" =>10, "key1" =>11}]
+let arrStr = json.marshal(arrJson)
+println(json.indent(arrStr))
+let arr1Json = json.unmarshal(arrStr)  //same as `json.fromJson(arrStr)`
+println(arr1Json)
+
+#Test `os.expand` method
+let expnd = os.expand("my home is ${HOME}, NAME is $NAME", fn(x) {
+                           case x in {
+                              "HOME"  { return `[/c/Users/huanghai/Desktop/monkey-master]` }
+                              "NAME"  { return `[HuangHaiFeng]` }
+                           }
+            })
+println(expnd)
+
+#test flag object(i.e. testing for command line options)
+let verV = flag.bool("version", false, "0.1")
+let ageV = flag.int("age", 40, "an int")
+let heightV = flag.float("height", 120.5, "a float")
+let nameV = flag.string("name", "HuangHaiFeng", "a string")
+let hobbiesV = flag.string("hobbies", "1,2,3", "a comma-delimited string")
+flag.parse()
+
+println("verV = ", verV)
+println("ageV = ", ageV)
+println("heightV = ", heightV)
+println("nameV = ", nameV)
+println("hobbies = ", hobbiesV.split(","))
+
+if (flag.isSet("age")) {
+    println("age is set")
+} else {
+    println("age is not set")
+}
+
+let filelist=[]
+#test filepath object
+let walkf = fn(path, info) {
+	if (filepath.ext(path) == ".my") {
+		println("path = ", path, ",  size = ", info.size())
+		filelist.push(path)
+	}
+}
+
+filepath.walk(".", walkf)
+println(filelist)
+
+//filepath.walk(".", fn(path, fileinfo) {
+//	if (filepath.ext(path) == ".my") {
+//		if (filepath.base(path) == "db.my") {
+//			println("============skipping eval.my============")
+//			return "SKIP_DIR"
+//		} else {
+//			println(path)
+//		}
+//	}
+//	else {
+//		println(path)
+//	}
+//})
+
+# Test for "time" module functions
+let time = newTime()
+println(time.format("2006-01-02 15:04"))
+println(time.year())
+println(time.month())
+println(time.day())
+println(time.weekDay())
+
+println("Sleeping 2 seconds...")
+time.sleep(2 * time.SECOND)
+println("After sleeping")
+
+
+# test "sync"'s Once Object(code from go source:src/sync/example_test.go)
+let ExampleOnce = fn() {
+	let once = newOnce()
+	let bChan = chan()
+	let i = 0
+	for (i=0; i < 10; i++) {
+		spawn fn() {
+			once.do(fn(){
+				println("Only once")
+			})
+			let done = bChan.send(true)
+		}()
+	}
+	for (i= 0; i < 10; i++) {
+		let done = bChan.recv()
+	}
+}
+
+ExampleOnce()
+
+println("Testing sync's waitGroup")
+# test "sync"'s Wait Object(code from go source:src/sync/example_test.go)
+let ExampleWaitGroup = fn() {
+	let wg = newWaitGroup()
+	let urls = ["http://www.baidu.org/","http://www.csdn.net/","http://www.sina.com.cn/"]
+	for url in urls {
+		// Increment the WaitGroup counter.
+		wg.add(1)
+		// Launch a goroutine to fetch the URL.
+		spawn fn(url) {
+			// Decrement the counter when the goroutine completes.
+			defer wg.done()
+			// Fetch the URL.
+			http.get(url)
+		}(url)
+	}
+	// Wait for all HTTP fetches to complete.
+	wg.wait()
+}
+
+ExampleWaitGroup()
+
+#Testing `fmt` module
+let i = 108, f = 25.383, b=true, s = "Hello, world"
+fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
+
+let sp = fmt.sprintf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
+fmt.printf("sp=%s", sp)
