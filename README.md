@@ -487,13 +487,15 @@ printf("mm=%d\n", mm)
 
 ## Standard module introduction
 
-In monkey, there are some standard modules provided for you. i.e. json, sql, sort, fmt, os, logger, time, flag, net, http, etc...
+In monkey, there are some standard modules provided for you. e.g. json, sql, sort, fmt, os, logger, time, flag, net, http, etc...
 This is a brief introduction of some of the monkey standard modules, don't expect it to be thorough.
 If you are curious, please see the source code.
 
 ```swift
 //fmt module
-let i = 108, f = 25.383, b=true, s = "Hello, world", aArr = [1, 2, 3, 4, "a", "b"], aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
+let i = 108, f = 25.383, b=true, s = "Hello, world", 
+    aArr = [1, 2, 3, 4, "a", "b"], 
+    aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
 
 // Use '%v (value)' to print variable value, '%_' to print the variable's type
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
