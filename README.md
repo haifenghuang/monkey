@@ -173,8 +173,11 @@ let a = array(i)   // result: [10]
 if (a > b) { // '()' is optional, but '{}' is a must
     println("a > b")
 }
+elseif a == b { // could also use 'elsif'
+    println("a = b")
+}
 else {
-    println("a <= b")
+    println("a < b")
 }
 
 // for
@@ -468,7 +471,7 @@ println(w)
 ## Pipe Operator
 
 The pipe operator, inspired by [Elixir](https://elixir-lang.org/).
-And thanks for the project [Aria](https://github.com/fadion/aria), I got the idea and code most from this project.
+And thanks for the project [Aria](https://github.com/fadion/aria), I got the idea and some code from this project.
 
 See below for examples:
 
@@ -485,6 +488,21 @@ let mm = add(1,2) |> pow() |> subtract()
 printf("mm=%d\n", mm)
 ```
 
+## Spawn and channel
+
+You can use `spawn` to create a new thread, and `chan` to communicate with the thread.
+
+```swift
+let aChan = chan()
+spawn fn() {
+    let message = aChan.recv()
+    println('channel received message=<{message}>')
+}()
+
+//send message to thread
+aChan.send("Hello Channel!")
+```
+
 ## Standard module introduction
 
 In monkey, there are some standard modules provided for you. e.g. json, sql, sort, fmt, os, logger, time, flag, net, http, etc...
@@ -493,8 +511,8 @@ If you are curious, please see the source code.
 
 ```swift
 //fmt module
-let i = 108, f = 25.383, b=true, s = "Hello, world", 
-    aArr = [1, 2, 3, 4, "a", "b"], 
+let i = 108, f = 25.383, b=true, s = "Hello, world",
+    aArr = [1, 2, 3, 4, "a", "b"],
     aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
 
 // Use '%v (value)' to print variable value, '%_' to print the variable's type
@@ -629,7 +647,7 @@ There are some other things i plan to do:
 * Improve this document with more explanation of the language.
 * Rewrite the demo program for better understanding of the language.
 * Rewrite the 'include' module logic.
-* Add support for if-elseif-else expression.
+* ~~Add support for if-elseif-else expression~~.
 
 ## License
 

@@ -69,6 +69,8 @@ const (
 	TRUE
 	FALSE
 	IF
+	ELSIF
+	ELSEIF
 	ELSE
 	RETURN
 	INCLUDE
@@ -110,6 +112,8 @@ var keywords = map[string]TokenType{
 	"true":     TRUE,
 	"false":    FALSE,
 	"if":       IF,
+	"elsif":    ELSIF,
+	"elseif":   ELSEIF,
 	"else":     ELSE,
 	"return":   RETURN,
 	"include":  INCLUDE,
@@ -254,6 +258,10 @@ func (tt TokenType) String() string {
 		return "FALSE"
 	case IF:
 		return "IF"
+	case ELSIF:
+		return "ELSIF"
+	case ELSEIF:
+		return "ELSEIF"
 	case ELSE:
 		return "ELSE"
 	case RETURN:

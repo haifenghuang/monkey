@@ -912,32 +912,80 @@ func (p *Parser) parseMapExprExpression(tok token.Token) ast.Expression {
 	return me
 }
 
+//func (p *Parser) parseIfExpression() ast.Expression {
+//	expression := &ast.IfExpression{Token: p.curToken}
+//
+//	if p.peekTokenIs(token.LPAREN) {
+//		p.nextToken()
+//	}
+//	p.nextToken()
+//	expression.Condition = p.parseExpression(LOWEST)
+//
+//	if p.peekTokenIs(token.RPAREN) {
+//		p.nextToken()
+//	}
+//
+//	if !p.expectPeek(token.LBRACE) {
+//		return nil
+//	}
+//
+//	expression.Consequence = p.parseBlockStatement().(*ast.BlockStatement)
+//	if p.peekTokenIs(token.ELSE) {
+//		p.nextToken()
+//		if p.expectPeek(token.LBRACE) {
+//			expression.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+//		}
+//	}
+//
+//	return expression
+//}
+
 func (p *Parser) parseIfExpression() ast.Expression {
-	expression := &ast.IfExpression{Token: p.curToken}
+	ie := &ast.IfExpression{Token: p.curToken}
+	// parse if/else-if expressions
+	ie.Conditions = p.parseConditionalExpressions()
+
+	// ELSE or RBRACE
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken() //skip "}"
+		p.nextToken() //skip "else"
+		ie.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+	}
+
+	return ie
+}
+
+func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
+	// if part
+	ic := []*ast.IfConditionExpr{p.parseConditionalExpression()}
+
+	//else-if
+	for p.peekTokenIs(token.ELSEIF) || p.peekTokenIs(token.ELSIF) { //could be 'elseif' or 'elsif'
+		p.nextToken()
+		ic = append(ic, p.parseConditionalExpression())
+	}
+
+	return ic
+}
+
+func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
+	ic := &ast.IfConditionExpr{Token: p.curToken}
 
 	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken()
+		p.nextToken() //skip current token
 	}
-	p.nextToken()
-	expression.Condition = p.parseExpression(LOWEST)
+	p.nextToken() //skip "{"
+
+	ic.Cond = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
+		p.nextToken() //skip current token
 	}
+	p.nextToken()  //skip "}"
 
-	if !p.expectPeek(token.LBRACE) {
-		return nil
-	}
+	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
 
-	expression.Consequence = p.parseBlockStatement().(*ast.BlockStatement)
-	if p.peekTokenIs(token.ELSE) {
-		p.nextToken()
-		if p.expectPeek(token.LBRACE) {
-			expression.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
-		}
-	}
-
-	return expression
+	return ic
 }
 
 func (p *Parser) parseSliceExpression(start ast.Expression) ast.Expression {

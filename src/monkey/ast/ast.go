@@ -361,11 +361,51 @@ func (i *Identifier) String() string       { return i.Value }
 ///////////////////////////////////////////////////////////
 //                         IFELSE                        //
 ///////////////////////////////////////////////////////////
+//type IfExpression struct {
+//	Token       token.Token
+//	Condition   Expression
+//	Consequence *BlockStatement
+//	Alternative *BlockStatement
+//}
+//
+//func (ifex *IfExpression) Pos() token.Position {
+//	return ifex.Token.Pos
+//}
+//
+//func (ifex *IfExpression) End() token.Position {
+//	if ifex.Alternative != nil {
+//		return ifex.Alternative.End()
+//	}
+//	return ifex.Consequence.End()
+//}
+//
+//func (ifex *IfExpression) expressionNode()      {}
+//func (ifex *IfExpression) TokenLiteral() string { return ifex.Token.Literal }
+//
+//func (ifex *IfExpression) String() string {
+//	var out bytes.Buffer
+//
+//	out.WriteString("if ")
+//	out.WriteString("(")
+//	out.WriteString(ifex.Condition.String())
+//	out.WriteString(")")
+//	out.WriteString(" { ")
+//	out.WriteString(ifex.Consequence.String())
+//	out.WriteString(" }")
+//	if ifex.Alternative != nil {
+//		out.WriteString(" else ")
+//		out.WriteString(" { ")
+//		out.WriteString(ifex.Alternative.String())
+//		out.WriteString(" }")
+//	}
+//
+//	return out.String()
+//}
+
 type IfExpression struct {
 	Token       token.Token
-	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Conditions  []*IfConditionExpr //if or elseif part
+	Alternative *BlockStatement //else part
 }
 
 func (ifex *IfExpression) Pos() token.Position {
@@ -376,7 +416,9 @@ func (ifex *IfExpression) End() token.Position {
 	if ifex.Alternative != nil {
 		return ifex.Alternative.End()
 	}
-	return ifex.Consequence.End()
+
+	aLen := len(ifex.Conditions)
+	return ifex.Conditions[aLen-1].End()
 }
 
 func (ifex *IfExpression) expressionNode()      {}
@@ -385,19 +427,50 @@ func (ifex *IfExpression) TokenLiteral() string { return ifex.Token.Literal }
 func (ifex *IfExpression) String() string {
 	var out bytes.Buffer
 
+	for i, c := range ifex.Conditions {
+		if i == 0 {
 	out.WriteString("if ")
-	out.WriteString("(")
-	out.WriteString(ifex.Condition.String())
-	out.WriteString(")")
-	out.WriteString(" { ")
-	out.WriteString(ifex.Consequence.String())
-	out.WriteString(" }")
+		} else {
+			out.WriteString("elseif ")
+		}
+		out.WriteString(c.String())
+	}
+
 	if ifex.Alternative != nil {
 		out.WriteString(" else ")
 		out.WriteString(" { ")
 		out.WriteString(ifex.Alternative.String())
 		out.WriteString(" }")
 	}
+
+	return out.String()
+}
+
+//if/else-if condition
+type IfConditionExpr struct {
+	Token token.Token
+	Cond  Expression  //condition
+	Block *BlockStatement //body
+}
+
+func (ic *IfConditionExpr) Pos() token.Position {
+	return ic.Token.Pos
+}
+
+func (ic *IfConditionExpr) End() token.Position {
+	return ic.Block.End()
+}
+
+func (ic *IfConditionExpr) expressionNode()      {}
+func (ic *IfConditionExpr) TokenLiteral() string { return ic.Token.Literal }
+
+func (ic *IfConditionExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ic.Cond.String())
+	out.WriteString(" { ")
+	out.WriteString(ic.Block.String())
+	out.WriteString(" }")
 
 	return out.String()
 }

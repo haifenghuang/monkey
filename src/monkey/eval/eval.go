@@ -1163,17 +1163,38 @@ func compareHashObj(left, right map[HashKey]HashPair) bool {
 }
 
 // IF expressions, if (evaluates to boolean) True: { Block Statement } Optional Else: {Block Statement}
+//func evalIfExpression(ie *ast.IfExpression, scope *Scope) Object {
+//	condition := Eval(ie.Condition, scope)
+//	if condition.Type() == ERROR_OBJ {
+//		return condition
+//	}
+//
+//	if IsTrue(condition) {
+//		return evalBlockStatements(ie.Consequence.Statements, scope)
+//	} else if ie.Alternative != nil {
+//		return evalBlockStatements(ie.Alternative.Statements, scope)
+//	}
+//	return NIL
+//}
+
 func evalIfExpression(ie *ast.IfExpression, scope *Scope) Object {
-	condition := Eval(ie.Condition, scope)
+	//eval "if/else-if" part
+	for _, c := range ie.Conditions {
+		condition := Eval(c.Cond, scope)
 	if condition.Type() == ERROR_OBJ {
 		return condition
 	}
 
 	if IsTrue(condition) {
-		return evalBlockStatements(ie.Consequence.Statements, scope)
-	} else if ie.Alternative != nil {
+			return evalBlockStatements(c.Block.Statements, scope)
+		}
+	}
+
+	//eval "else" part
+	if ie.Alternative != nil {
 		return evalBlockStatements(ie.Alternative.Statements, scope)
 	}
+
 	return NIL
 }
 
