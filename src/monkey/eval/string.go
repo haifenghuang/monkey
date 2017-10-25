@@ -175,6 +175,8 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.Repeat(line, args...)
 	case "title":
 		return s.Title(line, args...)
+	case "chomp":
+		return s.Chomp(line, args...)
 	case "valid":
 		return s.IsValid(line, args...)
 	case "setValid":
@@ -583,6 +585,15 @@ func (s *String) Title(line string, args ...Object) Object {
 	return NewString(ret)
 }
 
+func (s *String) Chomp(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	ret := strings.TrimRight(s.String, "\r\n")
+	return NewString(ret)
+}
+
 func (s *String) IsValid(line string, args ...Object) Object {
 	if len(args) != 0 {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
@@ -694,6 +705,8 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.Repeat(line, args...)
 	case "title":
 		return s.Title(line, args...)
+	case "chomp":
+		return s.Chomp(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, s.Type()))
 }
@@ -1209,5 +1222,19 @@ func (s *StringsObj) Title(line string, args ...Object) Object {
 	}
 
 	ret := strings.Title(source.String)
+	return NewString(ret)
+}
+
+func (s *StringsObj) Chomp(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	source, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "chomp", "*String", args[0].Type()))
+	}
+
+	ret := strings.TrimRight(source.String, "\r\n")
 	return NewString(ret)
 }

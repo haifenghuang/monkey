@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+	"runtime"
 )
 
 type ObjectType string
@@ -622,6 +623,10 @@ func initGlobalObj() {
 	SetGlobalObj("stdin", &FileObject{File: os.Stdin})
 	SetGlobalObj("stdout", &FileObject{File: os.Stdout})
 	SetGlobalObj("stderr", &FileObject{File: os.Stderr})
+
+	//runtime
+	SetGlobalObj("RUNTIME_ARCH", NewString(runtime.GOARCH))  //running program's architecture target: one of 386, amd64, arm, s390x, and so on
+	SetGlobalObj("RUNTIME_OS", NewString(runtime.GOOS))      //running program's operating system target: one of darwin, freebsd, linux, and so on. 
 }
 
 func init() {
