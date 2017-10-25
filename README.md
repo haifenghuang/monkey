@@ -605,6 +605,16 @@ fmt.printf("sp=%s", sp)
 fmt.fprintf(stdout, "Hello %s\n", "world")
 
 
+//time module
+t1 = newTime()
+println(t1.toStr(t1.strftime("%F %R")))
+Epoch = t1.toEpoch()
+println(Epoch)
+
+t2 = t1.fromEpoch(Epoch)
+println(t2.toStr(t1.strftime("%F %R")))
+
+
 //logger module
 #Log to stdout
 log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
