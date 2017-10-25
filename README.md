@@ -148,6 +148,37 @@ e = 5
 姓="黄"
 ```
 
+## Reserved keywords
+
+Keywords are predefined, reserved identifiers that have special meanings to the compiler. They cannot be used as identifiers. Below is a list of reserved keywords
+
+* fn
+* let
+* true false nil
+* if elsif elseif else
+* return
+* include
+* and or
+* enum
+* struct # not used
+* do while for break continue where
+* grep map
+* case is in
+* try catch finally throw
+* defer
+* spawn
+* yield #not used
+* qw
+
+Note:
+
+* `where` in expression `for xxx in where` is a reserved keyword, but in other part,
+   you could use `where` as a variable, or function name, etc. But it is not recomented.
+* `in` in expression `for xxx in`, `case xxx in` is a reserved keyword, but in other part,
+   you could use `in` as a variable, or function name, etc. But it is not recomented.
+* `is` in expression `case xxx is` is a reserved keyword, but in other part,
+   you could use `is` as a variable, or function name, etc. But it is not recomented.
+
 ### Type conversion
 
 You can use the builtin `int()`, `float()`, `str()`, `array()` functions for type conversion.
@@ -340,6 +371,10 @@ They are `stdin`, `stdout`, `stderr`.
 
 ```swift
 fmt.fprintf(stdout, "Hello world\n")
+
+print("Please type your name:")
+name = stdin.read(1024)  //read up to 1024 bytes from stdin
+println("Your name is " + name)
 ```
 
 ## Error Handling of standard library
