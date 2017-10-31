@@ -395,6 +395,9 @@ if (ret == false) {
 
 ```
 
+Maybe you are curious about why `nil` or `false` have message() function? Because in monkey, `nil` and `false`
+both are objects, so they have method to operate on it.
+
 ## About `defer` keyword
 
 A defer statement defers the execution of a function until the surrounding function returns.
@@ -607,12 +610,13 @@ fmt.fprintf(stdout, "Hello %s\n", "world")
 
 //time module
 t1 = newTime()
-println(t1.toStr(t1.strftime("%F %R")))
+format = t1.strftime("%F %R")
+println(t1.toStr(format))
 Epoch = t1.toEpoch()
 println(Epoch)
 
 t2 = t1.fromEpoch(Epoch)
-println(t2.toStr(t1.strftime("%F %R")))
+println(t2.toStr(format))
 
 
 //logger module

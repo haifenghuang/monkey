@@ -78,10 +78,13 @@ var errorType = map[int]string{
 
 func NewError(line string, t int, args ...interface{}) Object {
 	msg := line + fmt.Sprintf(errorType[t], args...)
-	return &Error{Message: msg}
+	return &Error{Kind: t, Message: msg}
 }
 
-type Error struct{ Message string }
+type Error struct{
+	Kind int
+	Message string
+}
 
 func (e Error) Error() string {
 	return e.Message

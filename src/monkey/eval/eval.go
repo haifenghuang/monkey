@@ -170,12 +170,15 @@ func evalProgram(program *ast.Program, scope *Scope) (results Object) {
 		case *ReturnValue:
 			return s.Value
 		case *Error:
+			if s.Kind == THROWNOTHANDLED {
+				panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, s.Message))
+			}
 			return s
-		case *ThrowValue:
-			//convert ThrowValue to Errors
-			throwObj := results.(*ThrowValue).Value
-			throwObjStr := throwObj.(*String).String
-			panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, throwObjStr))
+//		case *ThrowValue:
+//			//convert ThrowValue to Errors
+//			throwObj := results.(*ThrowValue).Value
+//			throwObjStr := throwObj.(*String).String
+//			panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, throwObjStr))
 		}
 	}
 	if results == nil {
@@ -602,7 +605,7 @@ func evalThrowStatement(t *ast.ThrowStmt, scope *Scope) Object {
 	if strObj, ok = value.(*String); !ok {
 		panic(NewError(t.Pos().Sline(), THROWERROR))
 	}
-	return &ThrowValue{Value: strObj}
+	return &Error{Kind: THROWNOTHANDLED, Message:strObj.String}
 }
 
 // Booleans
@@ -838,6 +841,10 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 				return TRUE
 			}
 			return FALSE
+		}
+
+		if left.Type() == NIL_OBJ && right.Type() == NIL_OBJ { //(s == nil) should return true if s is nil
+			return TRUE
 		}
 		return nativeBoolToBooleanObject(left == right)
 	case node.Operator == "!=":
@@ -1863,7 +1870,24 @@ func evalBlockStatements(block []ast.Statement, scope *Scope) (results Object) {
 		if _, ok := results.(*Continue); ok {
 			return
 		}
-		if results != nil && results.Type() == THROW_OBJ {
+	}
+	return //do not return NIL, becuase we have already set the 'results'
+}
+
+func evalTryBlockStatements(block []ast.Statement, scope *Scope) (results Object) {
+	for _, statement := range block {
+		results = Eval(statement, scope)
+		if isTryError(results) {
+			return results
+		}
+
+		if results != nil && results.Type() == RETURN_VALUE_OBJ {
+			return
+		}
+		if _, ok := results.(*Break); ok {
+			return
+		}
+		if _, ok := results.(*Continue); ok {
 			return
 		}
 	}
@@ -2244,14 +2268,18 @@ func evalDecrementPostfixOperatorExpression(node *ast.PostfixExpression, left Ob
 func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 	tryScope := NewScope(scope)
 
-	rv := Eval(ts.Block, tryScope) //try statement
-	if rv.Type() == ERROR_OBJ {
-		return rv
-	}
+	rv := evalTryBlockStatements(ts.Block.Statements, tryScope) //try statement
+	if isTryError(rv) {
+		rvObj := rv
+		var rvObjStr string
 
-	if rv.Type() == THROW_OBJ { //catch statement
-		rvObj := rv.(*ThrowValue).Value
-		rvObjStr := rvObj.(*String).String
+	if rv.Type() == ERROR_OBJ {
+			rvObjStr = rv.(*Error).Message
+		} else if rv.Type() == NIL_OBJ {
+			rvObjStr = rv.(*Nil).OptionalMsg
+		} else if rv.Type() == BOOLEAN_OBJ {
+			rvObjStr = rv.(*Boolean).OptionalMsg
+		}
 
 		done := false
 		var catchAllStmt *ast.CatchAllStmt
@@ -2268,13 +2296,15 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 			if cs.VarType == 1 { //IDENTIFIER
 				val, ok1 := catchSubScope.Get(cs.Var)
 				if !ok1 {
-					panic(NewError(cs.Pos().Sline(), UNKNOWNIDENT, cs.Var))
-				}
+					catchSubScope.Set(cs.Var, rvObj) //put it to scope
+					cs.Var = rvObjStr
+				} else {
 				valStr, ok2 := val.(*String)
 				if !ok2 {
 					panic(NewError(cs.Pos().Sline(), THROWERROR))
 				}
 				cs.Var = valStr.String
+				}
 			}
 
 			if cs.Var != rvObjStr {
@@ -2283,7 +2313,7 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 
 			catchSubScope.Set(cs.Var, rvObj)
 
-			rv = Eval(cs.Block, catchSubScope) //catch Block
+			rv = evalTryBlockStatements(cs.Block.Statements, catchSubScope) //catch Block
 			if rv.Type() == ERROR_OBJ {
 				return rv
 			}
@@ -2293,7 +2323,7 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 		} //end for
 
 		if !done && catchAllStmt != nil {
-			rv = Eval(catchAllStmt.Block, NewScope(scope))
+			rv = evalTryBlockStatements(catchAllStmt.Block.Statements, NewScope(scope))
 			if rv.Type() == ERROR_OBJ {
 				return rv
 			}
@@ -2302,7 +2332,7 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 
 	if ts.Finally != nil { //finally
 		finalScope := NewScope(scope)
-		rv = Eval(ts.Finally, finalScope)
+		rv = evalTryBlockStatements(ts.Finally.Statements, finalScope)
 		if rv.Type() == ERROR_OBJ {
 			return rv
 		}
@@ -2452,5 +2482,14 @@ func equal(isWholeMatch bool, lhsV, rhsV Object) bool {
 		return matched
 	}
 
+	return false
+}
+
+func isTryError(o Object) bool {
+	if o.Type() == ERROR_OBJ || 
+	   (o.Type() == NIL_OBJ && o.(*Nil).OptionalMsg != "") ||
+    (o.Type() == BOOLEAN_OBJ && o.(*Boolean).Bool == false && o.(*Boolean).OptionalMsg != "") {
+		return true
+	}
 	return false
 }

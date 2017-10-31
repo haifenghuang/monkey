@@ -42,7 +42,7 @@ const (
 	ENUM_OBJ         = "ENUM"
 	FILE_OBJ         = "FILE"
 	REGEX_OBJ        = "REGEX"
-	THROW_OBJ        = "THROW"
+//	THROW_OBJ        = "THROW"
 	RANGE_OBJ        = "RANGE"
 	CHANNEL_OBJ      = "CHANNEL"
 	NIL_OBJ          = "NIL_OBJ"
@@ -227,13 +227,13 @@ func (rv *ReturnValue) CallMethod(line string, scope *Scope, method string, args
 	panic(NewError(line, NOMETHODERROR, method, rv.Type()))
 }
 
-type ThrowValue struct{ Value Object }
-
-func (tv *ThrowValue) Inspect() string  { return tv.Value.Inspect() }
-func (tv *ThrowValue) Type() ObjectType { return THROW_OBJ }
-func (tv *ThrowValue) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
-	panic(NewError(line, NOMETHODERROR, method, tv.Type()))
-}
+//type ThrowValue struct{ Value Object }
+//
+//func (tv *ThrowValue) Inspect() string  { return tv.Value.Inspect() }
+//func (tv *ThrowValue) Type() ObjectType { return THROW_OBJ }
+//func (tv *ThrowValue) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+//	panic(NewError(line, NOMETHODERROR, method, tv.Type()))
+//}
 
 func NewNil(s string) *Nil {
 	return &Nil{OptionalMsg: s}
@@ -245,7 +245,12 @@ type Nil struct {
 	OptionalMsg string
 }
 
-func (n *Nil) Inspect() string  { return "nil" }
+func (n *Nil) Inspect() string  {
+	if n.OptionalMsg != "" {
+		return n.OptionalMsg
+	}
+	return "nil"
+}
 func (n *Nil) Type() ObjectType { return NIL_OBJ }
 func (n *Nil) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -486,6 +491,9 @@ type Boolean struct {
 
 func (b *Boolean) Inspect() string {
 	if b.Valid {
+		if b.Bool == false && b.OptionalMsg != "" {
+			return b.OptionalMsg
+		}
 		return fmt.Sprintf("%v", b.Bool)
 	}
 	return "ERROR: Boolean is null"
