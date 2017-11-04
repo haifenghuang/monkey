@@ -10,10 +10,10 @@ import (
 	"monkey/ast"
 	"os"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"unicode/utf8"
-	"runtime"
 )
 
 type ObjectType string
@@ -42,10 +42,10 @@ const (
 	ENUM_OBJ         = "ENUM"
 	FILE_OBJ         = "FILE"
 	REGEX_OBJ        = "REGEX"
-//	THROW_OBJ        = "THROW"
-	RANGE_OBJ        = "RANGE"
-	CHANNEL_OBJ      = "CHANNEL"
-	NIL_OBJ          = "NIL_OBJ"
+	//	THROW_OBJ        = "THROW"
+	RANGE_OBJ   = "RANGE"
+	CHANNEL_OBJ = "CHANNEL"
+	NIL_OBJ     = "NIL_OBJ"
 )
 
 type Object interface {
@@ -245,7 +245,7 @@ type Nil struct {
 	OptionalMsg string
 }
 
-func (n *Nil) Inspect() string  {
+func (n *Nil) Inspect() string {
 	if n.OptionalMsg != "" {
 		return n.OptionalMsg
 	}
@@ -633,8 +633,8 @@ func initGlobalObj() {
 	SetGlobalObj("stderr", &FileObject{File: os.Stderr})
 
 	//runtime
-	SetGlobalObj("RUNTIME_ARCH", NewString(runtime.GOARCH))  //running program's architecture target: one of 386, amd64, arm, s390x, and so on
-	SetGlobalObj("RUNTIME_OS", NewString(runtime.GOOS))      //running program's operating system target: one of darwin, freebsd, linux, and so on. 
+	SetGlobalObj("RUNTIME_ARCH", NewString(runtime.GOARCH)) //running program's architecture target: one of 386, amd64, arm, s390x, and so on
+	SetGlobalObj("RUNTIME_OS", NewString(runtime.GOOS))     //running program's operating system target: one of darwin, freebsd, linux, and so on.
 }
 
 func init() {
@@ -654,6 +654,7 @@ func init() {
 	NewStringsObj()
 	NewSortObj()
 	NewSqlsObject()
+	NewLinqObj()
 }
 
 func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {

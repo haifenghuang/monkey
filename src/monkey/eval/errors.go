@@ -81,8 +81,8 @@ func NewError(line string, t int, args ...interface{}) Object {
 	return &Error{Kind: t, Message: msg}
 }
 
-type Error struct{
-	Kind int
+type Error struct {
+	Kind    int
 	Message string
 }
 

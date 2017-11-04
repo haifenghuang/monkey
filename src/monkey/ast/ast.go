@@ -405,7 +405,7 @@ func (i *Identifier) String() string       { return i.Value }
 type IfExpression struct {
 	Token       token.Token
 	Conditions  []*IfConditionExpr //if or elseif part
-	Alternative *BlockStatement //else part
+	Alternative *BlockStatement    //else part
 }
 
 func (ifex *IfExpression) Pos() token.Position {
@@ -429,7 +429,7 @@ func (ifex *IfExpression) String() string {
 
 	for i, c := range ifex.Conditions {
 		if i == 0 {
-	out.WriteString("if ")
+			out.WriteString("if ")
 		} else {
 			out.WriteString("elseif ")
 		}
@@ -449,7 +449,7 @@ func (ifex *IfExpression) String() string {
 //if/else-if condition
 type IfConditionExpr struct {
 	Token token.Token
-	Cond  Expression  //condition
+	Cond  Expression      //condition
 	Block *BlockStatement //body
 }
 

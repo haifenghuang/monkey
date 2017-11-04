@@ -23,6 +23,8 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added json module(for json marshaling and unmarshaling)
 * Added fmt module
 * Added sync module
+* Added list module
+* Added linq module(Code come from [linq](https://github.com/ahmetb/go-linq) with some modifications)
 * Regular expression support(partially like perls)
 * channel support(like golang's channel)
 * more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
@@ -716,6 +718,90 @@ let ret = ln.close()
 if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
+
+
+
+//linq module
+//the linq module is not fully tested, and it has no `orderby` and `compare` compared with
+//ahmetb's linq implementation.
+let mm = [1,2,3,4,5,6,7,8,9,10]
+println('before mm={mm}')
+
+result = linq.from(mm).where(fn(x) {
+    x % 2 == 0
+}).select(fn(x) {
+    x = x + 2
+}).toSlice()
+println('after result={result}')
+
+result = linq.from(mm).where(fn(x) {
+    x % 2 == 0
+}).select(fn(x) {
+    x = x + 2
+}).last()
+println('after result={result}')
+
+let sortArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(sortArr).sort(fn(x,y){
+    return x > y
+})
+println('[1,2,3,4,5,6,7,8,9,10] sort(x>y)={result}')
+
+result = linq.from(sortArr).sort(fn(x,y){
+    return x < y
+})
+println('[1,2,3,4,5,6,7,8,9,10] sort(x<y)={result}')
+
+thenByDescendingArr = [
+    {"Owner" => "Google",    "Name" => "Chrome"},
+    {"Owner" => "Microsoft", "Name" => "Windows"},
+    {"Owner" => "Google",    "Name" => "GMail"},
+    {"Owner" => "Microsoft", "Name" => "VisualStudio"},
+    {"Owner" => "Google",    "Name" => "GMail"},
+    {"Owner" => "Microsoft", "Name" => "XBox"},
+    {"Owner" => "Google",    "Name" => "GMail"},
+    {"Owner" => "Google",    "Name" => "AppEngine"},
+    {"Owner" => "Intel",     "Name" => "ParallelStudio"},
+    {"Owner" => "Intel",     "Name" => "VTune"},
+    {"Owner" => "Microsoft", "Name" => "Office"},
+    {"Owner" => "Intel",     "Name" => "Edison"},
+    {"Owner" => "Google",    "Name" => "GMail"},
+    {"Owner" => "Microsoft", "Name" => "PowerShell"},
+    {"Owner" => "Google",    "Name" => "GMail"},
+    {"Owner" => "Google",    "Name" => "GDrive"}
+]
+
+result = linq.from(thenByDescendingArr).orderBy(fn(x) {
+    return x["Owner"]
+}).thenByDescending(fn(x){
+    return x["Name"]
+}).toOrderedSlice()    //Note: You need to use toOrderedSlice
+
+//use json.indent() for formatting the output
+let thenByDescendingArrStr = json.marshal(result)
+println(json.indent(thenByDescendingArrStr, "  "))
+
+//test 'selectManyByIndexed'
+println()
+let selectManyByIndexedArr1 = [[1, 2, 3], [4, 5, 6, 7]]
+result = linq.from(selectManyByIndexedArr1).selectManyByIndexed(
+fn(idx, x){
+    if idx == 0 { return linq.from([10, 20, 30]) }
+    return linq.from(x)
+}, fn(x,y){
+    return x + 1
+})
+println('[[1, 2, 3], [4, 5, 6, 7]] selectManyByIndexed() = {result}')
+
+let selectManyByIndexedArr2 = ["st", "ng"]
+result = linq.from(selectManyByIndexedArr2).selectManyByIndexed(
+fn(idx,x){
+    if idx == 0 { return linq.from(x + "r") }
+    return linq.from("i" + x)
+},fn(x,y){
+    return x + "_"
+})
+println('["st", "ng"] selectManyByIndexed() = {result}')
 
 ```
 

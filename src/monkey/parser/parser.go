@@ -981,7 +981,7 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken() //skip current token
 	}
-	p.nextToken()  //skip "}"
+	p.nextToken() //skip "}"
 
 	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
 

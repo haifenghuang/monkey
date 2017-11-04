@@ -174,11 +174,11 @@ func evalProgram(program *ast.Program, scope *Scope) (results Object) {
 				panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, s.Message))
 			}
 			return s
-//		case *ThrowValue:
-//			//convert ThrowValue to Errors
-//			throwObj := results.(*ThrowValue).Value
-//			throwObjStr := throwObj.(*String).String
-//			panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, throwObjStr))
+			//		case *ThrowValue:
+			//			//convert ThrowValue to Errors
+			//			throwObj := results.(*ThrowValue).Value
+			//			throwObjStr := throwObj.(*String).String
+			//			panic(NewError(statement.Pos().Sline(), THROWNOTHANDLED, throwObjStr))
 		}
 	}
 	if results == nil {
@@ -605,7 +605,7 @@ func evalThrowStatement(t *ast.ThrowStmt, scope *Scope) Object {
 	if strObj, ok = value.(*String); !ok {
 		panic(NewError(t.Pos().Sline(), THROWERROR))
 	}
-	return &Error{Kind: THROWNOTHANDLED, Message:strObj.String}
+	return &Error{Kind: THROWNOTHANDLED, Message: strObj.String}
 }
 
 // Booleans
@@ -1188,11 +1188,11 @@ func evalIfExpression(ie *ast.IfExpression, scope *Scope) Object {
 	//eval "if/else-if" part
 	for _, c := range ie.Conditions {
 		condition := Eval(c.Cond, scope)
-	if condition.Type() == ERROR_OBJ {
-		return condition
-	}
+		if condition.Type() == ERROR_OBJ {
+			return condition
+		}
 
-	if IsTrue(condition) {
+		if IsTrue(condition) {
 			return evalBlockStatements(c.Block.Statements, scope)
 		}
 	}
@@ -2273,7 +2273,7 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 		rvObj := rv
 		var rvObjStr string
 
-	if rv.Type() == ERROR_OBJ {
+		if rv.Type() == ERROR_OBJ {
 			rvObjStr = rv.(*Error).Message
 		} else if rv.Type() == NIL_OBJ {
 			rvObjStr = rv.(*Nil).OptionalMsg
@@ -2299,11 +2299,11 @@ func evalTryStatement(ts *ast.TryStmt, scope *Scope) Object {
 					catchSubScope.Set(cs.Var, rvObj) //put it to scope
 					cs.Var = rvObjStr
 				} else {
-				valStr, ok2 := val.(*String)
-				if !ok2 {
-					panic(NewError(cs.Pos().Sline(), THROWERROR))
-				}
-				cs.Var = valStr.String
+					valStr, ok2 := val.(*String)
+					if !ok2 {
+						panic(NewError(cs.Pos().Sline(), THROWERROR))
+					}
+					cs.Var = valStr.String
 				}
 			}
 
@@ -2486,9 +2486,9 @@ func equal(isWholeMatch bool, lhsV, rhsV Object) bool {
 }
 
 func isTryError(o Object) bool {
-	if o.Type() == ERROR_OBJ || 
-	   (o.Type() == NIL_OBJ && o.(*Nil).OptionalMsg != "") ||
-    (o.Type() == BOOLEAN_OBJ && o.(*Boolean).Bool == false && o.(*Boolean).OptionalMsg != "") {
+	if o.Type() == ERROR_OBJ ||
+		(o.Type() == NIL_OBJ && o.(*Nil).OptionalMsg != "") ||
+		(o.Type() == BOOLEAN_OBJ && o.(*Boolean).Bool == false && o.(*Boolean).OptionalMsg != "") {
 		return true
 	}
 	return false

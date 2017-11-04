@@ -68,7 +68,7 @@ func (a *Array) Len(line string, args ...Object) Object {
 }
 
 func (a *Array) Count(line string, args ...Object) Object {
-	if len(args) < 1 || len(args) > 1 {
+	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 	count := 0
@@ -78,8 +78,16 @@ func (a *Array) Count(line string, args ...Object) Object {
 			if c.Int64 == v.(*Integer).Int64 {
 				count++
 			}
+		case *Float:
+			if c.Float64 == v.(*Float).Float64 {
+				count++
+			}
 		case *String:
 			if c.String == v.(*String).String {
+				count++
+			}
+		case *Boolean:
+			if c.Bool == v.(*Boolean).Bool {
 				count++
 			}
 		default:

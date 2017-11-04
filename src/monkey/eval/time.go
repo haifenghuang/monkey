@@ -1,12 +1,12 @@
 package eval
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
 	"time"
-	"bytes"
 )
 
 //for strftime function, copied from 'https://github.com/billhathaway/strftime'
@@ -36,7 +36,6 @@ var conversions = map[byte]string{
 	'Z': "MST",         // timezone name or abbreviation
 	'%': "%",
 }
-
 
 const time_name = "time"
 

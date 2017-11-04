@@ -1,0 +1,1051 @@
+//test 'from'
+let fromArr = [1,2,3,4,5,6,7,8,9,10]
+lq = linq.from(fromArr)
+println('[1,2,3,4,5,6,7,8,9,10] from={lq}')
+
+
+
+//test 'range'
+println()
+result = linq.range(-2,5)
+println('range(-2,5) results={result}')
+
+
+
+
+//test 'repeat'
+println()
+result = linq.repeat([1,2],5)
+println('repeat([1,2],5) results={result}')
+
+result = linq.repeat(1,5)
+println('repeat(1,5) results={result}')
+
+result = linq.repeat("abc",5)
+println('repeat(abc,5) results={result}')
+
+
+
+//test 'where'
+println()
+let whereArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(whereArr).where(fn(x) {
+	x % 2 == 0
+})
+println('[1,2,3,4,5,6,7,8,9,10] where(x%2 == 0) = {result}')
+
+
+
+
+//test 'select'
+println()
+let selectArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(selectArr).select(fn(x) {
+    x = x + 2
+})
+println('[1,2,3,4,5,6,7,8,9,10] select(x=x+2)={result}')
+
+
+
+//test 'first'
+println()
+let firstArr1 = [1, 2, 2, 3, 1]
+result = linq.from(firstArr1).first()
+println('[1, 2, 2, 3, 1] first() = {result}')
+
+let firstArr2 = []
+result = linq.from(firstArr2).first()
+if result == nil {
+	println('[] first() = nil')
+} else {
+	println('[] first() failed')
+}
+
+
+
+//test 'firstWith'
+println()
+let firstWithArr1 = [1, 2, 2, 3, 1]
+result = linq.from(firstWithArr1).firstWith(fn(x) {
+	x > 2
+})
+println('[1, 2, 2, 3, 1] firstWith(x>2) = {result}')
+
+let firstWithArr2 = [1, 2, 2, 3, 1]
+result = linq.from(firstWithArr2).firstWith(fn(x) {
+	x > 5
+})
+if result == nil {
+	println('[1, 2, 2, 3, 1] firstWith(x>5) = nil')
+} else {
+	println('[1, 2, 2, 3, 1] firstWith(x>5) failed')
+}
+
+let firstWithArr3 = []
+result = linq.from(firstWithArr3).firstWith(fn(x){
+	x > 2
+})
+if result == nil {
+	println('[] firstWith(x>2) = nil')
+} else {
+	println('[] firstWith(x>2) failed')
+}
+
+
+
+
+//test 'last'
+println()
+let lastArr1 = [1, 2, 2, 3, 5]
+result = linq.from(lastArr1).last()
+println('[1, 2, 2, 3, 5] last() = {result}')
+
+let lastArr2 = []
+result = linq.from(lastArr2).last()
+if result == nil {
+	println('[] last() = nil')
+} else {
+	println('[] last() failed')
+}
+
+
+
+//test 'lastWith'
+println()
+let lastWithArr1 = [1, 2, 2, 3, 6]
+result = linq.from(lastWithArr1).lastWith(fn(x) {
+	x > 2
+})
+println('[1, 2, 2, 3, 6] lastWith(x>2) = {result}')
+
+let lastWithArr2 = [1, 2, 2, 3, 6]
+result = linq.from(lastWithArr2).lastWith(fn(x) {
+	x > 7
+})
+if result == nil {
+	println('[1, 2, 2, 3, 6] lastWith(x>7) = nil')
+} else {
+	println('[1, 2, 2, 3, 6] lastWith(x>7) failed')
+}
+
+let lastWithArr3 = []
+result = linq.from(lastWithArr3).lastWith(fn(x){
+	x > 2
+})
+if result == nil {
+	println('[] lastWith(x>2) = nil')
+} else {
+	println('[] lastWith(x>2) failed')
+}
+
+
+
+
+//test 'forEach'
+println()
+let foreachArr1 = [1, 2, 2, 35, 111]
+let foreachResultArr1=[]
+linq.from(foreachArr1).forEach(fn(x){
+	foreachResultArr1 += x * 2
+})
+println('[1, 2, 2, 35, 111] forEach(x * 2) = {foreachResultArr1}')
+
+let foreachArr2 = []
+let foreachResultArr2=[]
+linq.from(foreachArr2).forEach(fn(x){
+	foreachResultArr2 += x * 2
+})
+println('[] forEach(x * 2) = {foreachResultArr2}')
+
+
+
+
+//test 'forEachIndexed'
+println()
+let foreachIndexedArr1 = [1, 2, 2, 35, 111]
+let foreachIndexedResultArr1=[]
+linq.from(foreachIndexedArr1).forEachIndexed(fn(idx, x){
+	foreachIndexedResultArr1 += idx + x
+})
+println('[1, 2, 2, 35, 111] forEachIndexed(idx+x) = {foreachIndexedResultArr1}')
+
+let foreachIndexedArr2 = []
+let foreachIndexedResultArr2=[]
+linq.from(foreachIndexedArr2).forEach(fn(idx, x){
+	foreachIndexedResultArr2 += idx + x
+})
+println('[] forEachIndexed(x * 2) = {foreachIndexedResultArr2}')
+
+
+
+//test 'take'
+println()
+let takeArr1 = [1, 2, 2, 3, 1]
+result = linq.from(takeArr1).take(3)
+println('[1, 2, 2, 3, 1] take(3)={result}')
+
+let takeArr2 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(takeArr2).take(3)
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] take(3)={result}')
+
+let takeStr = "sstr"
+result = linq.from(takeStr).take(3)
+println('sstr take(3)={result}')
+
+
+
+//test 'takeWhile'
+println()
+let takeWhileArr1 = [1, 1, 1, 2, 1, 2]
+result = linq.from(takeWhileArr1).takeWhile(fn(x){
+	x < 3
+})
+println('[1, 1, 1, 2, 1, 2] takeWhile(x<3)={result}')
+
+let takeWhileArr2 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(takeWhileArr2).takeWhile(fn(x){
+	x < 3
+})
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] takeWhile(x<3)={result}')
+
+let takeWhileStr = "ssstr"
+result = linq.from(takeWhileStr).takeWhile(fn(x){
+	x == "s"
+})
+println('ssstr takeWhile(x==s) = {result}')
+
+
+
+
+//test 'takeWhileIndexed'
+println()
+let takeWhileIndexedArr1 = [1, 1, 1, 2]
+result = linq.from(takeWhileIndexedArr1).takeWhileIndexed(fn(idx, x){
+	x < 2 || idx < 5
+})
+println('[1, 1, 1, 2] takeWhileIndexed(x<2 || idx < 5)={result}')
+
+let takeWhileIndexedArr2 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(takeWhileIndexedArr2).takeWhileIndexed(fn(idx, x){
+	x < 2 || idx < 5
+})
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] takeWhileIndexed(x<2 || idx < 5)={result}')
+
+let takeWhileIndexedStr = "sstr"
+result = linq.from(takeWhileIndexedStr).takeWhileIndexed(fn(idx, x){
+	x == "s" && idx < 1
+})
+println('sstr takeWhileIndexed(x==s && idx < 1) = {result}')
+
+
+
+
+//test 'skip'
+println()
+let skipArr1 = [1, 2]
+result = linq.from(skipArr1).skip(3)
+println('[1,2] skip(3) = {result}')
+
+let skipArr2 = [1, 2, 2, 3, 1]
+result = linq.from(skipArr2).skip(3)
+println('[1, 2, 2, 3, 1] skip(3) = {result}')
+
+let skipStr = "sstr"
+result = linq.from(skipStr).skip(3)
+println('sstr skip(3) = {result}')
+
+
+
+
+//test 'skipWhile'
+println()
+let skipWhileArr1 = [1, 2]
+result = linq.from(skipWhileArr1).skipWhile(fn(x){
+	x < 3
+})
+println('[1, 2] skipWhile(x<3) = {result}')
+
+let skipWhileArr2 = [4, 1, 2]
+result = linq.from(skipWhileArr2).skipWhile(fn(x){
+	x < 3
+})
+println('[4, 1, 2] skipWhile(x<3) = {result}')
+
+let skipWhileArr3 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(skipWhileArr3).skipWhile(fn(x){
+	x < 3
+})
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] skipWhile(x<3) = {result}')
+
+let skipWhileStr = "sstr"
+result = linq.from(skipWhileStr).skipWhile(fn(x){
+	x == "s"
+})
+println('sstr skipWhile(x=="s") = {result}')
+
+
+
+
+//test 'skipWhileIndexed'
+println()
+let skipWhileIndexedArr1 = [1, 2]
+result = linq.from(skipWhileIndexedArr1).skipWhileIndexed(fn(idx, x){
+	x < 3
+})
+println('[1, 2] skipWhileIndexed(x<3) = {result}')
+
+let skipWhileIndexedArr2 = [4, 1, 2]
+result = linq.from(skipWhileIndexedArr2).skipWhileIndexed(fn(idx, x){
+	x < 3
+})
+println('[4, 1, 2] skipWhileIndexed(x<3) = {result}')
+
+let skipWhileIndexedArr3 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(skipWhileIndexedArr3).skipWhileIndexed(fn(idx, x){
+	x < 2 || idx < 5
+})
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] skipWhileIndexed(x<2 || idx < 5) = {result}')
+
+let skipWhileIndexedStr = "sstr"
+result = linq.from(skipWhileIndexedStr).skipWhileIndexed(fn(idx, x){
+	x == "s" && idx < 1
+})
+println('sstr skipWhileIndexed(x=="s" && i < 1) = {result}')
+
+
+
+
+//test 'groupBy'
+println()
+let groupByArr1 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+result = linq.from(groupByArr1).groupBy(
+	fn(v) { return v % 2 == 0 },
+	fn(v) { return v }
+)
+println('groupBy result={result}')
+
+wantEven = [2, 4, 6, 8]
+wantOdd  = [1, 3, 5, 7, 9]
+
+eq = true
+for i in result.toSlice() { //convert it to an array
+	if i.key() == true {
+		eq = (i.value() == wantEven)
+	} else {
+		eq = (i.value() == wantOdd)
+	}
+}
+
+if !eq {
+	println("groupBy 1 failed")
+} else {
+	println("groupBy 1 succeeded")
+}
+
+
+groupByArr2 = [
+	{"Owner" => "Google",    "Name" => "Chrome"},
+	{"Owner" => "Microsoft", "Name" => "Windows"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "XBox"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "AppEngine"},
+	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
+	{"Owner" => "Intel",     "Name" => "VTune"},
+	{"Owner" => "Microsoft", "Name" => "Office"},
+	{"Owner" => "Intel",     "Name" => "Edison"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "PowerShell"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "GDrive"}
+]
+result = linq.from(groupByArr2).groupBy(
+	fn(v) { return v["Owner"] },
+	fn(v) { return v["Name"] }
+)
+println('groupBy 2 result={result}')
+println()
+println()
+for i in result.toSlice() { //convert it to an array
+	if i.key() == "Google" {
+		println("Google: ", i.value()[0])
+	} elseif i.key() == "Intel" {
+		println("intel: ", i.value()[0])
+	} else {
+		println("Microsoft: ", i.value()[0])
+	}
+} 
+
+//test 'join'
+println()
+
+let joinOwnerArr = [
+	{"Name"=>"Hedlund, Magnus"},
+	{"Name"=>"Adams, Terry"},
+	{"Name"=>"Weiss, Charlotte"}
+]
+
+let joinPetsArr = [
+	{"Name" => "Barley",   "Age" => 8, "Owner" => joinOwnerArr[1]},
+	{"Name" => "Boots",    "Age" => 4, "Owner" => joinOwnerArr[1]},
+	{"Name" => "Whiskers", "Age" => 1, "Owner" => joinOwnerArr[2]},
+	{"Name" => "Daisy",    "Age" => 4, "Owner" => joinOwnerArr[0]}
+]
+
+result = linq.from(joinOwnerArr).join(linq.from(joinPetsArr),
+	fn(v) { return v["Name"] },
+	fn(v) { return v["Owner"]["Name"] },
+	fn(v1, v2) {
+		return fmt.sprintf("{%s - %s}", v1["Name"], v2["Name"])
+	}
+)
+//OUTPUT:["{Hedlund, Magnus - Daisy}", "{Adams, Terry - Barley}", "{Adams, Terry - Boots}", "{Weiss, Charlotte - Whiskers}"]
+println('join result={result}')
+
+
+
+
+//test 'zip'
+println()
+let zipArr1 = [1, 2, 3]
+let zipArr2 = [2, 4, 5, 1]
+result = linq.from(zipArr1).zip(linq.from(zipArr2), fn(x,y){
+   x + y
+})
+println('[1,2,3] zip([2,4,5,1], x+y) = {result}')
+
+
+
+
+//test 'union'
+println()
+let unionArr1 = [1, 2, 3]
+let unionArr2 = [2, 4, 5, 1,6]
+result = linq.from(unionArr1).union(linq.from(unionArr2))
+println('[1,2,3] union([2, 4, 5, 1, 6]) = {result}')
+
+
+
+
+//test 'selectMany'
+println()
+let selectManyArr1 = [[1, 2, 3], [4, 5, 6, 7]]
+result = linq.from(selectManyArr1).selectMany(fn(x){
+	return linq.from(x)
+})
+println('[[1, 2, 3], [4, 5, 6, 7]] selectMany() = {result}')
+
+let selectManyArr2 = ["str", "ing"]
+result = linq.from(selectManyArr2).selectMany(fn(x){
+	return linq.from(x)
+})
+println('["str", "ing"] selectMany() = {result}')
+
+
+
+
+//test 'selectManyIndexed'
+println()
+let selectManyIndexedArr1 = [[1, 2, 3], [4, 5, 6, 7]]
+result = linq.from(selectManyIndexedArr1).selectManyIndexed(fn(idx, x){
+	if idx > 0 { return linq.from(x[1:]) }
+	return linq.from(x)
+})
+println('[[1, 2, 3], [4, 5, 6, 7]] selectManyIndexed() = {result}')
+
+let selectManyIndexedArr2 = ["str", "ing"]
+result = linq.from(selectManyIndexedArr2).selectManyIndexed(fn(idx, x){
+	return linq.from(x + str(idx))
+})
+println('["str", "ing"] selectManyIndexed() = {result}')
+
+
+
+
+
+//test 'selectManyBy'
+println()
+let selectManyByArr1 = [[1, 2, 3], [4, 5, 6, 7]]
+result = linq.from(selectManyByArr1).selectManyBy(
+fn(x){
+	return linq.from(x)
+}, fn(x,y){
+	return x + 1
+})
+println('[[1, 2, 3], [4, 5, 6, 7]] selectManyBy() = {result}')
+
+let selectManyByArr2 = ["str", "ing"]
+result = linq.from(selectManyByArr2).selectManyBy(
+fn(x){
+	return linq.from(x)
+},fn(x,y){
+	return x + "_"
+})
+println('["str", "ing"] selectManyBy() = {result}')
+
+
+
+
+//test 'selectManyByIndexed'
+println()
+let selectManyByIndexedArr1 = [[1, 2, 3], [4, 5, 6, 7]]
+result = linq.from(selectManyByIndexedArr1).selectManyByIndexed(
+fn(idx, x){
+	if idx == 0 { return linq.from([10, 20, 30]) }
+	return linq.from(x)
+}, fn(x,y){
+	return x + 1
+})
+println('[[1, 2, 3], [4, 5, 6, 7]] selectManyByIndexed() = {result}')
+
+let selectManyByIndexedArr2 = ["st", "ng"]
+result = linq.from(selectManyByIndexedArr2).selectManyByIndexed(
+fn(idx,x){
+	if idx == 0 { return linq.from(x + "r") }
+	return linq.from("i" + x)
+},fn(x,y){
+	return x + "_"
+})
+println('["st", "ng"] selectManyByIndexed() = {result}')
+
+
+
+//test 'reverse'
+println()
+let srcArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(srcArr).reverse()
+println('[1,2,3,4,5,6,7,8,9,10] reverse={result}')
+
+
+
+//test 'except'
+println()
+let exceptArr1 = [1, 2, 3, 4, 5, 1, 2, 5]
+let exceptArr2 = [1,2]
+result = linq.from(exceptArr1).except(linq.from(exceptArr2))
+println('[1, 2, 3, 4, 5, 1, 2, 5] except([1,2]) = {result}')
+
+
+
+//test 'exceptBy'
+println()
+let exceptByArr1 = [1, 2, 3, 4, 5, 1, 2, 5]
+let exceptByArr2 = [1]
+result = linq.from(exceptByArr1).exceptBy(linq.from(exceptByArr2), fn(x) {
+    x % 2 == 0
+})
+println('[1, 2, 3, 4, 5, 1, 2, 5] exceptBy([1], x % 2 = 0) = {result}')
+
+
+
+//test 'append'
+println()
+let appendArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(appendArr).append(11)
+println('[1,2,3,4,5,6,7,8,9,10] append(11)={result}')
+
+
+
+//test 'concat'
+println()
+let concatArrSrc = [1,2,3,4,5,6,7,8,9,10]
+let concatArrDest = [11,12,13]
+result = linq.from(concatArrSrc).concat(linq.from(concatArrDest))
+println('[1,2,3,4,5,6,7,8,9,10] contact([11,12,13])={result}')
+
+
+
+//test 'prepend'
+println()
+let prependArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(prependArr).prepend(-1)
+println('[1,2,3,4,5,6,7,8,9,10] prepend(-1)={result}')
+
+
+
+//test 'distinct'
+println()
+let distinctArr1 = [1, 2, 2, 3, 1]
+result = linq.from(distinctArr1).distinct()
+println('[1, 2, 2, 3, 1] distinct()={result}')
+
+let distinctArr2 = [1, 1, 1, 2, 1, 2, 3, 4, 2]
+result = linq.from(distinctArr2).distinct()
+println('[1, 1, 1, 2, 1, 2, 3, 4, 2] distinct()={result}')
+
+let distinctStr = "sstr"
+result = linq.from(distinctStr).distinct()
+println('"sstr" distinct()={result}')
+
+
+
+
+
+//test 'distinctBy'
+println()
+let distinctByArr = ["Foo", "Bar", "Foo", "Foo"]
+result = linq.from(distinctByArr).distinctBy(fn(x) {
+	x == "Foo"
+})
+println('["Foo", "Bar", "Foo"] distinctBy("Foo")={result}')
+
+
+
+//test 'intersect'
+println()
+let intersectArr1 = [1, 2, 3]
+let intersectArr2 = [1, 4, 7, 9, 12, 3]
+result = linq.from(intersectArr1).intersect(linq.from(intersectArr2))
+println('[1, 2, 3] intersect [1, 4, 7, 9, 12, 3] = {result}')
+
+
+//test 'intersectBy'
+println()
+let intersectByArr1 = [5, 7, 8]
+let intersectByArr2 = [1, 4, 7, 9, 12, 3]
+result = linq.from(intersectByArr1).intersectBy(linq.from(intersectByArr2), fn(x){
+	return x % 2 == 0
+})
+println('[5, 7, 8] intersectBy(x % 2 == 0) [1, 4, 7, 9, 12, 3] = {result}')
+
+
+//test 'aggregate'
+println()
+let aggregateArr1 = ["apple", "mango", "orange", "passionfruit", "grape"]
+result = linq.from(aggregateArr1).aggregate(fn(r,i){
+	if (len(r) > len(i)) { return r }
+	else { return i }
+})
+println('["apple", "mango", "orange", "passionfruit", "grape"] aggregate() = {result}')
+
+let aggregateArr2 = []
+result = linq.from(aggregateArr2).aggregate(fn(r,i){
+	if (len(r) > len(i)) { return r }
+	else { return i }
+})
+println('[] aggregate() = {result}')
+
+
+
+
+//test 'aggregateWithSeed'
+println()
+let aggregateWithSeedArr1 = ["apple", "mango", "orange", "banana", "grape"]
+result = linq.from(aggregateWithSeedArr1).aggregateWithSeed("passionfruit", fn(r,i){
+	if (len(r) > len(i)) { return r }
+	else { return i }
+})
+println('["apple", "mango", "orange", "banana", "grape"] aggregateWithSeed("passionfruit") = {result}')
+
+
+
+
+//test 'aggregateWithSeedBy'
+println()
+let aggregateWithSeedByArr = ["apple", "mango", "orange", "passionfruit", "grape"]
+result = linq.from(aggregateWithSeedByArr).aggregateWithSeedBy("banana", 
+fn(r,i){
+	if (len(r) > len(i)) { return r }
+	else { return i }
+},
+fn(r){
+	return strings.upper(r)
+})
+println('["apple", "mango", "orange", "passionfruit", "grape"] aggregateWithSeedBy("banana") = {result}')
+
+
+
+
+//test 'all'
+println()
+let allArray = [2,4,6,8,10]
+result = linq.from(allArray).all(fn(x) {
+	x % 2 == 0
+})
+if result {
+	println("All element of [2,4,6,8,10] could be divided by two")
+} else {
+	println("linq.all() function failed")
+}
+
+
+//test 'any'
+println()
+let anyArray1 = [2,4,6,8,10]
+let anyArray2 = []
+result = linq.from(anyArray1).any()
+if result {
+	println("[2,4,8,10], any() returns true")
+} else {
+	println("linq.any() function failed")
+}
+
+result = linq.from(anyArray2).any()
+if result {
+	println("[], any() returns true")
+} else {
+	println("[], any() function returns false")
+}
+
+
+
+//test 'anyWith'
+println()
+let anyWithArray = [2,4,6,8,10]
+result = linq.from(anyWithArray).anyWith(fn(x){
+	x == 4
+})
+if result {
+	println("[2,4,6,8,10], anyWith(x==4) returns true")
+} else {
+	println("[2,4,6,8,10], anyWith(x==4) returns false")
+}
+
+
+
+//test 'contains'
+println()
+let containsArray = [2.0, 4.5, 6, 8, 8.9, 10.2]
+result = linq.from(containsArray).contains(4.5)
+if result {
+	println("[2.0, 4.5, 6, 8, 8.9, 10.2], contains(4.5) returns true")
+} else {
+	println("[2.0, 4.5, 6, 8, 8.9, 10.2], contains(4.5) returns false")
+}
+
+
+
+//test 'count'
+println()
+let countArray1 = [2.0, 4.5, 6, 8, 8.9, 10.2]
+result = linq.from(countArray1).count()
+if result == 6  {
+	println("[2.0, 4.5, 6, 8, 8.9, 10.2], count() returns 6")
+} else {
+	println("[2.0, 4.5, 6, 8, 8.9, 10.2], count() failed")
+}
+
+let countArray2 = []
+result = linq.from(countArray2).count()
+if result == 0  {
+	println("[], count() returns 0")
+} else {
+	println("[], count() failed")
+}
+
+
+
+//test 'countWith'
+println()
+let countWithArray1 = [1, 2, 2, 3, 1]
+result = linq.from(countWithArray1).countWith(fn(x){
+	x <= 2
+})
+if result == 4  {
+	println("[1, 2, 2, 3, 1], countWith(x<=2) returns 4")
+} else {
+	println("[1, 2, 2, 3, 1], countWith(x<=2) failed")
+} 
+
+let countWithArray2 = []
+result = linq.from(countWithArray2).countWith(fn(x){
+	x <= 2
+})
+if result == 0  {
+	println("[], countWith(x<=2) returns 0")
+} else {
+	println("[], countWith(x<=2) failed")
+}
+
+
+
+//test 'sequenceEqual'
+println()
+let se1=[1, 2, 2, 3, 1], se11=[4,6]
+let se2=[1, -1, 100], se22=[1, -1, 100]
+let se3=[], se33=[]
+result = linq.from(se1).sequenceEqual(linq.from(se11))
+if result {
+	println("[1, 2, 2, 3, 1] sequenceEqual([4,6]) returns true")
+} else {
+	println("[1, 2, 2, 3, 1] sequenceEqual([4,6]) returns false")
+}
+
+result = linq.from(se2).sequenceEqual(linq.from(se22))
+if result {
+	println("[1, -1, 100] sequenceEqual([1, -1, 100]) returns true")
+} else {
+	println("[1, -1, 100] sequenceEqual([1, -1, 100]) returns false")
+}
+
+result = linq.from(se3).sequenceEqual(linq.from(se33))
+if result {
+	println("[] sequenceEqual([]) returns true")
+} else {
+	println("[] sequenceEqual([]) returns false")
+}
+
+
+
+//test 'single'
+println()
+let singleArr1 = [1, 2, 2, 3, 1]
+result = linq.from(singleArr1).single()
+if result == nil {
+	println("[1, 2, 2, 3, 1] single() returns nil")
+} else {
+	println("[1, 2, 2, 3, 1] single() failed")
+}
+
+let singleArr2 = [1]
+result = linq.from(singleArr2).single()
+if result == 1 {
+	println("[1] single() returns 1")
+} else {
+	println("[1] single() failed")
+}
+
+let singleArr3 = []
+result = linq.from(singleArr3).single()
+if result == nil {
+	println("[] single() returns nil")
+} else {
+	println("[] single() failed")
+}
+
+
+
+
+//test 'singleWith'
+println()
+let swArr1 = [1, 2, 2, 3, 1]
+result = linq.from(swArr1).singleWith(fn(x) {
+	x > 2
+})
+if result == 3 {
+	println("[1, 2, 2, 3, 1] singleWith(i>2) returns 3")
+} else {
+	println("[1, 2, 2, 3, 1] singleWith(i>2) failed")
+}
+
+let swArr2 = [1, 1, 1]
+result = linq.from(swArr2).singleWith(fn(x) {
+	x > 2
+})
+if result == nil {
+	println("[1, 1, 1] singleWith(i>2) returns nil")
+} else {
+	println("[1, 1, 1] singleWith(i>2) failed")
+}
+
+let swArr3 = [5, 1, 1, 10, 2, 2]
+result = linq.from(swArr3).singleWith(fn(x) {
+	x > 2
+})
+if result == nil {
+	println("[5, 1, 1, 10, 2, 2] singleWith(i>2) returns nil")
+} else {
+	println("[5, 1, 1, 10, 2, 2] singleWith(i>2) failed")
+}
+
+let swArr4 = []
+result = linq.from(swArr4).singleWith(fn(x) {
+	x > 2
+})
+if result == nil {
+	println("[] singleWith(i>2) returns nil")
+} else {
+	println("[] singleWith(i>2) failed")
+}
+
+
+
+//test 'toSlice'
+println()
+let sliceArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(sliceArr).toSlice()
+println('[1,2,3,4,5,6,7,8,9,10] toSlice={result}')
+
+
+
+//test 'sumInts'
+println()
+let sumArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(sumArr).sumInts()
+println('[1,2,3,4,5,6,7,8,9,10] sumInts()={result}')
+
+
+//test 'sumFloats'
+println()
+let farr1 = [1., 2., 2., 3., 1.]
+result = linq.from(farr1).sumFloats()
+println("[1., 2., 2., 3., 1.] sumFloats() returns", result)
+
+let farr2 = [1.]
+result = linq.from(farr2).sumFloats()
+println("[1.] sumFloats() returns", result)
+
+let farr3 = []
+result = linq.from(farr3).sumFloats()
+println("[] sumFloats() returns", result)
+
+
+
+//test 'min'
+println()
+let minArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(minArr).min()
+println('[1,2,3,4,5,6,7,8,9,10] min()={result}')
+
+let minArr = []
+result = linq.from(minArr).min()
+println('[] min={result}')
+
+
+
+//test 'max'
+println()
+let maxArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(maxArr).max()
+println('[1,2,3,4,5,6,7,8,9,10] max()={result}')
+
+let maxArr = []
+result = linq.from(maxArr).max()
+println('[] max={result}')
+
+
+
+//test 'average'
+println()
+let reveseArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(reveseArr).average()
+println('[1,2,3,4,5,6,7,8,9,10] average={result}')
+
+
+//test 'orderBy'
+println()
+orderbyArr = [10,9,8,7,6,5,4,3,2,1,0]
+result = linq.from(orderbyArr).orderBy(fn(x) { 
+	return x
+}).toOrderedSlice()  //Note: You need to use toOrderedSlice
+println('orderBy([10,9,8,7,6,5,4,3,2,1,0])={result}')
+
+
+
+
+//test 'orderByDescending'
+println()
+orderByDescendingArr = [0,1,2,3,4,5,6,7,8,9,10]
+result = linq.from(orderByDescendingArr).orderByDescending(fn(x) { 
+	return x
+}).toOrderedSlice()  //Note: You need to use toOrderedSlice
+println('orderByDescending([0,1,2,3,4,5,6,7,8,9,10])={result}')
+
+
+
+//test 'thenBy'
+println()
+thenByArr = [
+	{"Owner" => "Google",    "Name" => "Chrome"},
+	{"Owner" => "Microsoft", "Name" => "Windows"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "XBox"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "AppEngine"},
+	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
+	{"Owner" => "Intel",     "Name" => "VTune"},
+	{"Owner" => "Microsoft", "Name" => "Office"},
+	{"Owner" => "Intel",     "Name" => "Edison"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "PowerShell"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "GDrive"}
+]
+
+result = linq.from(thenByArr).orderBy(fn(x) {
+	return x["Owner"]
+}).thenBy(fn(x){
+	return x["Name"]
+}).toOrderedSlice()   //Note: You need to use toOrderedSlice
+
+//use json.indent() for formatting the output
+let thenByArrStr = json.marshal(result)
+println(json.indent(thenByArrStr, "  "))
+//println('thenBy result={result}')
+
+
+
+//test 'thenByDescending'
+println()
+thenByDescendingArr = [
+	{"Owner" => "Google",    "Name" => "Chrome"},
+	{"Owner" => "Microsoft", "Name" => "Windows"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "XBox"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "AppEngine"},
+	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
+	{"Owner" => "Intel",     "Name" => "VTune"},
+	{"Owner" => "Microsoft", "Name" => "Office"},
+	{"Owner" => "Intel",     "Name" => "Edison"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Microsoft", "Name" => "PowerShell"},
+	{"Owner" => "Google",    "Name" => "GMail"},
+	{"Owner" => "Google",    "Name" => "GDrive"}
+]
+
+result = linq.from(thenByDescendingArr).orderBy(fn(x) {
+	return x["Owner"]
+}).thenByDescending(fn(x){
+	return x["Name"]
+}).toOrderedSlice()    //Note: You need to use toOrderedSlice
+
+//use json.indent() for formatting the output
+let thenByDescendingArrStr = json.marshal(result)
+println(json.indent(thenByDescendingArrStr, "  "))
+//println('thenByDescendingArr result={result}')
+
+
+//test 'sort'
+println()
+let sortArr = [1,2,3,4,5,6,7,8,9,10]
+result = linq.from(sortArr).sort(fn(x,y){
+	return x > y
+})
+println('[1,2,3,4,5,6,7,8,9,10] sort(x>y)={result}')
+
+result = linq.from(sortArr).sort(fn(x,y){
+	return x < y
+})
+println('[1,2,3,4,5,6,7,8,9,10] sort(x<y)={result}')
+
+
+
+
+//test 'toMap'
+println()
+aMap = {}
+aMap += {1 => true}
+aMap += {2 => false}
+aMap += {3 => true}
+result = linq.from(aMap).toMap(
+fn(x) {
+	return x.key()
+},
+fn(x) {
+	return x.value()
+})
+println('toMap() result={result}')
+
+if aMap == result {
+	println("toMap() result, aMap == result")
+} else {
+	println("toMap() result, aMap != result")
+}
+

@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"container/list"
 	"database/sql"
 	"fmt"
 	"io"
@@ -876,6 +877,34 @@ func newLoggerBuiltin() *Builtin {
 	}
 }
 
+func newListBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) != 0 {
+				panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+			}
+
+			return &ListObject{List: list.New()}
+		},
+	}
+}
+
+func newDeepEqualBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) != 2 {
+				panic(NewError(line, ARGUMENTERROR, "2", len(args)))
+			}
+
+			r := reflect.DeepEqual(args[0], args[1])
+			if r {
+				return TRUE
+			}
+			return FALSE
+		},
+	}
+}
+
 func RegisterBuiltin(name string, f *Builtin) {
 	builtins[strings.ToLower(name)] = f
 }
@@ -927,5 +956,11 @@ func init() {
 
 		//Logger
 		"newLogger": newLoggerBuiltin(),
+
+		//container
+		"newList": newListBuiltin(),
+
+		//deepEqual
+		"deepEqual": newDeepEqualBuiltin(),
 	}
 }

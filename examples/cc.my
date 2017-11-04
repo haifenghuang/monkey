@@ -51,3 +51,4 @@ fmt.printf("newArr=%v\n", newArr)
 for ij in range(6,2) {
     println('ij = {ij}')
 }
+
