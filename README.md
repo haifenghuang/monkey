@@ -172,15 +172,6 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * yield #not used
 * qw
 
-Note:
-
-* `where` in expression `for xxx in where` is a reserved keyword, but in other part,
-   you could use `where` as a variable, or function name, etc. But it is not recomented.
-* `in` in expression `for xxx in`, `case xxx in` is a reserved keyword, but in other part,
-   you could use `in` as a variable, or function name, etc. But it is not recomented.
-* `is` in expression `case xxx is` is a reserved keyword, but in other part,
-   you could use `is` as a variable, or function name, etc. But it is not recomented.
-
 ### Type conversion
 
 You can use the builtin `int()`, `float()`, `str()`, `array()` functions for type conversion.
