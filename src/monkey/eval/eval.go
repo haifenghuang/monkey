@@ -847,6 +847,11 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 		if left.Type() == NIL_OBJ && right.Type() == NIL_OBJ { //(s == nil) should return true if s is nil
 			return TRUE
 		}
+
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
 		return nativeBoolToBooleanObject(left == right)
 	case node.Operator == "!=":
 		if left.Type() == BOOLEAN_OBJ && right.Type() == BOOLEAN_OBJ {
@@ -1028,8 +1033,14 @@ func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Obj
 			return TRUE
 		}
 	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
 		return nativeBoolToBooleanObject(l.String == r.String)
 	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
 		return nativeBoolToBooleanObject(l.String != r.String)
 	case "+":
 		return NewString(l.String + r.String)
@@ -1095,6 +1106,10 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 
 	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
 		if left.Type() != ARRAY_OBJ || right.Type() != ARRAY_OBJ {
 			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 		}
@@ -1113,6 +1128,10 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 		return TRUE
 	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
+
 		if left.Type() != ARRAY_OBJ || right.Type() != ARRAY_OBJ {
 			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 		}
@@ -1145,8 +1164,14 @@ func evalHashInfixExpression(node *ast.InfixExpression, left Object, right Objec
 
 		return &Hash{Pairs: leftVals}
 	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
 		return nativeBoolToBooleanObject(compareHashObj(leftVals, rightVals))
 	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
 		return nativeBoolToBooleanObject(!compareHashObj(leftVals, rightVals))
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))

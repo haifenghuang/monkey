@@ -653,7 +653,7 @@ func NewStringsObj() Object {
 type StringsObj struct{}
 
 func (s *StringsObj) Inspect() string  { return strings_name }
-func (s *StringsObj) Type() ObjectType { return "STDLIB_STRINGS_OBJ" }
+func (s *StringsObj) Type() ObjectType { return "STRINGS_OBJ" }
 func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 
 	switch method {

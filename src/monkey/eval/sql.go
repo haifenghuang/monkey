@@ -25,7 +25,7 @@ type SqlsObject struct {
 }
 
 func (s *SqlsObject) Inspect() string  { return sql_name }
-func (s *SqlsObject) Type() ObjectType { return "STDLIB_SQLS_OBJ" }
+func (s *SqlsObject) Type() ObjectType { return "SQL_OBJ" }
 func (s *SqlsObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	panic(NewError(line, NOMETHODERROR, method, s.Type()))
 }

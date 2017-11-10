@@ -106,7 +106,7 @@ func NewHTTPObj() Object {
 }
 
 func (h *HttpObj) Inspect() string  { return http_name }
-func (h *HttpObj) Type() ObjectType { return "STDLIB_HTTP_OBJ" }
+func (h *HttpObj) Type() ObjectType { return "HTTP_OBJ" }
 
 func (h *HttpObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

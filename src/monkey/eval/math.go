@@ -37,7 +37,7 @@ func NewMathObj() Object {
 }
 
 func (m *Math) Inspect() string  { return math_name }
-func (m *Math) Type() ObjectType { return "STDLIB_MATH_OBJ" }
+func (m *Math) Type() ObjectType { return "MATH_OBJ" }
 
 func (m *Math) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

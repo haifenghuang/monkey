@@ -72,7 +72,7 @@ func (t *TimeObj) Inspect() string {
 	return v.(*String).String
 }
 
-func (t *TimeObj) Type() ObjectType { return "STDLIB_TIME_OBJ" }
+func (t *TimeObj) Type() ObjectType { return "TIME_OBJ" }
 
 func (t *TimeObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

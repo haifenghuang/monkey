@@ -29,7 +29,7 @@ func NewNetObj() Object {
 }
 
 func (n *NetObj) Inspect() string  { return net_name }
-func (n *NetObj) Type() ObjectType { return "STDLIB_NET_OBJ" }
+func (n *NetObj) Type() ObjectType { return "NET_OBJ" }
 
 func (n *NetObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

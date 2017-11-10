@@ -20,17 +20,21 @@ func NewIOUtilObj() Object {
 }
 
 func (i *IOUtilObj) Inspect() string  { return ioutil_name }
-func (i *IOUtilObj) Type() ObjectType { return "STDLIB_IOUTIL_OBJ" }
+func (i *IOUtilObj) Type() ObjectType { return "IOUTIL_OBJ" }
 func (i *IOUtilObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
 	case "readAll":
 		return i.ReadAll(line, args...)
 	case "readDir":
 		return i.ReadDir(line, args...)
+	case "readFile":
+		return i.ReadFile(line, args...)
 	case "tempDir":
 		return i.TempDir(line, args...)
 	case "tempFile":
 		return i.TempFile(line, args...)
+	case "writeFile":
+		return i.WriteFile(line, args...)
 	default:
 		panic(NewError(line, NOMETHODERROR, method, i.Type()))
 	}

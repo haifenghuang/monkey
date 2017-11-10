@@ -3,6 +3,7 @@ package eval
 import (
 	"container/list"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"log"
@@ -905,6 +906,47 @@ func newDeepEqualBuiltin() *Builtin {
 	}
 }
 
+func newCsvReaderBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			argLen := len(args)
+			if argLen != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", argLen))
+			}
+
+			fname, ok := args[0].(*String)
+			if !ok {
+				panic(NewError(line, PARAMTYPEERROR, "first", "newCsv", "*String", args[0].Type()))
+			}
+
+			f, err := os.Open(fname.String)
+			if err != nil {
+				return NewNil(err.Error())
+			}
+
+			return &CsvObj{Reader: csv.NewReader(f)}
+		},
+	}
+}
+
+func newCsvWriterBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			argLen := len(args)
+			if argLen != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", argLen))
+			}
+
+			writer, ok := args[0].(Writable)
+			if !ok {
+				panic(NewError(line, PARAMTYPEERROR, "first", "newCsvWriterBuiltin", "Writable", args[0].Type()))
+			}
+
+			return &CsvObj{Writer: csv.NewWriter(writer.IOWriter())}
+		},
+	}
+}
+
 func RegisterBuiltin(name string, f *Builtin) {
 	builtins[strings.ToLower(name)] = f
 }
@@ -962,5 +1004,9 @@ func init() {
 
 		//deepEqual
 		"deepEqual": newDeepEqualBuiltin(),
+
+		//csv
+		"newCsvReader": newCsvReaderBuiltin(),
+		"newCsvWriter": newCsvWriterBuiltin(),
 	}
 }

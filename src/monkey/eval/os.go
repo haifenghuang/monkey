@@ -52,7 +52,7 @@ func NewOsObj() Object {
 }
 
 func (o *Os) Inspect() string  { return os_name }
-func (o *Os) Type() ObjectType { return "STDLIB_OS_OBJ" }
+func (o *Os) Type() ObjectType { return "OS_OBJ" }
 
 func (o *Os) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

@@ -17,7 +17,7 @@ type FmtObj struct {
 }
 
 func (f *FmtObj) Inspect() string  { return fmt_name }
-func (f *FmtObj) Type() ObjectType { return "STDLIB_FMT_OBJ" }
+func (f *FmtObj) Type() ObjectType { return "FMT_OBJ" }
 
 func (f *FmtObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

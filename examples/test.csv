@@ -1,0 +1,5 @@
+first_name;last_name;username
+"Rob";"Pike";rob
+# lines beginning with a # character are ignored
+Ken;Thompson;ken
+"Robert";"Griesemer";"gri"

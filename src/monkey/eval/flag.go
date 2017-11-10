@@ -19,7 +19,7 @@ type FlagObj struct {
 }
 
 func (f *FlagObj) Inspect() string  { return flag_name }
-func (f *FlagObj) Type() ObjectType { return "STDLIB_FLAG_OBJ" }
+func (f *FlagObj) Type() ObjectType { return "FLAG_OBJ" }
 
 func (f *FlagObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

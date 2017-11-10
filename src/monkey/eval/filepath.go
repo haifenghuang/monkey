@@ -23,7 +23,7 @@ const filepath_name = "filepath"
 type FilePathObj struct{}
 
 func (f *FilePathObj) Inspect() string  { return filepath_name }
-func (f *FilePathObj) Type() ObjectType { return "STDLIB_FILEPATH_OBJ" }
+func (f *FilePathObj) Type() ObjectType { return "FILEPATH_OBJ" }
 
 func (f *FilePathObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

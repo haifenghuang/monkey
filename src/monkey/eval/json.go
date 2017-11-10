@@ -20,7 +20,7 @@ func NewJsonObj() Object {
 }
 
 func (j *Json) Inspect() string  { return json_name }
-func (j *Json) Type() ObjectType { return "STDLIB_JSON_OBJ" }
+func (j *Json) Type() ObjectType { return "JSON_OBJ" }
 
 func (j *Json) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
