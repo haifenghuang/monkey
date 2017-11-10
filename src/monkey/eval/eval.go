@@ -7,6 +7,7 @@ import (
 	"monkey/ast"
 	"os"
 	"path"
+	"reflect"
 	"regexp"
 	"runtime"
 	"runtime/debug"
@@ -2459,27 +2460,28 @@ func equal(isWholeMatch bool, lhsV, rhsV Object) bool {
 		}
 	}
 
-	if lhsV.Type() == INTEGER_OBJ && rhsV.Type() == INTEGER_OBJ { // both integer
-		leftObj := lhsV.(*Integer)
-		rightObj := rhsV.(*Integer)
-		return leftObj.Int64 == rightObj.Int64
-	}
-
 	if lhsV.Type() == STRING_OBJ && rhsV.Type() == STRING_OBJ {
 		leftStr := lhsV.(*String).String
 		rightStr := rhsV.(*String).String
 
-		leftLen := len(leftStr)
-		rightLen := len(rightStr)
 		if isWholeMatch {
-			if leftLen != rightLen {
+			r := reflect.DeepEqual(lhsV, rhsV)
+			if r {
+				return true
+			} else {
 				return false
 			}
-			return leftStr == rightStr
+		} else {
+			matched, _ := regexp.MatchString(rightStr, leftStr)
+			return matched
 		}
-
-		matched, _ := regexp.MatchString(rightStr, leftStr)
-		return matched
+	} else {
+		r := reflect.DeepEqual(lhsV, rhsV)
+		if r {
+			return true
+		} else {
+			return false
+		}
 	}
 
 	return false

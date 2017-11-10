@@ -239,6 +239,7 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ```swift
 // if-else
+let a= 10, b = 5
 if (a > b) { // '()' is optional, but '{}' is a must
     println("a > b")
 }
@@ -355,6 +356,16 @@ case testStr in { // in(exact/partial match), is(only exact match)
     `\d+`        { println("testStr contains digit") }
     else         { println("testStr not matched") }
 }
+
+let i = [{"a"=>1, "b"=>2}, 10]
+let x = [{"a"=>1, "b"=>2},10]
+case i in {
+	1, 2 { println("i matched 1, 2") }
+	3    { println("i matched 3") }
+	x    { println("i matched x") }
+	else { println("i not matched anything")}
+}
+
 ```
 
 ## Standard input/output/error
