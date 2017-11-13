@@ -646,7 +646,7 @@ func evalRegExLiteral(re *ast.RegExLiteral) Object {
 		panic(NewError(re.Pos().Sline(), INVALIDARG))
 	}
 
-	return &RegEx{RegExpression: regExpression, Value: re.Value}
+	return &RegEx{RegExp: regExpression, Value: re.Value}
 }
 
 func evalIdentifier(i *ast.Identifier, scope *Scope) Object {
@@ -1022,16 +1022,16 @@ func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		matched, _ := regexp.MatchString(r.String, l.String)
 		if matched {
 			return TRUE
-		} else {
-			return FALSE
 		}
+		return FALSE
+
 	case "!~": //not match
 		matched, _ := regexp.MatchString(r.String, l.String)
 		if matched {
 			return FALSE
-		} else {
-			return TRUE
 		}
+		return TRUE
+
 	case "==":
 		if left.Type() != right.Type() {
 			return FALSE

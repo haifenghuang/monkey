@@ -26,7 +26,8 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added list module
 * Added linq module(Code come from [linq](https://github.com/ahmetb/go-linq) with some modifications)
 * Added csv module
-* Regular expression support(partially like perls)
+* Added regexp module
+* Regular expression literal support(partially like perls)
 * channel support(like golang's channel)
 * more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
 * utf8 support(e.g. you could use utf8 character as variable name)
@@ -428,6 +429,17 @@ I'm defer1
 4
 ```
 
+```swift
+file = newFile(filename, "r")
+if (file == nil) {
+    println("opening ", filename, "for reading failed, error:", file.message())
+    return false
+}
+defer file.close()
+//do other file related stuff, and not need to worry about the file close.
+//when any file operation error occurs, it will close the file before it returns.
+
+```
 ## About concatenation of different types
 
 In monkey, you could concatenate of different types. See below for examples:
@@ -836,9 +848,37 @@ w.setOptions({"Comma"=>"	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
+```
 
+## About regular expression
 
+In monkey, regard to regular expression, you could use:
 
+* Regular expression literal
+* 'regexp' module
+* '=~' and '!~' operators(like perl's)
+
+```swift
+//Use regular expression literal
+let regex = /\d+\t/.match("abc 123	mnj")
+if (regex) { println("regex matched using regular expression literal") }
+
+//Use 'regexp' module
+if regexp.compile(`\d+\t`).match("abc 123	mnj") {
+    println("regex matched using 'regexp' module")
+}
+
+//Use '=~'(str =~ pattern)
+if "abc 123	mnj" =~ `\d+\t` {
+    println("regex matched using '=~'")
+}else {
+    println("regex not matched using '=~'")
+}
+
+```
+
+```
+Note: For detailed explanation of 'Regular Expression' pattern matching, you could see golang's regexp module for reference.
 ```
 
 ## Useful Utilities

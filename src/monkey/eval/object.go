@@ -655,6 +655,7 @@ func init() {
 	NewSortObj()
 	NewSqlsObject()
 	NewLinqObj()
+	NewRegExpObj()
 }
 
 func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
