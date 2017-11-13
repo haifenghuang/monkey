@@ -830,6 +830,10 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 	case (left.Type() == HASH_OBJ && right.Type() == HASH_OBJ):
 		return evalHashInfixExpression(node, left, right)
 	case node.Operator == "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
 		//Here we need to special handling for `Boolean` object. Because most of the time `BOOLEAN` will
 		//return TRUE and FALSE. But sometimes we have to returns a new `Boolean` object,
 		//Here we need to compare `Boolean.Bool`，or else when we using
@@ -848,12 +852,12 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 			return TRUE
 		}
 
-		if left.Type() != right.Type() {
-			return FALSE
-		}
-
 		return nativeBoolToBooleanObject(left == right)
 	case node.Operator == "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
+
 		if left.Type() == BOOLEAN_OBJ && right.Type() == BOOLEAN_OBJ {
 			l := left.(*Boolean)
 			r := right.(*Boolean)
@@ -862,6 +866,7 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 			}
 			return FALSE
 		}
+
 		return nativeBoolToBooleanObject(left != right)
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
@@ -1033,14 +1038,8 @@ func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		return TRUE
 
 	case "==":
-		if left.Type() != right.Type() {
-			return FALSE
-		}
 		return nativeBoolToBooleanObject(l.String == r.String)
 	case "!=":
-		if left.Type() != right.Type() {
-			return TRUE
-		}
 		return nativeBoolToBooleanObject(l.String != r.String)
 	case "+":
 		return NewString(l.String + r.String)
@@ -1164,14 +1163,8 @@ func evalHashInfixExpression(node *ast.InfixExpression, left Object, right Objec
 
 		return &Hash{Pairs: leftVals}
 	case "==":
-		if left.Type() != right.Type() {
-			return FALSE
-		}
 		return nativeBoolToBooleanObject(compareHashObj(leftVals, rightVals))
 	case "!=":
-		if left.Type() != right.Type() {
-			return TRUE
-		}
 		return nativeBoolToBooleanObject(!compareHashObj(leftVals, rightVals))
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
