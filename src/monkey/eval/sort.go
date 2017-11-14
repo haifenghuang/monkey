@@ -14,7 +14,10 @@ const (
 	CaseInsensitiveDescending
 )
 
-const sort_name = "sort"
+const (
+	SORT_OBJ = "SORT_OBJ"
+	sort_name = "sort"
+)
 
 func NewSortObj() Object {
 	ret := &SortObj{}
@@ -31,7 +34,7 @@ func NewSortObj() Object {
 type SortObj struct{}
 
 func (s *SortObj) Inspect() string  { return sort_name }
-func (s *SortObj) Type() ObjectType { return "SORT_OBJ" }
+func (s *SortObj) Type() ObjectType { return SORT_OBJ }
 
 func (s *SortObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

@@ -11,13 +11,16 @@ func NewFmtObj() *FmtObj {
 	return ret
 }
 
-const fmt_name = "fmt"
+const (
+	FMT_OBJ = "FMT_OBJ"
+	fmt_name = "fmt"
+)
 
 type FmtObj struct {
 }
 
 func (f *FmtObj) Inspect() string  { return fmt_name }
-func (f *FmtObj) Type() ObjectType { return "FMT_OBJ" }
+func (f *FmtObj) Type() ObjectType { return FMT_OBJ }
 
 func (f *FmtObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

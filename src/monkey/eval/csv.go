@@ -4,7 +4,10 @@ import (
 	"encoding/csv"
 )
 
-const csv_name = "csv"
+const (
+	CSV_OBJ = "CSV_OBJ"
+	csv_name = "csv"
+)
 
 var optionsKeyMap = map[string]bool{
 	//used in Reader and Writer
@@ -27,7 +30,7 @@ type CsvObj struct {
 }
 
 func (c *CsvObj) Inspect() string  { return csv_name }
-func (c *CsvObj) Type() ObjectType { return "CSV_OBJ" }
+func (c *CsvObj) Type() ObjectType { return CSV_OBJ }
 
 func (c *CsvObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

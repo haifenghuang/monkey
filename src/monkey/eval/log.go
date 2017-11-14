@@ -4,7 +4,10 @@ import (
 	"log"
 )
 
-const logger_name = "logger"
+const (
+	LOGGER_OBJ = "LOGGER_OBJ"
+	logger_name = "logger"
+)
 
 func NewLoggerObj() Object {
 	ret := &LoggerObj{}
@@ -26,7 +29,7 @@ type LoggerObj struct {
 }
 
 func (l *LoggerObj) Inspect() string  { return logger_name }
-func (l *LoggerObj) Type() ObjectType { return "STDLIB_LOGGER_OBJ" }
+func (l *LoggerObj) Type() ObjectType { return LOGGER_OBJ }
 
 func (l *LoggerObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

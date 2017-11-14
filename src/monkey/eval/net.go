@@ -17,8 +17,10 @@ const (
 )
 
 //Net Object
-const net_name = "net"
-
+const (
+	NET_OBJ = "NET_OBJ"
+	net_name = "net"
+)
 type NetObj struct{}
 
 func NewNetObj() Object {
@@ -29,7 +31,7 @@ func NewNetObj() Object {
 }
 
 func (n *NetObj) Inspect() string  { return net_name }
-func (n *NetObj) Type() ObjectType { return "NET_OBJ" }
+func (n *NetObj) Type() ObjectType { return NET_OBJ }
 
 func (n *NetObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

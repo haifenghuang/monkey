@@ -8,7 +8,10 @@ import (
 	"os"
 )
 
-const ioutil_name = "ioutil"
+const (
+	IOUTIL_OBJ = "IOUTIL_OBJ"
+	ioutil_name = "ioutil"
+)
 
 type IOUtilObj struct{}
 
@@ -20,7 +23,7 @@ func NewIOUtilObj() Object {
 }
 
 func (i *IOUtilObj) Inspect() string  { return ioutil_name }
-func (i *IOUtilObj) Type() ObjectType { return "IOUTIL_OBJ" }
+func (i *IOUtilObj) Type() ObjectType { return IOUTIL_OBJ }
 func (i *IOUtilObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
 	case "readAll":

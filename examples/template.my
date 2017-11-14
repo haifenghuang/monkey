@@ -1,0 +1,65 @@
+//test using array
+arr = [
+	{ "key" => "key1", "value" => "value1" },
+	{ "key" => "key2", "value" => "value2" },
+	{ "key" => "key3", "value" => "value3" }
+]
+
+//use parseFiles()
+t = template.parseFiles("./examples/looping.tmpl")
+arrValue1 = t.execute(arr)
+println('arrValue1={arrValue1}')
+
+
+//use parse()
+//Note here: we need to use "{{-" and "-}}" to remove the newline from the output
+t1 = template.new("array").parse(`Looping
+{{- range . }}
+	key={{ .key }}, value={{ .value -}}
+{{- end }}`)
+arrValue2 = t1.execute(arr)
+println('arrValue2: {arrValue2}')
+
+//test using hash
+hs = { "key" => "key1", "value" => "value1" }
+t2 = template.new("hash").parse(`key={{.key }}, value={{ .value -}}`)
+hashValue = t2.execute(hs)
+println('hashValue:    {hashValue}')
+
+//test using integer
+iValue = 15
+t3 = template.new("int").parse(`value={{.}}`)
+intValue = t3.execute(iValue)
+println('intValue:     {intValue}')
+
+//test using float
+fValue = 15.2
+t4 = template.new("float").parse(`value={{.}}`)
+floatValue = t4.execute(fValue)
+println('floatValue:   {floatValue}')
+
+//test using boolean
+bValue = true
+t4 = template.new("bool").parse(`value={{.}}`)
+boolValue = t4.execute(bValue)
+println('boolValue:    {boolValue}')
+
+//test using time
+tValue = newTime()
+t5 = template.new("time").parse(`value={{.}}`)
+timeValue = t5.execute(tValue)
+println('timeValue:    {timeValue}')
+
+//test using string
+sValue = "world"
+t6 = template.new("string").parse(` value={{.}}
+	      value={{printf "%q" .}}
+`)
+strValue = t6.execute(sValue)
+println('strValue:    {strValue}')
+
+//test using Nil
+nValue = nil
+t7 = template.new("Nil").parse(`value={{.}}`)
+nilValue = t7.execute(nValue)
+println('nilValue:    {nilValue}')

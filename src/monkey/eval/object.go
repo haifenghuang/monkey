@@ -268,6 +268,15 @@ func (n *Nil) Message(line string, args ...Object) Object {
 	return NewString(n.OptionalMsg)
 }
 
+//Json marshal handling
+func (n *Nil) MarshalJSON() ([]byte, error) {
+	return json.Marshal(nil)
+}
+
+func (n *Nil) UnmarshalJSON(b []byte) error {
+	return nil
+}
+
 //Returns a valid Integer Object, that is Valid=true
 func NewInteger(i int64) *Integer {
 	return &Integer{Int64: i, Valid: true}
@@ -656,6 +665,7 @@ func init() {
 	NewSqlsObject()
 	NewLinqObj()
 	NewRegExpObj()
+	NewTemplateObj()
 }
 
 func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {

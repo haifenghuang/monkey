@@ -383,7 +383,10 @@ func (re *RegEx) UnmarshalJSON(b []byte) error {
 }
 
 /* REGEXP OBJECT */
-const regexp_name = "regexp"
+const (
+	REGEXP_OBJ = "REGEXP_OBJ"
+	regexp_name = "regexp"
+)
 
 type RegExpObj struct{
 	RegExp *regexp.Regexp
@@ -403,7 +406,7 @@ func (rex *RegExpObj) Inspect() string  {
 	return rex.RegExp.String()
 }
 
-func (rex *RegExpObj) Type() ObjectType { return "REGEXP_OBJ" }
+func (rex *RegExpObj) Type() ObjectType { return REGEXP_OBJ }
 
 func (rex *RegExpObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

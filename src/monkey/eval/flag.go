@@ -12,14 +12,17 @@ func NewFlagObj() *FlagObj {
 	return ret
 }
 
-const flag_name = "flag"
+const (
+	FLAG_OBJ = "FLAG_OBJ"
+	flag_name = "flag"
+)
 
 type FlagObj struct {
 	arguments map[Object]interface{}
 }
 
 func (f *FlagObj) Inspect() string  { return flag_name }
-func (f *FlagObj) Type() ObjectType { return "FLAG_OBJ" }
+func (f *FlagObj) Type() ObjectType { return FLAG_OBJ }
 
 func (f *FlagObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

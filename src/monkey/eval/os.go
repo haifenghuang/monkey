@@ -9,7 +9,10 @@ import (
 	"strings"
 )
 
-const os_name = "os"
+const (
+	OS_OBJ = "OS_OBJ"
+	os_name = "os"
+)
 
 type Os struct{}
 
@@ -52,7 +55,7 @@ func NewOsObj() Object {
 }
 
 func (o *Os) Inspect() string  { return os_name }
-func (o *Os) Type() ObjectType { return "OS_OBJ" }
+func (o *Os) Type() ObjectType { return OS_OBJ }
 
 func (o *Os) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -674,13 +677,14 @@ func (o *Os) IsExist(line string, args ...Object) Object {
 	return NewFalseObj(err.Error())
 }
 
+const FILEINFO_OBJ = "FILEINFO_OBJ"
 //FileInfo Object
 type FileInfoObj struct {
 	Info os.FileInfo
 }
 
-func (fi *FileInfoObj) Inspect() string  { return "OS_FILEINFO_OBJ" }
-func (fi *FileInfoObj) Type() ObjectType { return "OS_FILEINFO_OBJ" }
+func (fi *FileInfoObj) Inspect() string  { return FILEINFO_OBJ }
+func (fi *FileInfoObj) Type() ObjectType { return FILEINFO_OBJ }
 
 func (fi *FileInfoObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -741,14 +745,15 @@ func (fi *FileInfoObj) IsDir(line string, args ...Object) Object {
 	return FALSE
 }
 
+const PIPE_OBJ = "PIPE_OBJ"
 //Pipe Object
 type PipeObj struct {
 	Reader *io.PipeReader
 	Writer *io.PipeWriter
 }
 
-func (p *PipeObj) Inspect() string  { return "OS_PIPE_OBJ" }
-func (p *PipeObj) Type() ObjectType { return "OS_PIPE_OBJ" }
+func (p *PipeObj) Inspect() string  { return PIPE_OBJ }
+func (p *PipeObj) Type() ObjectType { return PIPE_OBJ }
 
 func (p *PipeObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

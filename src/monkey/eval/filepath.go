@@ -18,12 +18,15 @@ func NewFilePathObj() *FilePathObj {
 	return ret
 }
 
-const filepath_name = "filepath"
+const (
+	FILEPATH_OBJ = "FILEPATH_OBJ"
+	filepath_name = "filepath"
+)
 
 type FilePathObj struct{}
 
 func (f *FilePathObj) Inspect() string  { return filepath_name }
-func (f *FilePathObj) Type() ObjectType { return "FILEPATH_OBJ" }
+func (f *FilePathObj) Type() ObjectType { return FILEPATH_OBJ }
 
 func (f *FilePathObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

@@ -62,6 +62,7 @@ func NewTimeObj() Object {
 }
 
 const (
+	TIME_OBJ = "TIME_OBJ"
 	builtinDate_goDateTimeLayout = time.RFC1123 // "Mon, 02 Jan 2006 15:04:05 MST"
 	builtinDate_goDateLayout     = "Mon, 02 Jan 2006"
 	builtinDate_goTimeLayout     = "15:04:05 MST"
@@ -72,7 +73,7 @@ func (t *TimeObj) Inspect() string {
 	return v.(*String).String
 }
 
-func (t *TimeObj) Type() ObjectType { return "TIME_OBJ" }
+func (t *TimeObj) Type() ObjectType { return TIME_OBJ }
 
 func (t *TimeObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

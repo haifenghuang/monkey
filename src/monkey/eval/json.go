@@ -7,7 +7,10 @@ import (
 	_ "reflect"
 )
 
-const json_name = "json"
+const (
+	JSON_OBJ = "JSON_OBJ"
+	json_name = "json"
+)
 
 type Json struct {
 }
@@ -20,7 +23,7 @@ func NewJsonObj() Object {
 }
 
 func (j *Json) Inspect() string  { return json_name }
-func (j *Json) Type() ObjectType { return "JSON_OBJ" }
+func (j *Json) Type() ObjectType { return JSON_OBJ }
 
 func (j *Json) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

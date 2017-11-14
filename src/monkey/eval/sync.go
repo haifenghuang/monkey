@@ -18,7 +18,7 @@ type SyncCondObj struct {
 	Cond *sync.Cond
 }
 
-func (c *SyncCondObj) Inspect() string  { return "SYNCCOND_OBJ" }
+func (c *SyncCondObj) Inspect() string  { return SYNCCOND_OBJ }
 func (c *SyncCondObj) Type() ObjectType { return SYNCCOND_OBJ }
 
 func (c *SyncCondObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

@@ -27,6 +27,7 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added linq module(Code come from [linq](https://github.com/ahmetb/go-linq) with some modifications)
 * Added csv module
 * Added regexp module
+* Added template module(somewhat a little bit simple, please see template.my for help)
 * Regular expression literal support(partially like perls)
 * channel support(like golang's channel)
 * more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
@@ -835,10 +836,10 @@ if (ra == nil) {
 }
 
 for line in ra {
-	println(line)
-	for record in line {
-		println("	", record)
-	}
+    println(line)
+    for record in line {
+        println("	", record)
+    }
 }
 
 //test csv writer

@@ -641,7 +641,10 @@ func (s String) Value() (driver.Value, error) {
 	return s.String, nil
 }
 
-const strings_name = "strings"
+const (
+	STRINGS_OBJ = "STRINGS_OBJ"
+	strings_name = "strings"
+)
 
 func NewStringsObj() Object {
 	ret := &StringsObj{}
@@ -653,7 +656,7 @@ func NewStringsObj() Object {
 type StringsObj struct{}
 
 func (s *StringsObj) Inspect() string  { return strings_name }
-func (s *StringsObj) Type() ObjectType { return "STRINGS_OBJ" }
+func (s *StringsObj) Type() ObjectType { return STRINGS_OBJ }
 func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 
 	switch method {

@@ -114,6 +114,7 @@ func (q Query) lessSort(scope *Scope, less *Function) (r []Object) {
 	return
 }
 
+const KEYVALUE_OBJ = "KEYVALUE_OBJ"
 // KeyValue is a type that is used to iterate over a map (if query is created
 // from a map). This type is also used by ToMap() method to output result of a
 // query into a map.
@@ -131,7 +132,7 @@ func (kv *KeyValueObj) Inspect() string {
 	return hash.Inspect()
 }
 
-func (kv *KeyValueObj) Type() ObjectType { return "KEYVALUE_OBJ" }
+func (kv *KeyValueObj) Type() ObjectType { return KEYVALUE_OBJ }
 
 func (kv *KeyValueObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -161,6 +162,7 @@ func (kv *KeyValueObj) Value_(line string, args ...Object) Object {
 }
 
 
+const GROUP_OBJ = "GROUP_OBJ"
 // Group is a type that is used to store the result of GroupBy method.
 type GroupObj struct {
 	Key   Object
@@ -181,7 +183,7 @@ func (g *GroupObj) Inspect() string {
 	return hash.Inspect()
 }
 
-func (g *GroupObj) Type() ObjectType { return "GROUP_OBJ" }
+func (g *GroupObj) Type() ObjectType { return GROUP_OBJ }
 
 func (g *GroupObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -248,6 +250,7 @@ func toSlice(lq *LinqObj) (result *Array) {
 	return
 }
 
+const LINQ_OBJ = "LINQ_OBJ"
 type LinqObj struct {
 	Query Query
 	OrderedQuery OrderedQuery
@@ -259,7 +262,7 @@ func (lq *LinqObj) Inspect() string  {
 	return r.Inspect()
 }
 
-func (lq *LinqObj) Type() ObjectType { return "LINQ_OBJ" }
+func (lq *LinqObj) Type() ObjectType { return LINQ_OBJ }
 
 func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -1331,7 +1334,7 @@ func (lq *LinqObj) SelectMany(line string, scope *Scope, args ...Object) Object 
 							lq = obj.Value
 						}
 
-						if lq.Type() != "LINQ_OBJ" {
+						if lq.Type() != LINQ_OBJ {
 							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
 						}
 
@@ -1393,7 +1396,7 @@ func (lq *LinqObj) SelectManyIndexed(line string, scope *Scope, args ...Object) 
 						if obj, ok1 := lq.(*ReturnValue); ok1 {
 							lq = obj.Value
 						}
-						if lq.Type() != "LINQ_OBJ" {
+						if lq.Type() != LINQ_OBJ {
 							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
 						}
 						innernext = lq.(*LinqObj).Query.Iterate()
@@ -1453,7 +1456,7 @@ func (lq *LinqObj) SelectManyBy(line string, scope *Scope, args ...Object) Objec
 						if obj, ok1 := lq.(*ReturnValue); ok1 {
 							lq = obj.Value
 						}
-						if lq.Type() != "LINQ_OBJ" {
+						if lq.Type() != LINQ_OBJ {
 							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
 						}
 						innernext = lq.(*LinqObj).Query.Iterate()
@@ -1520,7 +1523,7 @@ func (lq *LinqObj) SelectManyByIndexed(line string, scope *Scope, args ...Object
 						if obj, ok1 := item.(*ReturnValue); ok1 {
 							item = obj.Value
 						}
-						if item.Type() != "LINQ_OBJ" {
+						if item.Type() != LINQ_OBJ {
 							panic(NewError(line, GENERICERROR, "Function should return a *LinqObj"))
 						}
 						innernext = item.(*LinqObj).Query.Iterate()

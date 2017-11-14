@@ -18,14 +18,17 @@ const (
 	DBTX_OBJ   = "DBTX_OBJ"   //transaction object
 )
 
-const sql_name = "sql"
+const (
+	SQL_OBJ = "SQL_OBJ"
+	sql_name = "sql"
+)
 
 //This object's purpose is only for 5 predefined null constants
 type SqlsObject struct {
 }
 
 func (s *SqlsObject) Inspect() string  { return sql_name }
-func (s *SqlsObject) Type() ObjectType { return "SQL_OBJ" }
+func (s *SqlsObject) Type() ObjectType { return SQL_OBJ }
 func (s *SqlsObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	panic(NewError(line, NOMETHODERROR, method, s.Type()))
 }
