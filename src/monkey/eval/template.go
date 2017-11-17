@@ -56,10 +56,20 @@ func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args 
 		return t.Option(line, args...)
 	case "templates":
 		return t.Templates(line, args...)
+	case "htmlEscape":
+		return t.HTMLEscape(line, args...)
+	case "htmlEscaper":
+		return t.HTMLEscaper(line, args...)
 	case "htmlEscapeString":
 		return t.HTMLEscapeString(line, args...)
 	case "jsEscapeString":
 		return t.JSEscapeString(line, args...)
+	case "jsEscape":
+		return t.JSEscape(line, args...)
+	case "jsEscaper":
+		return t.JSEscaper(line, args...)
+	case "urlQueryEscaper":
+		return t.URLQueryEscaper(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, t.Type()))
 }
@@ -515,6 +525,40 @@ func (t *TemplateObj) HTMLEscapeString(line string, args ...Object) Object {
 	return NewString(ret)
 }
 
+func (t *TemplateObj) HTMLEscape(line string, args ...Object) Object {
+	if len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
+	}
+
+	writerObj, ok := args[0].(Writable)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "htmlEscape", "Writable", args[0].Type()))
+	}
+
+	strObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "htmlEscape", "*String", args[1].Type()))
+	}
+
+	b := []byte(strObj.String)
+	template.HTMLEscape(writerObj.IOWriter(), b)
+	return NIL
+}
+
+func (t *TemplateObj) HTMLEscaper(line string, args ...Object) Object {
+	if len(args) == 0 {
+		return NewString("")
+	}
+
+	arrIntf := make([]interface{}, len(args))
+	for i, v := range args {
+		arrIntf[i] = object2RawValue(v)
+	}
+
+	ret := template.HTMLEscaper(arrIntf...)
+	return NewString(ret)
+}
+
 func (t *TemplateObj) JSEscapeString(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
@@ -528,3 +572,52 @@ func (t *TemplateObj) JSEscapeString(line string, args ...Object) Object {
 	ret := template.JSEscapeString(strObj.String)
 	return NewString(ret)
 }
+
+func (t *TemplateObj) JSEscape(line string, args ...Object) Object {
+	if len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
+	}
+
+	writerObj, ok := args[0].(Writable)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "jsEscape", "Writable", args[0].Type()))
+	}
+
+	strObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "jsEscape", "*String", args[1].Type()))
+	}
+
+	b := []byte(strObj.String)
+	template.JSEscape(writerObj.IOWriter(), b)
+	return NIL
+}
+
+func (t *TemplateObj) JSEscaper(line string, args ...Object) Object {
+	if len(args) == 0 {
+		return NewString("")
+	}
+
+	arrIntf := make([]interface{}, len(args))
+	for i, v := range args {
+		arrIntf[i] = object2RawValue(v)
+	}
+
+	ret := template.JSEscaper(arrIntf...)
+	return NewString(ret)
+}
+
+func (t *TemplateObj) URLQueryEscaper(line string, args ...Object) Object {
+	if len(args) == 0 {
+		return NewString("")
+	}
+
+	arrIntf := make([]interface{}, len(args))
+	for i, v := range args {
+		arrIntf[i] = object2RawValue(v)
+	}
+
+	ret := template.URLQueryEscaper(arrIntf...)
+	return NewString(ret)
+}
+
