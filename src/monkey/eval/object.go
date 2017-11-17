@@ -785,6 +785,48 @@ func unmarshalHash(m map[string]interface{}) (Object, error) {
 	return hash, nil
 }
 
+//this function is used in template.go for converting 'Object' to 'interface{}'
+func object2RawValue(obj Object) interface{} {
+	var ret interface{} = nil
+	objType := obj.Type()
+	switch objType {
+	case HASH_OBJ:
+		ret = hashObj2RawValue(obj.(*Hash))
+	case ARRAY_OBJ:
+		ret = arrayObj2RawValue(obj.(*Array))
+	case INTEGER_OBJ:
+		ret = obj.(*Integer).Int64
+	case FLOAT_OBJ:
+		ret = obj.(*Float).Float64
+	case BOOLEAN_OBJ:
+		ret = obj.(*Boolean).Bool
+	case NIL_OBJ:
+		ret = nil
+	case STRING_OBJ:
+		ret = obj.(*String).String
+	default:
+		panic("Could not convert to RawValue!")
+	}
+	return ret
+}
+
+func arrayObj2RawValue(arr *Array) interface{} {
+	ret := make([]interface{}, len(arr.Members))
+	for idx, v := range arr.Members {
+		ret[idx] = object2RawValue(v)
+	}
+	return ret
+}
+
+func hashObj2RawValue(h *Hash) interface{} {
+	ret := make(map[interface{}]interface{})
+	for _, v := range h.Pairs{
+		ret[object2RawValue(v.Key)] = object2RawValue(v.Value)
+	}
+	return ret
+}
+
+
 //This `Formatter` struct is mainly used to encapsulate golang
 //`fmt` package's `Formatter` interface.
 //When we implement this interface, our `Object` could be directed passed to fmt.Printf(xxx)

@@ -16,7 +16,8 @@ println('arrValue1={arrValue1}')
 t1 = template.new("array").parse(`Looping
 {{- range . }}
 	key={{ .key }}, value={{ .value -}}
-{{- end }}`)
+{{- end }}
+`)
 arrValue2 = t1.execute(arr)
 println('arrValue2: {arrValue2}')
 
@@ -53,7 +54,7 @@ println('timeValue:    {timeValue}')
 //test using string
 sValue = "world"
 t6 = template.new("string").parse(` value={{.}}
-	      value={{printf "%q" .}}
+	      value={{printf "%q" . -}}
 `)
 strValue = t6.execute(sValue)
 println('strValue:    {strValue}')
@@ -63,3 +64,39 @@ nValue = nil
 t7 = template.new("Nil").parse(`value={{.}}`)
 nilValue = t7.execute(nValue)
 println('nilValue:    {nilValue}')
+
+
+//test template.funcs()
+templateText = `
+Input: {{printf "%q" .}}
+Output 0: {{title .}}
+Output 1: {{title . | printf "%q"}}
+Output 2: {{printf "%q" . | title}}
+
+Output 3: {{upper .}}
+Output 4: {{upper . | printf "%q"}}
+Output 5: {{printf "%q" . | upper}}
+`
+
+t8 = template.new("titleTest").funcs(
+{
+	"title" => fn(x){strings.title(x)},
+	"upper" => fn(x){strings.upper(x)}
+}
+).parse(templateText)
+
+// Run the template to verify the output.
+funcValue = t8.execute("the go programming language")
+println('funcValue:    {funcValue}')
+
+
+envText = `ENVIRONMENT PATH: {{getenv .}}`
+t9 = template.new("titleTest").funcs(
+{
+	"getenv" => fn(x){os.getenv(x)}
+}
+).parse(envText)
+
+// Run the template to verify the output.
+pathValue = t9.execute("PATH")
+println('{pathValue}')
