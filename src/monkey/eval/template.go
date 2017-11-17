@@ -207,107 +207,25 @@ func (t *TemplateObj) Delims(line string, args ...Object) Object {
 }
 
 func (t *TemplateObj) Execute(line string, args ...Object) Object {
-	if len(args) != 1 {
-		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
-	}
-
-	if t.Template == nil {
-		return NewNil("Before calling execute(), you should first call 'new|parseFiles|parseGlob' function")
-	}
-
-	var data []byte
-	var err error
-
-	objType := args[0].Type()
-	switch objType {
-	case HASH_OBJ:
-		//convert 'Hash' object to interface{}
-		h := args[0].(*Hash)
-		data, err = h.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case ARRAY_OBJ:
-		//convert 'Array' object to interface{}
-		arr := args[0].(*Array)
-		data, err = arr.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case INTEGER_OBJ:
-		//convert 'Integer' object to interface{}
-		i := args[0].(*Integer)
-		data, err = i.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case FLOAT_OBJ:
-		//convert 'Float' object to interface{}
-		f := args[0].(*Float)
-		data, err = f.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case BOOLEAN_OBJ:
-		//convert 'Boolean' object to interface{}
-		b := args[0].(*Boolean)
-		data, err = b.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case NIL_OBJ:
-		//convert 'Nil' object to interface{}
-		n := args[0].(*Nil)
-		data, err = n.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case STRING_OBJ:
-		//convert 'String' object to interface{}
-		s := args[0].(*String)
-		data, err = s.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	case TIME_OBJ:
-		//convert 'TimeObj' object to interface{}
-		t := args[0].(*TimeObj)
-		data, err = t.MarshalJSON()
-		if err != nil {
-			return NewNil(err.Error())
-		}
-	default:
-		panic(NewError(line, PARAMTYPEERROR, "second", "execute", "*Integer|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
-	}
-
-	var obj interface{}
-	err = json.Unmarshal(data, &obj)
-	if err != nil {
-		return NewNil(err.Error())
-	}
-
-	var out bytes.Buffer
-	err = t.Template.Execute(&out, obj)
-	if err != nil {
-		return NewNil(err.Error())
-	}
-
-	return NewString(out.String())
-}
-
-//Note :ExecuteTemplate is similar to Execute function, should extract a common private function.
-func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 	if len(args) != 2 {
 		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
 	}
 
 	if t.Template == nil {
-		return NewNil("Before calling executeTemplate(), you should first call 'new|parseFiles|parseGlob' function")
+		return NewFalseObj("Before calling execute(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	nameStrObj, ok := args[0].(*String)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "executeTemplate", "*String", args[0].Type()))
+	var isWriter bool = false
+	var strObj *String
+	writerObj, ok := args[0].(Writable)
+	if !ok { //is not 'Writable', check if it's a '*String'
+		var ok bool
+		strObj, ok = args[0].(*String)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "first", "execute", "Writable|*String", args[0].Type()))
+		}
+	} else {
+		isWriter = true
 	}
 
 	var data []byte
@@ -320,56 +238,56 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 		h := args[1].(*Hash)
 		data, err = h.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case ARRAY_OBJ:
 		//convert 'Array' object to interface{}
 		arr := args[1].(*Array)
 		data, err = arr.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case INTEGER_OBJ:
 		//convert 'Integer' object to interface{}
 		i := args[1].(*Integer)
 		data, err = i.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case FLOAT_OBJ:
 		//convert 'Float' object to interface{}
 		f := args[1].(*Float)
 		data, err = f.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case BOOLEAN_OBJ:
 		//convert 'Boolean' object to interface{}
 		b := args[1].(*Boolean)
 		data, err = b.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case NIL_OBJ:
 		//convert 'Nil' object to interface{}
 		n := args[1].(*Nil)
 		data, err = n.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case STRING_OBJ:
 		//convert 'String' object to interface{}
 		s := args[1].(*String)
 		data, err = s.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	case TIME_OBJ:
 		//convert 'TimeObj' object to interface{}
 		t := args[1].(*TimeObj)
 		data, err = t.MarshalJSON()
 		if err != nil {
-			return NewNil(err.Error())
+			return NewFalseObj(err.Error())
 		}
 	default:
 		panic(NewError(line, PARAMTYPEERROR, "second", "execute", "*Integer|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
@@ -378,16 +296,142 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 	var obj interface{}
 	err = json.Unmarshal(data, &obj)
 	if err != nil {
-		return NewNil(err.Error())
+		return NewFalseObj(err.Error())
 	}
 
-	var out bytes.Buffer
-	err = t.Template.ExecuteTemplate(&out, nameStrObj.String, obj)
+	if isWriter {
+		err = t.Template.Execute(writerObj.IOWriter(), obj)
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	} else {
+		var out bytes.Buffer
+		err = t.Template.Execute(&out, obj)
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+		//set result to the first parameter
+		strObj.String = out.String()
+	}
+
+	return TRUE
+}
+
+//Note :ExecuteTemplate is similar to Execute function, should extract a common private function.
+func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
+	if len(args) != 3 {
+		panic(NewError(line, ARGUMENTERROR, "3", len(args)))
+	}
+
+	if t.Template == nil {
+		return NewFalseObj("Before calling executeTemplate(), you should first call 'new|parseFiles|parseGlob' function")
+	}
+
+	var isWriter bool = false
+	var strObj *String
+	writerObj, ok := args[0].(Writable)
+	if !ok { //is not 'Writable', check if it's a '*String'
+		var ok bool
+		strObj, ok = args[0].(*String)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "first", "executeTemplate", "Writable|*String", args[0].Type()))
+		}
+	} else {
+		isWriter = true
+	}
+
+	nameStrObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "executeTemplate", "*String", args[1].Type()))
+	}
+
+	var data []byte
+	var err error
+
+	objType := args[2].Type()
+	switch objType {
+	case HASH_OBJ:
+		//convert 'Hash' object to interface{}
+		h := args[2].(*Hash)
+		data, err = h.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case ARRAY_OBJ:
+		//convert 'Array' object to interface{}
+		arr := args[2].(*Array)
+		data, err = arr.MarshalJSON()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+	case INTEGER_OBJ:
+		//convert 'Integer' object to interface{}
+		i := args[2].(*Integer)
+		data, err = i.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case FLOAT_OBJ:
+		//convert 'Float' object to interface{}
+		f := args[2].(*Float)
+		data, err = f.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case BOOLEAN_OBJ:
+		//convert 'Boolean' object to interface{}
+		b := args[2].(*Boolean)
+		data, err = b.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case NIL_OBJ:
+		//convert 'Nil' object to interface{}
+		n := args[2].(*Nil)
+		data, err = n.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case STRING_OBJ:
+		//convert 'String' object to interface{}
+		s := args[2].(*String)
+		data, err = s.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	case TIME_OBJ:
+		//convert 'TimeObj' object to interface{}
+		t := args[2].(*TimeObj)
+		data, err = t.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "third", "executeTemplate", "*Integer|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
+	}
+
+	var obj interface{}
+	err = json.Unmarshal(data, &obj)
 	if err != nil {
-		return NewNil(err.Error())
+		return NewFalseObj(err.Error())
 	}
 
-	return NewString(out.String())
+	if isWriter {
+		err = t.Template.ExecuteTemplate(writerObj.IOWriter(), nameStrObj.String, obj)
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+	} else {
+		var out bytes.Buffer
+		err = t.Template.ExecuteTemplate(&out, nameStrObj.String, obj)
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
+		//set result to the first parameter
+		strObj.String = out.String()
+	}
+
+	return TRUE
 }
 
 func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
