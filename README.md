@@ -377,13 +377,12 @@ In monkey, you could use [] to initialize an empty array:
 
 ```swift
 emptyArr = []
-```swift
+```
 
 Array could contain any number of different data types.
 
 ```swift
 mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
-
 ```
 
 You could use index to access array element.
@@ -458,9 +457,9 @@ println('str={str}') //output: "Hello World"
 In monkey, strings are utf8-encoded, you could use utf-8 encoded name as a variable name.
 
 ```swift
-? = 3
-? = 5
-println(? + ?) //output : 8
+三 = 3
+五= 5
+println(三 + 五) //output : 8
 ```
 
 strings are also object, so you could use some of the methods provided by `strings` module.
@@ -484,9 +483,11 @@ for v in "Hello World" {
 
 You could concatenate an object to a string:
 
+```swift
 joinedStr = "Hello " + "World"
 joinedStr += "!"
 println(joinedStr)
+```
 
 ## Hash
 
