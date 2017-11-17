@@ -75,7 +75,7 @@ Monkey only support single line comment.
 
 ### Data Types
 
-Monkey supports 7 data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` and `Nil`
+Monkey supports 7 basic data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` and `Nil`
 
 ```swift
 s1 = "hello, 黄"      # strings are UTF-8 encoded
@@ -105,7 +105,7 @@ In monkey, there are mainly nine types of constants(Literals).
 ```swift
 // Integer literals
 i1 = 10
-i2 = 20_000_000
+i2 = 20_000_000     //for more readable
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
 i5 = 0c127          // octal
@@ -113,7 +113,7 @@ i5 = 0c127          // octal
 // Float literals
 f1 = 10.25
 f2 = 1.02E3
-f3 = 123_456.789_012
+f3 = 123_456.789_012 //for more readable
 
 // String literals
 s1 = "123"
@@ -363,12 +363,173 @@ case testStr in { // in(exact/partial match), is(only exact match)
 let i = [{"a"=>1, "b"=>2}, 10]
 let x = [{"a"=>1, "b"=>2},10]
 case i in {
-	1, 2 { println("i matched 1, 2") }
-	3    { println("i matched 3") }
-	x    { println("i matched x") }
-	else { println("i not matched anything")}
+    1, 2 { println("i matched 1, 2") }
+    3    { println("i matched 3") }
+    x    { println("i matched x") }
+    else { println("i not matched anything")}
 }
 
+```
+
+## Array
+
+In monkey, you could use [] to initialize an empty array:
+
+```swift
+emptyArr = []
+```swift
+
+Array could contain any number of different data types.
+
+```swift
+mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
+
+```
+
+You could use index to access array element.
+
+```swift
+println('mixedArr[2]={mixedArr[2]})
+println(["a", "b", "c", "d"][2])
+```
+
+Because array is an object, so you could use the object's method to operate on it.
+
+```swift
+if ([].empty()) {
+    println("array is empty")
+}
+
+emptyArr.push("Hello")
+println(emptyArr)
+
+//you could also use 'addition' to add an item to an array
+emptyArr += 2
+println(emptyArr)
+```
+
+Array could be iterated using `for` loop
+
+```swift
+numArr = [1,3,5,2,4,6,7,8,9]
+for item in numArr where item % 2 == 0 {
+    println(item)
+}
+
+let strArr = ["1","a5","5", "5b","4","cc", "7", "dd", "9"]
+for item in strArr where /^\d+/.match(item) {
+    println(item)
+}
+
+for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_ is the index
+    printf("idx=%d, v=%s\n", $_, item)
+}
+
+```
+
+## String
+
+In monkey, there are three types of `string`:
+
+* Raw string
+* Double quoted string(Could not contains newline)
+* Single quoted string(Interpolated String)
+
+Raw string literals are character sequences between back quotes, as in `foo`. Within the quotes, any character may appear except back quote.
+
+See below for some examples:
+
+```swift
+normalStr = "Hello " + "world!"
+println(normalStr)
+
+println("123456"[2])
+
+rawStr = `Welcome to
+visit us!`
+println(rawStr)
+
+//when you use single quoted string, and want variable to be interpolated,
+//you just put the variable into '{}'. see below:
+str = "Hello World"
+println('str={str}') //output: "Hello World"
+```
+
+In monkey, strings are utf8-encoded, you could use utf-8 encoded name as a variable name.
+
+```swift
+? = 3
+? = 5
+println(? + ?) //output : 8
+```
+
+strings are also object, so you could use some of the methods provided by `strings` module.
+
+```swift
+upperStr = "hello world".upper()
+println(upperStr) //output : HELLO WORLD
+```
+
+string could also be iterated:
+
+```swift
+for idx, v in "abcd" {
+    printf("idx=%d, v=%s\n", idx, v)
+}
+
+for v in "Hello World" {
+    printf("idx=%d, v=%s\n", $_, v) //$_ is the index
+}
+```
+
+You could concatenate an object to a string:
+
+joinedStr = "Hello " + "World"
+joinedStr += "!"
+println(joinedStr)
+
+## Hash
+
+In monkey, you could use {} to initialize an empty hash:
+
+```swift
+emptyHash = {}
+```
+
+Hash's key could be string, int, boolean:
+
+```swift
+hashObj = {
+    12     => "twelve",
+    true   => 1,
+    "Name" => "HHF"
+}
+println(hashObj)
+```
+
+You could use '+' or '-' to add or remove an item from a hash:
+
+```swift
+hashObj += {"key1" => "value1"}
+hashObj += {"key2" => "value2"}
+hashObj += {5 => "five"}
+hashObj -= "key2"
+hashObj -= 5
+println(hash)
+```
+
+In monkey, Hash is also an object, so you could use them to operate on hash object:
+
+```swift
+
+hashObj.push(15, "fifteen") //first parameter is the key, second is the value
+hashObj.pop(15)
+
+keys = hashObj.keys()
+println(keys)
+
+values = hashObj.values()
+println(values)
 ```
 
 ## Standard input/output/error
@@ -441,6 +602,7 @@ defer file.close()
 //when any file operation error occurs, it will close the file before it returns.
 
 ```
+
 ## About concatenation of different types
 
 In monkey, you could concatenate of different types. See below for examples:
@@ -860,7 +1022,7 @@ In monkey, regard to regular expression, you could use:
 * '=~' and '!~' operators(like perl's)
 
 ```swift
-//Use regular expression literal
+//Use regular expression literal( /pattern/.match(str) )
 let regex = /\d+\t/.match("abc 123	mnj")
 if (regex) { println("regex matched using regular expression literal") }
 
@@ -878,7 +1040,7 @@ if "abc 123	mnj" =~ `\d+\t` {
 
 ```
 
-```
+```sh
 Note: For detailed explanation of 'Regular Expression' pattern matching, you could see golang's regexp module for reference.
 ```
 
