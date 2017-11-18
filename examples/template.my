@@ -7,16 +7,16 @@ arr = [
 ]
 
 //use parseFiles(), write to a string
-template.parseFiles("./examples/looping.tmpl").execute(resultValue, arr)
+template.parseTextFiles("./examples/looping.tmpl").execute(resultValue, arr)
 println('{resultValue}')
 
 //use parseFiles(), write to a file
 file = newFile("./examples/outTemplate.log", "a+")
-template.parseFiles("./examples/looping.tmpl").execute(file, arr)
+template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
 
 //use parse()
 //Note here: we need to use "{{-" and "-}}" to remove the newline from the output
-template.new("array").parse(`Looping
+template.newText("array").parse(`Looping
 {{- range . }}
 	key={{ .key }}, value={{ .value -}}
 {{- end }}
@@ -25,39 +25,39 @@ println('{resultValue}')
 
 //test using hash
 hs = { "key" => "key1", "value" => "value1" }
-template.new("hash").parse(`key={{.key }}, value={{ .value -}}`).execute(resultValue, hs)
+template.newText("hash").parse(`key={{.key }}, value={{ .value -}}`).execute(resultValue, hs)
 println('{resultValue}')
 
 //test using integer
 iValue = 15
-template.new("int").parse(`value={{.}}`).execute(resultValue, iValue)
+template.newText("int").parse(`value={{.}}`).execute(resultValue, iValue)
 println('{resultValue}')
 
 //test using float
 fValue = 15.2
-template.new("float").parse(`value={{.}}`).execute(resultValue, fValue)
+template.newText("float").parse(`value={{.}}`).execute(resultValue, fValue)
 println('{resultValue}')
 
 //test using boolean
 bValue = true
-template.new("bool").parse(`value={{.}}`).execute(resultValue, bValue)
+template.newText("bool").parse(`value={{.}}`).execute(resultValue, bValue)
 println('{resultValue}')
 
 //test using time
 tValue = newTime()
-template.new("time").parse(`value={{.}}`).execute(resultValue, tValue)
+template.newText("time").parse(`value={{.}}`).execute(resultValue, tValue)
 println('{resultValue}')
 
 //test using string
 sValue = "world"
-template.new("string").parse(`value={{.}}
+template.newText("string").parse(`value={{.}}
 value={{printf "%q" . -}}
 `).execute(resultValue, sValue)
 println('{resultValue}')
 
 //test using Nil
 nValue = nil
-template.new("Nil").parse(`value={{.}}`).execute(resultValue, nValue)
+template.newText("Nil").parse(`value={{.}}`).execute(resultValue, nValue)
 println('{resultValue}')
 
 
@@ -73,7 +73,7 @@ Output 4: {{upper . | printf "%q"}}
 Output 5: {{printf "%q" . | upper}}
 `
 
-template.new("titleTest").funcs(
+template.newText("titleTest").funcs(
 {
 	"title" => fn(x){strings.title(x)},
 	"upper" => fn(x){strings.upper(x)}
@@ -83,7 +83,7 @@ println('{resultValue}')
 
 
 envText = `ENVIRONMENT PATH: {{getenv .}}`
-template.new("titleTest").funcs(
+template.newText("titleTest").funcs(
 {
 	"getenv" => fn(x){os.getenv(x)}
 }

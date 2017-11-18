@@ -27,7 +27,7 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added linq module(Code come from [linq](https://github.com/ahmetb/go-linq) with some modifications)
 * Added csv module
 * Added regexp module
-* Added template module(somewhat a little bit simple, please see template.my for help)
+* Added template module
 * Regular expression literal support(partially like perls)
 * channel support(like golang's channel)
 * more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
@@ -150,7 +150,7 @@ form `variable=value`.
 let a = 1, b = "hello world", c = [1,2,3]
 d = 4
 e = 5
-姓="黄"
+姓 = "黄"
 ```
 
 ## Reserved keywords
@@ -458,7 +458,7 @@ In monkey, strings are utf8-encoded, you could use utf-8 encoded name as a varia
 
 ```swift
 三 = 3
-五= 5
+五 = 5
 println(三 + 五) //output : 8
 ```
 
@@ -604,7 +604,7 @@ defer file.close()
 
 ```
 
-## About concatenation of different types
+## Concatenation of different types
 
 In monkey, you could concatenate of different types. See below for examples:
 
@@ -649,7 +649,7 @@ hash -= 5
 println(hash)
 ```
 
-## Grep and map
+## grep and map
 
 The `grep` and `map` operators are just like perl's `grep` and `map`.
 
@@ -773,8 +773,9 @@ In monkey, there are some standard modules provided for you. e.g. json, sql, sor
 This is a brief introduction of some of the monkey standard modules, don't expect it to be thorough.
 If you are curious, please see the source code.
 
+#### fmt module
+
 ```swift
-//fmt module
 let i = 108, f = 25.383, b=true, s = "Hello, world",
     aArr = [1, 2, 3, 4, "a", "b"],
     aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
@@ -787,9 +788,11 @@ sp = fmt.sprintf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
 fmt.printf("sp=%s", sp)
 
 fmt.fprintf(stdout, "Hello %s\n", "world")
+```
 
+#### time module
 
-//time module
+```swift
 t1 = newTime()
 format = t1.strftime("%F %R")
 println(t1.toStr(format))
@@ -798,9 +801,11 @@ println(Epoch)
 
 t2 = t1.fromEpoch(Epoch)
 println(t2.toStr(format))
+```
 
+#### logger module
 
-//logger module
+```swift
 #Log to stdout
 log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
 
@@ -813,9 +818,11 @@ log.setOutput(file)
 for i in 1..5 {
     log.printf("This is <%d>\n", i)
 }
+```
 
+#### flag module(for handling of command line options)
 
-//flag module(for handling of command line options)
+```swift
 let verV = flag.bool("version", false, "0.1")
 let ageV = flag.int("age", 40, "an int")
 let heightV = flag.float("height", 120.5, "a float")
@@ -834,9 +841,11 @@ if (flag.isSet("age")) {
 } else {
     println("age is not set")
 }
+```
 
+#### json module( for json marshal & unmarshal)
 
-// json module( for json marshal & unmarshal)
+```swift
 let hsJson = {"key1" => 10,
               "key2" => "Hello Json %s %s Module",
               "key3" => 15.8912,
@@ -857,9 +866,10 @@ let arrStr = json.marshal(arrJson)
 println(json.indent(arrStr))
 let arr1Json = json.unmarshal(arrStr)  //same as `json.fromJson(arrStr)`
 println(arr1Json)
+```
 
+#### net module
 
-//net module
 //A simple tcp client
 let conn = dialTCP("tcp", "127.0.0.1:9090")
 if (conn == nil) {
@@ -897,12 +907,12 @@ let ret = ln.close()
 if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
+```
 
 
+#### linq module
 
-//linq module
-//the linq module is not fully tested, and it has no `orderby` and `compare` compared with
-//ahmetb's linq implementation.
+```swift
 let mm = [1,2,3,4,5,6,7,8,9,10]
 println('before mm={mm}')
 
@@ -981,10 +991,11 @@ fn(idx,x){
     return x + "_"
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
+```
 
+#### csv module
 
-
-//csv module
+```swift
 //test csv reader
 let r = newCsvReader("./examples/test.csv")
 if r == nil {
@@ -1012,6 +1023,38 @@ w.setOptions({"Comma"=>"	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
+```
+
+#### template module
+
+The `template` module contains 'text' and 'html' template handling.
+
+Use `newText(...)` or `parseTextFiles(...)` to create a new 'text' template.
+Use `newHtml(...)` or `parseHtmlFiles(...)` to create a new 'html' template.
+
+```swift
+arr = [
+	{ "key" => "key1", "value" => "value1" },
+	{ "key" => "key2", "value" => "value2" },
+	{ "key" => "key3", "value" => "value3" }
+]
+
+//use parseTextFiles(), write to a string
+template.parseTextFiles("./examples/looping.tmpl").execute(resultValue, arr)
+println('{resultValue}')
+
+//use parseTextFiles(), write to a file
+file = newFile("./examples/outTemplate.log", "a+")
+template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
+
+//use parse()
+//Note here: we need to use "{{-" and "-}}" to remove the newline from the output
+template.newText("array").parse(`Looping
+{{- range . }}
+	key={{ .key }}, value={{ .value -}}
+{{- end }}
+`).execute(resultValue, arr)
+println('{resultValue}')
 ```
 
 ## About regular expression

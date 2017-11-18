@@ -4,22 +4,30 @@ import (
 	"bytes"
 	"encoding/json"
 	"monkey/ast"
-	"text/template"
+	text "text/template"
+	html "html/template"
 )
 
 const (
 	TEMPLATE_OBJ = "TEMPLATE_OBJ"
 	template_name = "template"
+	T_TEXT = 0
+	T_HTML = 1
 )
 
 type TemplateObj struct {
-	Template *template.Template
+	TmplType         int64  //template type
+	TextTemplate *text.Template
+	HTMLTemplate *html.Template
 }
 
 func NewTemplateObj() Object {
 	ret := &TemplateObj{}
 	SetGlobalObj(template_name, ret)
 
+	SetGlobalObj(template_name+".TEXT", NewInteger(0))
+	SetGlobalObj(template_name+".HTML", NewInteger(1))
+	
 	return ret
 }
 
@@ -28,10 +36,18 @@ func (t *TemplateObj) Type() ObjectType { return TEMPLATE_OBJ }
 
 func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
+	case "newText":
+		return t.NewText(line, args...)
+	case "newHtml":
+		return t.NewHtml(line, args...)
 	case "new":
 		return t.New(line, args...)
 	case "parse":
 		return t.Parse(line, args...)
+	case "parseTextFiles":
+		return t.ParseTextFiles(line, args...)
+	case "parseHtmlFiles":
+		return t.ParseHtmlFiles(line, args...)
 	case "parseFiles":
 		return t.ParseFiles(line, args...)
 	case "parseGlob":
@@ -74,22 +90,64 @@ func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args 
 	panic(NewError(line, NOMETHODERROR, method, t.Type()))
 }
 
+func (t *TemplateObj) NewText(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "newText", "*String", args[0].Type()))
+	}
+
+	return &TemplateObj{TmplType:T_TEXT, TextTemplate:text.New(strObj.String)}
+}
+
+func (t *TemplateObj) NewHtml(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "newHtml", "*String", args[0].Type()))
+	}
+
+	return &TemplateObj{TmplType:T_HTML, HTMLTemplate:html.New(strObj.String)}
+}
+
 func (t *TemplateObj) New(line string, args ...Object) Object {
 	argLen := len(args)
-	if argLen != 0 && argLen != 1 {
-		panic(NewError(line, ARGUMENTERROR, "0|1", argLen))
+	if argLen != 2 {
+		panic(NewError(line, ARGUMENTERROR, "2", argLen))
 	}
 
-	var name string = "main"
-	if argLen == 1 {
-		strObj, ok := args[0].(*String)
-		if !ok {
-			panic(NewError(line, PARAMTYPEERROR, "first", "new", "*String", args[0].Type()))
-		}
-		name = strObj.String
+	intObj, ok := args[0].(*Integer)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "new", "*Integer", args[0].Type()))
 	}
 
-	return &TemplateObj{Template:template.New(name)}
+	tmplType := intObj.Int64
+	if tmplType != T_TEXT && tmplType != T_HTML {
+		panic(NewError(line, GENERICERROR, "First parameter of new() should be 0(text)|1(html)."))
+	}
+
+	var name string = ""
+	strObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "new", "*String", args[1].Type()))
+	}
+	name = strObj.String
+
+	var ret *TemplateObj
+	if tmplType == T_TEXT {
+		ret  = &TemplateObj{TmplType:tmplType, TextTemplate:text.New(name)}
+	} else if tmplType == T_HTML {
+		ret = &TemplateObj{TmplType:tmplType, HTMLTemplate:html.New(name)}
+	}
+	return ret
 }
 
 func (t *TemplateObj) Parse(line string, args ...Object) Object {
@@ -102,12 +160,17 @@ func (t *TemplateObj) Parse(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "parse", "*String", args[0].Type()))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling parse(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
 	var err error = nil
-	t.Template, err = t.Template.Parse(strObj.String)
+	if t.TmplType == T_TEXT {
+		t.TextTemplate, err = t.TextTemplate.Parse(strObj.String)
+	} else if t.TmplType == T_HTML {
+		t.HTMLTemplate, err = t.HTMLTemplate.Parse(strObj.String)
+	}
+
 	if err != nil {
 		return NewNil(err.Error())
 	}
@@ -115,22 +178,78 @@ func (t *TemplateObj) Parse(line string, args ...Object) Object {
 	return t
 }
 
-func (t *TemplateObj) ParseFiles(line string, args ...Object) Object {
+func (t *TemplateObj) ParseTextFiles(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
 	strObj, ok := args[0].(*String)
 	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "parseFiles", "*String", args[0].Type()))
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseTextFiles", "*String", args[0].Type()))
 	}
 
-	temp, err := template.ParseFiles(strObj.String)
+	temp, err := text.ParseFiles(strObj.String)
 	if err != nil {
 		return NewNil(err.Error())
 	}
 
-	return &TemplateObj{Template:temp}
+	return &TemplateObj{TmplType: T_TEXT, TextTemplate: temp}
+}
+
+func (t *TemplateObj) ParseHtmlFiles(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseHtmlFiles", "*String", args[0].Type()))
+	}
+
+	temp, err := html.ParseFiles(strObj.String)
+	if err != nil {
+		return NewNil(err.Error())
+	}
+
+	return &TemplateObj{TmplType: T_HTML, HTMLTemplate: temp}
+}
+
+func (t *TemplateObj) ParseFiles(line string, args ...Object) Object {
+	if len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
+	}
+
+	intObj, ok := args[0].(*Integer)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseFiles", "*Integer", args[0].Type()))
+	}
+
+	tmplType := intObj.Int64
+	if tmplType != T_TEXT && tmplType != T_HTML {
+		panic(NewError(line, GENERICERROR, "First parameter of parseFiles() should be 0(text)|1(html)."))
+	}
+
+	strObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "parseFiles", "*String", args[1].Type()))
+	}
+
+	var ret *TemplateObj
+	if tmplType == T_TEXT {
+		temp, err := text.ParseFiles(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType : tmplType, TextTemplate: temp}
+	} else if tmplType == T_HTML {
+		temp, err := html.ParseFiles(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType : tmplType, HTMLTemplate: temp}
+	}
+
+	return ret
 }
 
 func (t *TemplateObj) ParseGlob(line string, args ...Object) Object {
@@ -143,12 +262,22 @@ func (t *TemplateObj) ParseGlob(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "parseGlob", "*String", args[0].Type()))
 	}
 
-	temp, err := template.ParseGlob(strObj.String)
-	if err != nil {
-		return NewNil(err.Error())
+	var ret *TemplateObj
+	if t.TmplType == T_TEXT {
+		temp, err := text.ParseGlob(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+	} else if t.TmplType == T_HTML {
+		temp, err := html.ParseGlob(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return &TemplateObj{Template:temp}
+	return ret
 }
 
 func (t *TemplateObj) Clone(line string, args ...Object) Object {
@@ -156,16 +285,26 @@ func (t *TemplateObj) Clone(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling clone(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	temp, err := t.Template.Clone()
-	if err != nil {
-		return NewNil(err.Error())
+	var ret *TemplateObj
+	if t.TmplType == T_TEXT {
+		temp, err := t.TextTemplate.Clone()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+	} else if t.TmplType == T_HTML {
+		temp, err := t.HTMLTemplate.Clone()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return &TemplateObj{Template:temp}
+	return ret
 }
 
 func (t *TemplateObj) DefinedTemplates(line string, args ...Object) Object {
@@ -173,11 +312,16 @@ func (t *TemplateObj) DefinedTemplates(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
-	if t.Template == nil {
-		return NewNil("Before calling definedTemplates(), you should first call 'new|parseFiles|parseGlob' function")
+	var s string = ""
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
+			return NewNil("Before calling definedTemplates(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	s := t.Template.DefinedTemplates()
+	if t.TmplType == T_TEXT {
+		s = t.TextTemplate.DefinedTemplates()
+	} else if t.TmplType == T_HTML {
+		s = t.HTMLTemplate.DefinedTemplates()
+	}
 
 	return NewString(s)
 }
@@ -187,9 +331,10 @@ func (t *TemplateObj) Delims(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling delims(), you should first call 'new|parseFiles|parseGlob' function")
 	}
+	
 
 	leftStrObj, ok := args[0].(*String)
 	if !ok {
@@ -201,7 +346,11 @@ func (t *TemplateObj) Delims(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "second", "delims", "*String", args[1].Type()))
 	}
 
-	t.Template.Delims(leftStrObj.String, rightStrObj.String)
+	if t.TmplType == T_TEXT {
+		t.TextTemplate.Delims(leftStrObj.String, rightStrObj.String)
+	} else if t.TmplType == T_HTML {
+		t.HTMLTemplate.Delims(leftStrObj.String, rightStrObj.String)
+	}
 
 	return t
 }
@@ -211,7 +360,7 @@ func (t *TemplateObj) Execute(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewFalseObj("Before calling execute(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
@@ -300,15 +449,30 @@ func (t *TemplateObj) Execute(line string, args ...Object) Object {
 	}
 
 	if isWriter {
-		err = t.Template.Execute(writerObj.IOWriter(), obj)
-		if err != nil {
-			return NewFalseObj(err.Error())
+		if t.TmplType == T_TEXT {
+			err = t.TextTemplate.Execute(writerObj.IOWriter(), obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
+		} else if t.TmplType == T_HTML {
+			err = t.HTMLTemplate.Execute(writerObj.IOWriter(), obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
 		}
+
 	} else {
 		var out bytes.Buffer
-		err = t.Template.Execute(&out, obj)
-		if err != nil {
-			return NewFalseObj(err.Error())
+		if t.TmplType == T_TEXT {
+			err = t.TextTemplate.Execute(&out, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
+		} else if t.TmplType == T_HTML {
+			err = t.HTMLTemplate.Execute(&out, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
 		}
 		//set result to the first parameter
 		strObj.String = out.String()
@@ -323,7 +487,7 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "3", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewFalseObj("Before calling executeTemplate(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
@@ -417,15 +581,29 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 	}
 
 	if isWriter {
-		err = t.Template.ExecuteTemplate(writerObj.IOWriter(), nameStrObj.String, obj)
-		if err != nil {
-			return NewFalseObj(err.Error())
+		if t.TmplType == T_TEXT {
+			err = t.TextTemplate.ExecuteTemplate(writerObj.IOWriter(), nameStrObj.String, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
+		} else if t.TmplType == T_HTML {
+			err = t.HTMLTemplate.ExecuteTemplate(writerObj.IOWriter(), nameStrObj.String, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
 		}
 	} else {
 		var out bytes.Buffer
-		err = t.Template.ExecuteTemplate(&out, nameStrObj.String, obj)
-		if err != nil {
-			return NewFalseObj(err.Error())
+		if t.TmplType == T_TEXT {
+			err = t.TextTemplate.ExecuteTemplate(&out, nameStrObj.String, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
+		} else if t.TmplType == T_HTML {
+			err = t.HTMLTemplate.ExecuteTemplate(&out, nameStrObj.String, obj)
+			if err != nil {
+				return NewFalseObj(err.Error())
+			}
 		}
 		//set result to the first parameter
 		strObj.String = out.String()
@@ -444,11 +622,11 @@ func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "funcs", "*Hash", args[0].Type()))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling funcs(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	funcMaps := template.FuncMap{}
+	funcMaps := make(map[string]interface{})
 	for _, pair := range hashObj.Pairs {
 		if pair.Key.Type() != STRING_OBJ {
 			panic(NewError(line, GENERICERROR, "Hash's key type should be 'STRING', got '" + pair.Key.Type() + "'"))
@@ -483,7 +661,11 @@ func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
 		}
 	}
 
-	t.Template.Funcs(funcMaps)
+	if t.TmplType == T_TEXT {
+		t.TextTemplate.Funcs(funcMaps)
+	} else if t.TmplType == T_HTML {
+		t.HTMLTemplate.Funcs(funcMaps)
+	}
 
 	return t
 }
@@ -493,7 +675,7 @@ func (t *TemplateObj) Lookup(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling lookup(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
@@ -502,13 +684,22 @@ func (t *TemplateObj) Lookup(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "lookup", "*String", args[0].Type()))
 	}
 
-
-	temp := t.Template.Lookup(nameStrObj.String)
-	if temp == nil {
-		return NIL
+	var ret *TemplateObj
+	if t.TmplType == T_TEXT {
+		temp := t.TextTemplate.Lookup(nameStrObj.String)
+		if temp == nil {
+			return NIL
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+	} else if t.TmplType == T_HTML {
+		temp := t.HTMLTemplate.Lookup(nameStrObj.String)
+		if temp == nil {
+			return NIL
+		}
+		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return &TemplateObj{Template:temp}
+	return ret
 }
 
 func (t *TemplateObj) Name(line string, args ...Object) Object {
@@ -516,16 +707,21 @@ func (t *TemplateObj) Name(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling name(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	str := t.Template.Name()
+	var str string = ""
+	if t.TmplType == T_TEXT {
+		str = t.TextTemplate.Name()
+	} else if t.TmplType == T_HTML {
+		str = t.HTMLTemplate.Name()
+	}
 	return NewString(str)
 }
 
 func (t *TemplateObj) Option(line string, args ...Object) Object {
-	if t.Template == nil {
+	if t.TextTemplate == nil  && t.HTMLTemplate == nil {
 		return NewNil("Before calling option(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
@@ -533,7 +729,12 @@ func (t *TemplateObj) Option(line string, args ...Object) Object {
 	for _, v := range args {
 		strArr = append(strArr, v.(*String).String)
 	}
-	t.Template.Option(strArr...)
+
+	if t.TmplType == T_TEXT {
+		t.TextTemplate.Option(strArr...)
+	} else if t.TmplType == T_HTML {
+		t.HTMLTemplate.Option(strArr...)
+	}
 
 	return t
 }
@@ -543,15 +744,24 @@ func (t *TemplateObj) Templates(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
-	if t.Template == nil {
+	if t.TextTemplate == nil && t.HTMLTemplate == nil {
 		return NewNil("Before calling templates(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
 	retArr := &Array{}
-	templateArr := t.Template.Templates()
-	for _, v := range templateArr {
-		retArr.Members = append(retArr.Members, &TemplateObj{Template:v})
+
+	if t.TmplType == T_TEXT {
+		templateArr := t.TextTemplate.Templates()
+		for _, v := range templateArr {
+			retArr.Members = append(retArr.Members, &TemplateObj{TextTemplate:v})
+		}
+	} else if t.TmplType == T_HTML {
+		templateArr := t.HTMLTemplate.Templates()
+		for _, v := range templateArr {
+			retArr.Members = append(retArr.Members, &TemplateObj{HTMLTemplate:v})
+		}
 	}
+
 	return retArr
 }
 
@@ -565,7 +775,7 @@ func (t *TemplateObj) HTMLEscapeString(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "htmlEscapeString", "*String", args[0].Type()))
 	}
 
-	ret := template.HTMLEscapeString(strObj.String)
+	ret := text.HTMLEscapeString(strObj.String)
 	return NewString(ret)
 }
 
@@ -585,7 +795,7 @@ func (t *TemplateObj) HTMLEscape(line string, args ...Object) Object {
 	}
 
 	b := []byte(strObj.String)
-	template.HTMLEscape(writerObj.IOWriter(), b)
+	text.HTMLEscape(writerObj.IOWriter(), b)
 	return NIL
 }
 
@@ -599,7 +809,8 @@ func (t *TemplateObj) HTMLEscaper(line string, args ...Object) Object {
 		arrIntf[i] = object2RawValue(v)
 	}
 
-	ret := template.HTMLEscaper(arrIntf...)
+	//use text.HTMLEscaper() is ok, because html.HTMLEscaper() just call text.HTMLEscaper().
+	ret := text.HTMLEscaper(arrIntf...)
 	return NewString(ret)
 }
 
@@ -613,7 +824,7 @@ func (t *TemplateObj) JSEscapeString(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "jsEscapeString", "*String", args[0].Type()))
 	}
 
-	ret := template.JSEscapeString(strObj.String)
+	ret := text.JSEscapeString(strObj.String)
 	return NewString(ret)
 }
 
@@ -633,7 +844,7 @@ func (t *TemplateObj) JSEscape(line string, args ...Object) Object {
 	}
 
 	b := []byte(strObj.String)
-	template.JSEscape(writerObj.IOWriter(), b)
+	text.JSEscape(writerObj.IOWriter(), b)
 	return NIL
 }
 
@@ -647,7 +858,7 @@ func (t *TemplateObj) JSEscaper(line string, args ...Object) Object {
 		arrIntf[i] = object2RawValue(v)
 	}
 
-	ret := template.JSEscaper(arrIntf...)
+	ret := text.JSEscaper(arrIntf...)
 	return NewString(ret)
 }
 
@@ -661,7 +872,7 @@ func (t *TemplateObj) URLQueryEscaper(line string, args ...Object) Object {
 		arrIntf[i] = object2RawValue(v)
 	}
 
-	ret := template.URLQueryEscaper(arrIntf...)
+	ret := text.URLQueryEscaper(arrIntf...)
 	return NewString(ret)
 }
 
