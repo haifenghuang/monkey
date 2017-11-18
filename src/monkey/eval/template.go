@@ -662,9 +662,9 @@ func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
 	}
 
 	if t.TmplType == T_TEXT {
-		t.TextTemplate.Funcs(funcMaps)
+		t.TextTemplate = t.TextTemplate.Funcs(funcMaps)
 	} else if t.TmplType == T_HTML {
-		t.HTMLTemplate.Funcs(funcMaps)
+		t.HTMLTemplate = t.HTMLTemplate.Funcs(funcMaps)
 	}
 
 	return t

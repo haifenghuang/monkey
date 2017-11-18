@@ -89,3 +89,13 @@ template.newText("titleTest").funcs(
 }
 ).parse(envText).execute(resultValue, "PATH")
 println('{resultValue}')
+
+
+
+/////////////////////////////////
+//        HTML Template Test
+/////////////////////////////////
+guardians = ["Gamora", "Groot", "Nebula", "Rocket", "Star-Lord"]
+master  = `Names:{{block "list" .}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`
+masterTmpl = template.newHtml("master").parse(master)
+masterTmpl.execute(stdout, guardians)
