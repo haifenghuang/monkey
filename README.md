@@ -388,7 +388,7 @@ mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"
 You could use index to access array element.
 
 ```swift
-println('mixedArr[2]={mixedArr[2]})
+println('mixedArr[2]={mixedArr[2]}')
 println(["a", "b", "c", "d"][2])
 ```
 
@@ -870,6 +870,7 @@ println(arr1Json)
 
 #### net module
 
+```swift
 //A simple tcp client
 let conn = dialTCP("tcp", "127.0.0.1:9090")
 if (conn == nil) {
@@ -908,7 +909,6 @@ if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
 ```
-
 
 #### linq module
 
@@ -1030,13 +1030,14 @@ w.flush()
 The `template` module contains 'text' and 'html' template handling.
 
 Use `newText(...)` or `parseTextFiles(...)` to create a new 'text' template.
+
 Use `newHtml(...)` or `parseHtmlFiles(...)` to create a new 'html' template.
 
 ```swift
 arr = [
-	{ "key" => "key1", "value" => "value1" },
-	{ "key" => "key2", "value" => "value2" },
-	{ "key" => "key3", "value" => "value3" }
+    { "key" => "key1", "value" => "value1" },
+    { "key" => "key2", "value" => "value2" },
+    { "key" => "key3", "value" => "value3" }
 ]
 
 //use parseTextFiles(), write to a string
@@ -1051,11 +1052,105 @@ template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
 //Note here: we need to use "{{-" and "-}}" to remove the newline from the output
 template.newText("array").parse(`Looping
 {{- range . }}
-	key={{ .key }}, value={{ .value -}}
+        key={{ .key }}, value={{ .value -}}
 {{- end }}
 `).execute(resultValue, arr)
 println('{resultValue}')
 ```
+
+#### sql module
+
+The `sql` module provides a lower abstraction layer for working with database.
+
+It should correctly handle database null values, though not throughly tested.
+
+For testing `sql` module, you need to do following:
+
+1. Download sql driver source.
+
+2. Include the package in 'sql.go' like below:
+
+```go
+    _ "github.com/mattn/go-sqlite3"
+```
+
+3. Recompile monkey source.
+
+Below is a complete source of the `examples/db.my`:
+
+```swift
+let dbOp = fn() {
+    os.remove("./foo.db") //delete `foo.db` file
+    let db = dbOpen("sqlite3", "./foo.db")
+    if (db == nil) {
+        println("DB open failed, error:", db.message())
+        return false
+    }
+    defer db.close()
+    let sqlStmt = `create table foo (id integer not null primary key, name text);delete from foo;`
+    let exec_ret = db.exec(sqlStmt)
+    if (exec_ret == nil) {
+        println("DB exec failed! error:", exec_ret.message())
+        return false
+    }
+    
+    let tx = db.begin()
+    if (tx == nil) { 
+        println("db.Begin failed!, error:", tx.message())
+        return false
+    }
+    
+    let stmt = tx.prepare(`insert into foo(id, name) values(?, ?)`)
+    if (stmt == nil) {
+        println("tx.Prepare failed!, error:", stmt.message())
+        return false
+    }
+    
+    defer stmt.close()
+    let i = 0
+    for (i = 0; i < 105; i++) {
+        let name = "您好" + i
+        if (i>100) {
+            //insert `null` value. There are five predefined values:
+            let rs = stmt.exec(i, sql.STRING_NULL)
+        } else {
+            let rs = stmt.exec(i, name)
+        }
+        
+        if (rs == nil) {
+            println("statement exec failed, error:", rs.message())
+            return false
+        }
+    } //end for
+    
+    tx.commit()
+    
+    let id = 0, name = ""
+    let rows = db.query("select id, name from foo")
+    if (rows == nil) {
+        println("db queue failed, error:", rows.message())
+        return false
+    }
+    defer rows.close()
+    while (rows.next()) {
+        rows.scan(id, name)
+        if (name.valid()) { //check if it's `null`
+            println(id, "|", name)
+        } else {
+            println(id, "|", "null")
+        }
+    }
+    return true
+}
+
+let ret = dbOp()
+if (ret == nil) {
+    os.exit(1)
+}
+
+os.exit()
+```
+
 
 ## About regular expression
 
