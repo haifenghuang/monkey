@@ -36,9 +36,9 @@ func (t *TemplateObj) Type() ObjectType { return TEMPLATE_OBJ }
 
 func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
-	case "newText":
+	case "newText","text":
 		return t.NewText(line, args...)
-	case "newHtml":
+	case "newHtml", "html":
 		return t.NewHtml(line, args...)
 	case "new":
 		return t.New(line, args...)
@@ -50,6 +50,10 @@ func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args 
 		return t.ParseHtmlFiles(line, args...)
 	case "parseFiles":
 		return t.ParseFiles(line, args...)
+	case "parseTextGlob":
+		return t.ParseTextGlob(line, args...)
+	case "parseHtmlGlob":
+		return t.ParseHtmlGlob(line, args...)
 	case "parseGlob":
 		return t.ParseGlob(line, args...)
 	case "clone":
@@ -101,7 +105,9 @@ func (t *TemplateObj) NewText(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "newText", "*String", args[0].Type()))
 	}
 
-	return &TemplateObj{TmplType:T_TEXT, TextTemplate:text.New(strObj.String)}
+	t.TmplType = T_TEXT
+	t.TextTemplate = text.New(strObj.String)
+	return t
 }
 
 func (t *TemplateObj) NewHtml(line string, args ...Object) Object {
@@ -115,7 +121,9 @@ func (t *TemplateObj) NewHtml(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "newHtml", "*String", args[0].Type()))
 	}
 
-	return &TemplateObj{TmplType:T_HTML, HTMLTemplate:html.New(strObj.String)}
+	t.TmplType = T_HTML
+	t.HTMLTemplate = html.New(strObj.String)
+	return t
 }
 
 func (t *TemplateObj) New(line string, args ...Object) Object {
@@ -141,13 +149,14 @@ func (t *TemplateObj) New(line string, args ...Object) Object {
 	}
 	name = strObj.String
 
-	var ret *TemplateObj
 	if tmplType == T_TEXT {
-		ret  = &TemplateObj{TmplType:tmplType, TextTemplate:text.New(name)}
+		t.TmplType = tmplType
+		t.TextTemplate = text.New(name)
 	} else if tmplType == T_HTML {
-		ret = &TemplateObj{TmplType:tmplType, HTMLTemplate:html.New(name)}
+		t.TmplType = tmplType
+		t.HTMLTemplate = html.New(name)
 	}
-	return ret
+	return t
 }
 
 func (t *TemplateObj) Parse(line string, args ...Object) Object {
@@ -164,18 +173,22 @@ func (t *TemplateObj) Parse(line string, args ...Object) Object {
 		return NewNil("Before calling parse(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	var err error = nil
 	if t.TmplType == T_TEXT {
-		t.TextTemplate, err = t.TextTemplate.Parse(strObj.String)
+		temp, err := t.TextTemplate.Parse(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return &TemplateObj{TmplType: t.TmplType, TextTemplate :temp}
+
 	} else if t.TmplType == T_HTML {
-		t.HTMLTemplate, err = t.HTMLTemplate.Parse(strObj.String)
+		temp, err := t.HTMLTemplate.Parse(strObj.String)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return &TemplateObj{TmplType: t.TmplType, HTMLTemplate :temp}
 	}
 
-	if err != nil {
-		return NewNil(err.Error())
-	}
-
-	return t
+	return NIL
 }
 
 func (t *TemplateObj) ParseTextFiles(line string, args ...Object) Object {
@@ -234,22 +247,57 @@ func (t *TemplateObj) ParseFiles(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "second", "parseFiles", "*String", args[1].Type()))
 	}
 
-	var ret *TemplateObj
 	if tmplType == T_TEXT {
 		temp, err := text.ParseFiles(strObj.String)
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType : tmplType, TextTemplate: temp}
+		return &TemplateObj{TmplType : tmplType, TextTemplate: temp}
 	} else if tmplType == T_HTML {
 		temp, err := html.ParseFiles(strObj.String)
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType : tmplType, HTMLTemplate: temp}
+		return &TemplateObj{TmplType : tmplType, HTMLTemplate: temp}
 	}
 
-	return ret
+	return NIL
+}
+
+func (t *TemplateObj) ParseTextGlob(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseTextGlob", "*String", args[0].Type()))
+	}
+
+	temp, err := text.ParseGlob(strObj.String)
+	if err != nil {
+		return NewNil(err.Error())
+	}
+
+	return &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+}
+
+func (t *TemplateObj) ParseHtmlGlob(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseHtmlGlob", "*String", args[0].Type()))
+	}
+
+	temp, err := html.ParseGlob(strObj.String)
+	if err != nil {
+		return NewNil(err.Error())
+	}
+
+	return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 }
 
 func (t *TemplateObj) ParseGlob(line string, args ...Object) Object {
@@ -262,22 +310,21 @@ func (t *TemplateObj) ParseGlob(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "parseGlob", "*String", args[0].Type()))
 	}
 
-	var ret *TemplateObj
 	if t.TmplType == T_TEXT {
 		temp, err := text.ParseGlob(strObj.String)
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
 	} else if t.TmplType == T_HTML {
 		temp, err := html.ParseGlob(strObj.String)
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return ret
+	return NIL
 }
 
 func (t *TemplateObj) Clone(line string, args ...Object) Object {
@@ -289,22 +336,21 @@ func (t *TemplateObj) Clone(line string, args ...Object) Object {
 		return NewNil("Before calling clone(), you should first call 'new|parseFiles|parseGlob' function")
 	}
 
-	var ret *TemplateObj
 	if t.TmplType == T_TEXT {
 		temp, err := t.TextTemplate.Clone()
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
 	} else if t.TmplType == T_HTML {
 		temp, err := t.HTMLTemplate.Clone()
 		if err != nil {
 			return NewNil(err.Error())
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return ret
+	return NIL
 }
 
 func (t *TemplateObj) DefinedTemplates(line string, args ...Object) Object {
@@ -347,12 +393,12 @@ func (t *TemplateObj) Delims(line string, args ...Object) Object {
 	}
 
 	if t.TmplType == T_TEXT {
-		t.TextTemplate.Delims(leftStrObj.String, rightStrObj.String)
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate:t.TextTemplate.Delims(leftStrObj.String, rightStrObj.String)}
 	} else if t.TmplType == T_HTML {
-		t.HTMLTemplate.Delims(leftStrObj.String, rightStrObj.String)
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:t.HTMLTemplate.Delims(leftStrObj.String, rightStrObj.String)}
 	}
 
-	return t
+	return NIL
 }
 
 func (t *TemplateObj) Execute(line string, args ...Object) Object {
@@ -662,12 +708,12 @@ func (t *TemplateObj) Funcs(line string, scope *Scope, args ...Object) Object {
 	}
 
 	if t.TmplType == T_TEXT {
-		t.TextTemplate = t.TextTemplate.Funcs(funcMaps)
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate: t.TextTemplate.Funcs(funcMaps)}
 	} else if t.TmplType == T_HTML {
-		t.HTMLTemplate = t.HTMLTemplate.Funcs(funcMaps)
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:t.HTMLTemplate.Funcs(funcMaps)}
 	}
 
-	return t
+	return NIL
 }
 
 func (t *TemplateObj) Lookup(line string, args ...Object) Object {
@@ -684,22 +730,21 @@ func (t *TemplateObj) Lookup(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "lookup", "*String", args[0].Type()))
 	}
 
-	var ret *TemplateObj
 	if t.TmplType == T_TEXT {
 		temp := t.TextTemplate.Lookup(nameStrObj.String)
 		if temp == nil {
 			return NIL
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate:temp}
 	} else if t.TmplType == T_HTML {
 		temp := t.HTMLTemplate.Lookup(nameStrObj.String)
 		if temp == nil {
 			return NIL
 		}
-		ret = &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:temp}
 	}
 
-	return ret
+	return NIL
 }
 
 func (t *TemplateObj) Name(line string, args ...Object) Object {
@@ -731,12 +776,12 @@ func (t *TemplateObj) Option(line string, args ...Object) Object {
 	}
 
 	if t.TmplType == T_TEXT {
-		t.TextTemplate.Option(strArr...)
+		return &TemplateObj{TmplType:t.TmplType, TextTemplate:t.TextTemplate.Option(strArr...)}
 	} else if t.TmplType == T_HTML {
-		t.HTMLTemplate.Option(strArr...)
+		return &TemplateObj{TmplType:t.TmplType, HTMLTemplate:t.HTMLTemplate.Option(strArr...)}
 	}
 
-	return t
+	return NIL
 }
 
 func (t *TemplateObj) Templates(line string, args ...Object) Object {
@@ -753,12 +798,12 @@ func (t *TemplateObj) Templates(line string, args ...Object) Object {
 	if t.TmplType == T_TEXT {
 		templateArr := t.TextTemplate.Templates()
 		for _, v := range templateArr {
-			retArr.Members = append(retArr.Members, &TemplateObj{TextTemplate:v})
+			retArr.Members = append(retArr.Members, &TemplateObj{TmplType:t.TmplType, TextTemplate:v})
 		}
 	} else if t.TmplType == T_HTML {
 		templateArr := t.HTMLTemplate.Templates()
 		for _, v := range templateArr {
-			retArr.Members = append(retArr.Members, &TemplateObj{HTMLTemplate:v})
+			retArr.Members = append(retArr.Members, &TemplateObj{TmplType:t.TmplType, HTMLTemplate:v})
 		}
 	}
 
