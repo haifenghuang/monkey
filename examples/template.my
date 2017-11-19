@@ -97,5 +97,24 @@ println('{resultValue}')
 /////////////////////////////////
 guardians = ["Gamora", "Groot", "Nebula", "Rocket", "Star-Lord"]
 master  = `Names:{{block "list" .}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`
-masterTmpl = template.newHtml("master").parse(master)
-masterTmpl.execute(stdout, guardians)
+overlay = `{{define "list"}} {{join . ", "}}{{end}} `
+
+masterTmpl = template.newHtml("master").funcs(
+{
+	"join" => fn(x,y) { strings.join(x,y) }
+}
+).parse(master)
+
+overlayTmpl = masterTmpl.clone().parse(overlay)
+
+ret = masterTmpl.execute(stdout, guardians)
+if ret == false {
+	printf("Parse failed, reason:%s\n", ret.message())
+}
+
+ret = overlayTmpl.execute(stdout, guardians)
+if ret == false {
+	printf("Parse failed, reason:%s\n", ret.message())
+}
+println()
+
