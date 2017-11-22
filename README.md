@@ -377,6 +377,8 @@ In monkey, you could use [] to initialize an empty array:
 
 ```swift
 emptyArr = []
+emptyArr[3] = 3 //will auto expand the array
+println(emptyArr)
 ```
 
 Array could contain any number of different data types.
@@ -450,8 +452,11 @@ println(rawStr)
 
 //when you use single quoted string, and want variable to be interpolated,
 //you just put the variable into '{}'. see below:
-str = "Hello World"
+str = "Hello world"
+println('str={str}') //output: "Hello world"
+str[6]="W"
 println('str={str}') //output: "Hello World"
+
 ```
 
 In monkey, strings are utf8-encoded, you could use utf-8 encoded name as a variable name.
@@ -495,6 +500,8 @@ In monkey, you could use {} to initialize an empty hash:
 
 ```swift
 emptyHash = {}
+emptyHash["key1"] = "value1"
+println(emptyHash)
 ```
 
 Hash's key could be string, int, boolean:

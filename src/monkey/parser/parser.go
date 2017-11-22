@@ -519,9 +519,20 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 		p.nextToken()
 		e.Value = p.parseExpression(LOWEST)
 		return e
+	} else if indexExp, ok := name.(*ast.IndexExpression); ok {
+		// IndexExpression(Subscript)'s left expression should be an identifier.
+		switch indexExp.Left.(type) {
+		case *ast.Identifier:
+			e.Name = indexExp
+		default:
+			msg := fmt.Sprintf("Syntax Error: Assignment operator expects an identifier")
+			p.errors = append(p.errors, msg)
+			return nil
+		}
 	} else {
 		msg := fmt.Sprintf("Syntax Error: %v - expected assign token to be IDENT, got %s instead", p.curToken.Pos, name.TokenLiteral())
 		p.errors = append(p.errors, msg)
+		return nil
 	}
 
 	p.nextToken()

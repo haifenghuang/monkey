@@ -56,6 +56,12 @@ func (a *Array) CallMethod(line string, scope *Scope, method string, args ...Obj
 		return a.Empty(line, args...)
 	case "len":
 		return a.Len(line, args...)
+	case "first", "head":
+		return a.First(line, args...)
+	case "last":
+		return a.Last(line, args...)
+	case "tail":
+		return a.Tail(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, a.Type(), method))
 }
@@ -256,6 +262,47 @@ func (a *Array) Empty(line string, args ...Object) Object {
 		return TRUE
 	}
 	return FALSE
+}
+
+func (a *Array) First(line string, args ...Object) Object {
+	l := len(args)
+	if l != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", l))
+	}
+
+	if len(a.Members) == 0 {
+		return NIL
+	}
+	return a.Members[0]
+}
+
+func (a *Array) Last(line string, args ...Object) Object {
+	l := len(args)
+	if l != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", l))
+	}
+
+	length := len(a.Members)
+	if length == 0 {
+		return NIL
+	}
+	return a.Members[length - 1]
+}
+
+func (a *Array) Tail(line string, args ...Object) Object {
+	l := len(args)
+	if l != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", l))
+	}
+
+	length := len(a.Members)
+	if length == 0 {
+		return NIL
+	}
+
+	newMembers := make([]Object, length+1, length+1)
+	copy(newMembers, a.Members)
+	return &Array{Members: newMembers}
 }
 
 //Json marshal handling

@@ -361,62 +361,92 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 func evalStrAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	leftVal := left.(*String).String
 	var ok bool
+
+	switch a.Token.Literal {
+	case "=":
+		switch nodeType := a.Name.(type) {
+		case *ast.IndexExpression: //str[idx] = xxx
+			index := Eval(nodeType.Index, scope)
+			if index == NIL {
+				ret = NIL
+				return
+			}
+			if index.Type() != INTEGER_OBJ { //must be an integer
+				panic(NewError(a.Pos().Sline(), GENERICERROR, "Array index value should evaluate to an integer"))
+			}
+
+			idx := index.(*Integer).Int64
+			if idx < 0 || idx >= int64(len(leftVal)) {
+				panic(NewError(a.Pos().Sline(), INDEXERROR, idx))
+			}
+
+			str := NewString(leftVal[:idx] + val.Inspect() + leftVal[idx+1:])
+			ret, ok = scope.Reset(name, str)
+			if ok {
+				return
+			}
+		}
+	}
+
 	ret, ok = scope.Reset(name, NewString(leftVal+val.Inspect()))
 	if ok {
 		return
 	}
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 
-	//	valType := val.Type()
-	//	if valType != INTEGER_OBJ && valType != FLOAT_OBJ && valType != STRING_OBJ {
-	//		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
-	//	}
-	//
-	//	leftVal := left.(*String).String
-	//	switch valType {
-	//	case INTEGER_OBJ, FLOAT_OBJ:
-	//		switch a.Token.Literal {
-	//		case "+=":
-	//			var str string
-	//			if valType == INTEGER_OBJ {
-	//				str = fmt.Sprintf("%v", val.(*Integer).Int64)
-	//			} else {
-	//				str = fmt.Sprintf("%v", val.(*Float).Float64)
-	//			}
-	//			var ok bool
-	//			ret, ok = scope.Reset(name, NewString(leftVal+str))
-	//			if ok {
-	//				return
-	//			}
-	//			panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
-	//		}
-	//	case STRING_OBJ:
-	//		switch a.Token.Literal {
-	//		case "+=":
-	//			str := val.(*String).String
-	//			v, ok := scope.Reset(name, NewString(leftVal+str))
-	//			if ok {
-	//				return v
-	//			}
-	//			panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, name))
-	//		}
-	//		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
-	//	}
-	//
-	//	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 }
 
 func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	leftVals := left.(*Array).Members
-	leftVals = append(leftVals, val)
 
 	var ok bool
 	switch a.Token.Literal {
 	case "+=":
-		ret, ok = scope.Reset(name, &Array{Members: leftVals})
-		if ok {
-			return
+		switch nodeType := a.Name.(type) {
+		case *ast.Identifier:
+			name = nodeType.Value
+			leftVals = append(leftVals, val)
+			ret, ok = scope.Reset(name, &Array{Members: leftVals})
+			if ok {
+				return
+			}
 		}
+	case "=":
+		switch nodeType := a.Name.(type) {
+		case *ast.IndexExpression: //arr[idx] = xxx
+			index := Eval(nodeType.Index, scope)
+			if index == NIL {
+				ret = NIL
+				return
+			}
+			if index.Type() != INTEGER_OBJ { //must be an integer
+				panic(NewError(a.Pos().Sline(), GENERICERROR, "Array index value should evaluate to an integer"))
+			}
+
+			idx := index.(*Integer).Int64
+			if idx < 0 {
+				panic(NewError(a.Pos().Sline(), INDEXERROR, idx))
+			}
+
+			if idx < int64(len(leftVals)) { //index is in range
+				leftVals[idx] = val
+				ret, ok = scope.Reset(name, &Array{Members: leftVals})
+				if ok {
+					return
+				}
+			} else { //index is out of range, we auto-expand the array
+				for i := int64(len(leftVals)); i < idx; i++ {
+					leftVals = append(leftVals, NIL)
+				}
+
+				leftVals = append(leftVals, val)
+				ret, ok = scope.Reset(name, &Array{Members: leftVals})
+				if ok {
+					return
+				}
+			}
+		}
+
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	}
 
@@ -454,6 +484,18 @@ func evalHashAssignExpression(a *ast.AssignExpression, name string, left Object,
 		ret, ok = scope.Reset(name, &Hash{Pairs: leftVals})
 		if ok {
 			return
+		}
+		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
+	case "=":
+		switch nodeType := a.Name.(type) {
+		case *ast.IndexExpression: //hash[key] = xxx
+			key := Eval(nodeType.Index, scope)
+			hashable, ok := key.(Hashable)
+			if !ok {
+				panic(NewError(a.Pos().Sline(), KEYERROR, val.Type()))
+			}
+			leftVals[hashable.HashKey()] = HashPair{Key: key, Value: val}
+			return left
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	}
@@ -532,27 +574,45 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		return evalStructAssignExpression(a, scope, val)
 	}
 
-	if a.Token.Literal == "=" {
-		v, ok := scope.Reset(a.Name.String(), val)
-		if ok {
-			return v
-		}
-		panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, a.Name.String()))
+	var name string
+	switch nodeType := a.Name.(type) {
+	case *ast.Identifier:
+		name = nodeType.Value
+	case *ast.IndexExpression:
+		name = nodeType.Left.(*ast.Identifier).Value
 	}
 
-	left, _ := scope.Get(a.Name.String())
+	if a.Token.Literal == "=" {
+		switch nodeType := a.Name.(type) {
+		case *ast.Identifier:
+			name := nodeType.Value
+			v, ok := scope.Reset(name, val)
+			if ok {
+				return v
+			}
+			panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, a.Name.String()))
+		}
+	}
+
+	// Check if the variable exists or not
+	var left Object
+	var ok bool
+	if left, ok = scope.Get(name); !ok {
+		panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, name))
+	}
+
 	switch left.Type() {
 	case INTEGER_OBJ, FLOAT_OBJ:
-		val = evalNumAssignExpression(a, a.Name.String(), left, scope, val)
+		val = evalNumAssignExpression(a, name, left, scope, val)
 		return
 	case STRING_OBJ:
-		val = evalStrAssignExpression(a, a.Name.String(), left, scope, val)
+		val = evalStrAssignExpression(a, name, left, scope, val)
 		return
 	case ARRAY_OBJ:
-		val = evalArrayAssignExpression(a, a.Name.String(), left, scope, val)
+		val = evalArrayAssignExpression(a, name, left, scope, val)
 		return
 	case HASH_OBJ:
-		val = evalHashAssignExpression(a, a.Name.String(), left, scope, val)
+		val = evalHashAssignExpression(a, name, left, scope, val)
 		return
 	}
 
@@ -2192,8 +2252,12 @@ func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scop
 		return startIdx
 	}
 	idx = startIdx.(*Integer).Int64
-	if idx >= length || idx < 0 {
+	if idx < 0 {
 		panic(NewError(se.Pos().Sline(), INDEXERROR, idx))
+	}
+
+	if idx >= length {
+		return NIL
 	}
 
 	if se.EndIndex == nil {
@@ -2233,8 +2297,11 @@ func evalArrayIndex(array *Array, ie *ast.IndexExpression, scope *Scope) Object 
 		return index
 	}
 	idx = index.(*Integer).Int64
-	if idx >= length || idx < 0 {
+	if idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
+	}
+	if idx >= length {
+		return NIL
 	}
 	return array.Members[idx]
 }
