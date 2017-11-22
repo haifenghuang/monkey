@@ -1178,7 +1178,7 @@ func (ce *ContinueExpression) String() string { return ce.Token.Literal }
 ///////////////////////////////////////////////////////////
 type AssignExpression struct {
 	Token token.Token
-	Name  *Identifier
+	Name  Expression
 	Value Expression
 }
 
