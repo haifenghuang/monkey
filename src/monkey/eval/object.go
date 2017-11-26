@@ -299,7 +299,7 @@ func (i *Integer) number()          {}
 func (i *Integer) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 
 	switch method {
-	case "valid":
+	case "valid", "isValid":
 		return i.IsValid(line, args...)
 	case "setValid":
 		return i.SetValid(line, args...)
@@ -406,7 +406,7 @@ func (f *Float) number()          {}
 func (f *Float) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 
 	switch method {
-	case "valid":
+	case "valid", "isValid":
 		return f.IsValid(line, args...)
 	case "setValid":
 		return f.SetValid(line, args...)
@@ -528,7 +528,7 @@ func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 func (b *Boolean) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 
 	switch method {
-	case "valid":
+	case "valid", "isValid":
 		return b.IsValid(line, args...)
 	case "setValid":
 		return b.SetValid(line, args...)
