@@ -758,13 +758,14 @@ Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, lo
 
 下面是对monkey的标准模块的一个简短的描述。
 
+#### fmt 模块
+
 ```swift
-//fmt module
 let i = 108, f = 25.383, b=true, s = "Hello, world",
     aArr = [1, 2, 3, 4, "a", "b"],
     aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
 
-// Use '%v (value)' to print variable value, '%_' to print the variable's type
+//使用 '%v (value)' 来打印变量值, '%_' 来打印变量类型
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
 fmt.printf("i=[%_], b=[%t], f=[%f], aArr=%_, aHash=%_, s=[%s] \n", i, b, f, aArr, aHash, s)
 
@@ -772,9 +773,11 @@ sp = fmt.sprintf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
 fmt.printf("sp=%s", sp)
 
 fmt.fprintf(stdout, "Hello %s\n", "world")
+```
 
+#### time 模块
 
-//time module
+```swift
 t1 = newTime()
 format = t1.strftime("%F %R")
 println(t1.toStr(format))
@@ -783,24 +786,28 @@ println(Epoch)
 
 t2 = t1.fromEpoch(Epoch)
 println(t2.toStr(format))
+```
 
+#### logger 模块
 
-//logger module
-#Log to stdout
+```swift
+#输出到标准输出(stdout)
 log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
 
 log.printf("Hello, %s\n", "logger")
 fmt.printf("Logger: flags =<%d>, prefix=<%s>\n", log.flags(), log.prefix())
 
-#Log to file
+#输出到文件
 file = newFile("./logger.log", "a+")
 log.setOutput(file)
 for i in 1..5 {
     log.printf("This is <%d>\n", i)
 }
+```
 
+#### flag 模块(处理命令行选项)
 
-//flag module(for handling of command line options)
+```swift
 let verV = flag.bool("version", false, "0.1")
 let ageV = flag.int("age", 40, "an int")
 let heightV = flag.float("height", 120.5, "a float")
@@ -819,9 +826,11 @@ if (flag.isSet("age")) {
 } else {
     println("age is not set")
 }
+```
 
+#### json 模块( json序列化(marshal)和反序列化(unmarshal) )
 
-// json module( for json marshal & unmarshal)
+```swift
 let hsJson = {"key1" => 10,
               "key2" => "Hello Json %s %s Module",
               "key3" => 15.8912,
@@ -830,7 +839,7 @@ let hsJson = {"key1" => 10,
               "key6" => {"subkey1"=>12, "subkey2"=>"Json"},
               "key7" => fn(x,y){x+y}(1,2)
 }
-let hashStr = json.marshal(hsJson) //same as `json.toJson(hsJson)`
+let hashStr = json.marshal(hsJson) //也可以使用 `json.toJson(hsJson)`
 println(json.indent(hashStr, "  "))
 
 let hsJson1 = json.unmarshal(hashStr)
@@ -840,12 +849,14 @@ println(hsJson1)
 let arrJson = [1,2.3,"HHF",[],{ "key" =>10, "key1" =>11}]
 let arrStr = json.marshal(arrJson)
 println(json.indent(arrStr))
-let arr1Json = json.unmarshal(arrStr)  //same as `json.fromJson(arrStr)`
+let arr1Json = json.unmarshal(arrStr)  //也可以使用 `json.fromJson(arrStr)`
 println(arr1Json)
+```
 
+#### net 模块
 
-//net module
-//A simple tcp client
+```swift
+//简单的TCP客户端
 let conn = dialTCP("tcp", "127.0.0.1:9090")
 if (conn == nil) {
     println("dailTCP failed, error:", conn.message())
@@ -863,7 +874,7 @@ if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
 
-//A simple tcp server
+//一个简单的TCP服务端
 let ln = listenTCP("tcp", ":9090")
 for {
     let conn = ln.acceptTCP()
@@ -882,12 +893,11 @@ let ret = ln.close()
 if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
+```
 
+#### linq 模块
 
-
-//linq module
-//the linq module is not fully tested, and it has no `orderby` and `compare` compared with
-//ahmetb's linq implementation.
+```swift
 let mm = [1,2,3,4,5,6,7,8,9,10]
 println('before mm={mm}')
 
@@ -945,7 +955,7 @@ result = linq.from(thenByDescendingArr).orderBy(fn(x) {
 let thenByDescendingArrStr = json.marshal(result)
 println(json.indent(thenByDescendingArrStr, "  "))
 
-//test 'selectManyByIndexed'
+//测试 'selectManyByIndexed'
 println()
 let selectManyByIndexedArr1 = [[1, 2, 3], [4, 5, 6, 7]]
 result = linq.from(selectManyByIndexedArr1).selectManyByIndexed(
@@ -966,11 +976,12 @@ fn(idx,x){
     return x + "_"
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
+```
 
+#### csv 模块
 
-
-//csv module
-//test csv reader
+```swift
+//测试 csv reader
 let r = newCsvReader("./examples/test.csv")
 if r == nil {
     printf("newCsv returns err, message:%s\n", r.message())
@@ -984,21 +995,145 @@ if (ra == nil) {
 }
 
 for line in ra {
-	println(line)
-	for record in line {
-		println("	", record)
-	}
+    println(line)
+    for record in line {
+        println("	", record)
+    }
 }
 
-//test csv writer
+//测试 csv writer
 let ofile = newFile("./examples/demo.csv", "a+")
 let w = newCsvWriter(ofile)
 w.setOptions({"Comma"=>"	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
+```
 
+#### template 模块
 
+`template` 模块包含'text'和'html'模版处理.
+
+使用 `newText(...)` 或者 `parseTextFiles(...)` 来创建一个新的'text'模版。
+
+使用 `newHtml(...)` 或者`parseHtmlFiles(...)` 来创建一个新的'html'模版。
+
+```swift
+arr = [
+    { "key" => "key1", "value" => "value1" },
+    { "key" => "key2", "value" => "value2" },
+    { "key" => "key3", "value" => "value3" }
+]
+
+//使用parseTextFiles(), 来写入一个字符串
+template.parseTextFiles("./examples/looping.tmpl").execute(resultValue, arr)
+println('{resultValue}')
+
+//使用parseTextFiles()来写入一个文件
+file = newFile("./examples/outTemplate.log", "a+")
+template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
+
+//使用 parse()
+//注: 我们需要使用"{{-" and "-}}"来移除输出中的回车换行(newline)
+template.newText("array").parse(`Looping
+{{- range . }}
+        key={{ .key }}, value={{ .value -}}
+{{- end }}
+`).execute(resultValue, arr)
+println('{resultValue}')
+```
+
+#### sql 模块
+
+`sql` 模块提供了一个底层封装来操作数据库。
+
+它可以正确的处理数据库中的null值,虽然没有经过完全的测试。
+
+为了测试`sql`模块, 你需要做以下几个步骤:
+
+1. 下载sql驱动器(sql driver)代码.
+
+2. 将驱动器的包包含到'sql.go'文件中:
+
+```go
+    _ "github.com/mattn/go-sqlite3"
+```
+
+3. 重新编译monkey源码.
+
+下面是一个完整的使用数据库的例子(`examples/db.my`):
+
+```swift
+let dbOp = fn() {
+    os.remove("./foo.db") //delete `foo.db` file
+    let db = dbOpen("sqlite3", "./foo.db")
+    if (db == nil) {
+        println("DB open failed, error:", db.message())
+        return false
+    }
+    defer db.close()
+    let sqlStmt = `create table foo (id integer not null primary key, name text);delete from foo;`
+    let exec_ret = db.exec(sqlStmt)
+    if (exec_ret == nil) {
+        println("DB exec failed! error:", exec_ret.message())
+        return false
+    }
+    
+    let tx = db.begin()
+    if (tx == nil) { 
+        println("db.Begin failed!, error:", tx.message())
+        return false
+    }
+    
+    let stmt = tx.prepare(`insert into foo(id, name) values(?, ?)`)
+    if (stmt == nil) {
+        println("tx.Prepare failed!, error:", stmt.message())
+        return false
+    }
+    
+    defer stmt.close()
+    let i = 0
+    for (i = 0; i < 105; i++) {
+        let name = "您好" + i
+        if (i>100) {
+            //插入`null`值. 有五个预定义的null常量：INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
+            let rs = stmt.exec(i, sql.STRING_NULL)
+        } else {
+            let rs = stmt.exec(i, name)
+        }
+        
+        if (rs == nil) {
+            println("statement exec failed, error:", rs.message())
+            return false
+        }
+    } //end for
+    
+    tx.commit()
+    
+    let id = 0, name = ""
+    let rows = db.query("select id, name from foo")
+    if (rows == nil) {
+        println("db queue failed, error:", rows.message())
+        return false
+    }
+    defer rows.close()
+    while (rows.next()) {
+        rows.scan(id, name)
+        if (name.valid()) { //检查是否为`null`
+            println(id, "|", name)
+        } else {
+            println(id, "|", "null")
+        }
+    }
+    return true
+}
+
+let ret = dbOp()
+if (ret == nil) {
+    os.exit(1)
+}
+
+os.exit()
 ```
 
 ## 实用工具

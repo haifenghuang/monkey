@@ -155,7 +155,7 @@ e = 5
 姓 = "黄"
 ```
 
-## Reserved keywords
+### Reserved keywords
 
 Keywords are predefined, reserved identifiers that have special meanings to the compiler. They cannot be used as identifiers. Below is a list of reserved keywords
 
@@ -188,7 +188,7 @@ let f = float(i)   // result: 10
 let a = array(i)   // result: [10]
 ```
 
-## `qw`(Quote word) keyword
+### `qw`(Quote word) keyword
 
 The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings, the `qw` keyword can make it a lot easier for those strings.
 
@@ -201,7 +201,7 @@ newArr = qw(1,2,3.5) //array with string values, not number values.
 fmt.printf("newArr=%v\n", newArr)
 ```
 
-## `enum` keyword
+### `enum` keyword
 
 In mokey, you can use enum to define constants.
 
@@ -373,7 +373,7 @@ case i in {
 
 ```
 
-## Array
+### Array
 
 In monkey, you could use [] to initialize an empty array:
 
@@ -430,7 +430,7 @@ for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_ is the index
 
 ```
 
-## String
+### String
 
 In monkey, there are three types of `string`:
 
@@ -496,7 +496,7 @@ joinedStr += "!"
 println(joinedStr)
 ```
 
-## Hash
+### Hash
 
 In monkey, you could use {} to initialize an empty hash:
 
@@ -1120,7 +1120,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //insert `null` value. There are five predefined values:
+            //insert `null` value. There are five predefined values:INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)
