@@ -427,8 +427,18 @@ for item in strArr where /^\d+/.match(item) {
 for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_ is the index
     printf("idx=%d, v=%s\n", $_, item)
 }
-
 ```
+
+You could also use the builtin `reverse` function to reverse array element:
+
+```swift
+let arr = [1,3,5,2,4,6,7,8,9]
+println("Source Array =", arr)
+
+revArr = reverse(arr)
+println("Reverse Array =", revArr)
+```
+
 
 ### String
 
@@ -496,6 +506,15 @@ joinedStr += "!"
 println(joinedStr)
 ```
 
+You could also can use the builtin `reverse` function to reverse character of the string:
+
+```swift
+let str = "Hello world!"
+println("Source Str =", str)
+revStr = reverse(str)
+println("Reverse str =", revStr)
+```
+
 ### Hash
 
 In monkey, you could use {} to initialize an empty hash:
@@ -540,6 +559,15 @@ println(keys)
 
 values = hashObj.values()
 println(values)
+```
+
+You could also use the builtin `reverse` function to reverse hash's key and value:
+
+```swift
+let hs = {"key1"=>12, "key2"=>"HHF", "key3"=>false}
+println("Source Hash =", hs)
+revHash = reverse(hs)
+println("Reverse Hash =", revHash)
 ```
 
 ## Standard input/output/error

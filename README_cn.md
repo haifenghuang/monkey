@@ -431,7 +431,16 @@ for item in strArr where /^\d+/.match(item) {
 for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_是索引
     printf("idx=%d, v=%s\n", $_, item)
 }
+```
 
+你可以使用内置函数`reverse`来反转数组元素:
+
+```swift
+let arr = [1,3,5,2,4,6,7,8,9]
+println("Source Array =", arr)
+
+revArr = reverse(arr)
+println("Reverse Array =", revArr)
 ```
 
 ## 字符串(String)
@@ -500,6 +509,16 @@ joinedStr += "!"
 println(joinedStr)
 ```
 
+你还可以使用内置函数`reverse`来反转字符串：
+
+```swift
+let str = "Hello world!"
+println("Source Str =", str)
+revStr = reverse(str)
+println("Reverse str =", revStr)
+```
+
+
 ## 哈希(Hash)
 
 在monkey中, 使用{}来创建一个空的哈希:
@@ -544,6 +563,15 @@ println(keys)
 
 values = hashObj.values()
 println(values)
+```
+
+你还可以使用内置函数`reverse`来反转哈希的key和value:
+
+```swift
+let hs = {"key1"=>12, "key2"=>"HHF", "key3"=>false}
+println("Source Hash =", hs)
+revHash = reverse(hs)
+println("Reverse Hash =", revHash)
 ```
 
 ## 标准输入/输出/错误

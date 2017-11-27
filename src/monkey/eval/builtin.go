@@ -523,6 +523,16 @@ func reverseBuiltin() *Builtin {
 					reverse.Members = append(reverse.Members, input.Members[i])
 				}
 				return reverse
+			case *Hash:
+				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+				for _, v := range input.Pairs {
+					if hashable, ok := v.Value.(Hashable); ok {
+						hash.Pairs[hashable.HashKey()] = HashPair{Key: v.Value, Value: v.Key}
+					} else {
+						panic(NewError(line, GENERICERROR, fmt.Sprintf("The hash's value(%s) is not hashable", v.Value.Inspect())))
+					}
+				}
+				return hash
 			default:
 				panic(NewError(line, PARAMTYPEERROR, "first", "reverse", "*Array|*String", args[0].Type()))
 			}
