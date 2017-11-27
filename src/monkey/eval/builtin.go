@@ -326,8 +326,10 @@ func lenBuiltin() *Builtin {
 				return NewInteger(int64(len(arg.Members)))
 			case *Hash:
 				return NewInteger(int64(len(arg.Pairs)))
+			case *Nil:
+				return NewInteger(0)
 			}
-			panic(NewError(line, PARAMTYPEERROR, "first", "len", "*String|*Array|*Hash", args[0].Type()))
+			panic(NewError(line, PARAMTYPEERROR, "first", "len", "*String|*Array|*Hash|*Nil", args[0].Type()))
 		},
 	}
 }
