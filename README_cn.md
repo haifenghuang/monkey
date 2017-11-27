@@ -1,55 +1,60 @@
-# Monkey Programming Language
+﻿# Monkey程序语言
 
-Chinese version:[中文](https://github.com/haifenghuang/monkey/blob/master/README_cn.md)
+## 主页
 
-## Summary
+[monkey](https://github.com/haifenghuang/monkey)
 
-Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python and Perl.
+## 概述
 
-## Overview
+Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl.
 
-This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:
+## 总览
 
-* Modified string module(which can correctly handle utf8 character encoding)
-* Added file module(with some new methods).
-* Added math module
-* Added sql(db) module(which can correctly handing null values. Need sql driver package)
-* Added time module
-* Added sort module
-* Added os module
-* Added log module
-* Added net module
-* Added http module
-* Added filepath module
-* Added flag module(for handling command line options)
-* Added json module(for json marshaling and unmarshaling)
-* Added fmt module
-* Added sync module
-* Added list module
-* Added linq module(Code come from [linq](https://github.com/ahmetb/go-linq) with some modifications)
-* Added csv module
-* Added regexp module
-* Added template module
-* Regular expression literal support(partially like perls)
-* channel support(like golang's channel)
-* more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
-* utf8 support(e.g. you could use utf8 character as variable name)
-* more flow control support(e.g. try/catch/finally, for-in, case, c-like for loop)
-* defer support
-* spawn support(goroutine)
-* enum support
-* pipe operator support(see demo for help)
-* function with default value and variadic parameters
+此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
 
-There are a number of tasks to complete, as well as a number of bugs. The purpose of this project was to dive deeper into Go, as well as get a better understanding of how programming languages work. It has been successful in those goals. There may or may not be continued work - I do plan on untangling a few messy spots, and there are a few features I'd like to see implemented. This will happen as time and interest allows.
+* 更改了`string`模块(能够正确处理utf8字符编码)
+* 修改了`file`模块(包含一些新方法).
+* 增加了`math`模块
+* 增加了`sql(db)`模块(能够正确的处理`null`值)
+* 增加了`time`模块
+* 增加了`sort`模块
+* 增加了`os`模块
+* 增加了`log`模块
+* 增加了`net`模块
+* 增加了`http`模块
+* 增加了`filepath`模块
+* 增加了`flag`模块(用来处理命令行参数)
+* 增加了`json`模块(json序列化和反序列化)
+* 增加了`fmt`模块
+* 增加了`sync`模块
+* 增加了`list`模块
+* 增加了`linq`模块(代码来自[linq](https://github.com/ahmetb/go-linq)并进行了相应的更改)
+* 增加了`csv`模块
+* 增加了`template`模块
+* 正则表达式支持(部分类似于perl)
+* 管道(channel)(基于go语言的channel)
+* 更多的操作符支持(&&, ||, &, |, ^, +=, -=, ?: 等等)
+* utf8支持(例如，你可以使用utf8字符作为变量名)
+* 更多的流程控制支持(例如: try/catch/finally, for-in, case-in, 类似c语言的for循环)
+* defer支持
+* spawn支持(goroutine)
+* enum支持和
+* pipe操作符支持
+* 支持可变参数和缺省参数的函数
 
-## Installation
+这个项目的目的主要有以下几点：
+* 自学go语言
+* 了解解析器的工作原理
 
-Just download the repository and run `./run.sh`
+但是，解析器的速度并不是这个项目考虑的因素
 
-## Basic use
+## 安装
 
-To access the REPL, simply run the following:
+下载本项目，运行`./run.sh`
+
+## 基本用法
+
+你可以如下方式使用REPL:
 
 ```sh
 ~ » monkey
@@ -58,26 +63,26 @@ Monkey programming language REPL
 >>
 ```
 
-or, to run a program:
+或者运行一个monkey文件:
 
 ```sh
 monkey path/to/file
 ```
 
-## Language Tour
+## 语言之旅
 
-### Comments
+### 注释
 
-Monkey only support single line comment.
+Monkey仅支持单行注释.
 
 ```swift
 // an inline comment
 # another inline comment
 ```
 
-### Data Types
+### 数据类型
 
-Monkey supports 7 basic data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` and `Nil`
+Monkey支持7种基本类型: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` 和`Nil`
 
 ```swift
 s1 = "hello, 黄"      # strings are UTF-8 encoded
@@ -90,14 +95,14 @@ h = { "a"=>1, "b"=>2}  # hash
 n = nil
 ```
 
-### Constants(Literal)
+### 常量(字面值)
 
-In monkey, there are mainly nine types of constants(Literals).
+Monkey中，主要有9种类型的常量(字面量).
 
 * Integer
 * Float
 * String
-* Regular expression
+* 正则表达式
 * Array
 * Hash
 * Nil
@@ -107,7 +112,7 @@ In monkey, there are mainly nine types of constants(Literals).
 ```swift
 // Integer literals
 i1 = 10
-i2 = 20_000_000     //for more readable
+i2 = 20_000_000
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
 i5 = 0c127          // octal
@@ -115,7 +120,7 @@ i5 = 0c127          // octal
 // Float literals
 f1 = 10.25
 f2 = 1.02E3
-f3 = 123_456.789_012 //for more readable
+f3 = 123_456.789_012
 
 // String literals
 s1 = "123"
@@ -143,21 +148,20 @@ let f = add(x, y) { return a + b }
 println(f(1,2))
 ```
 
-### Variables
+### 变量
 
-Variables in Monkey could start with the keyword `let`, or nothing with the
-form `variable=value`.
+你可以使用`let`来声明一个变量，或直接使用赋值的方式来声明并赋值一个变量:`variable=value`.
 
 ```swift
 let a = 1, b = "hello world", c = [1,2,3]
 d = 4
 e = 5
-姓 = "黄"
+姓="黄"
 ```
 
-### Reserved keywords
+## 保留字
 
-Keywords are predefined, reserved identifiers that have special meanings to the compiler. They cannot be used as identifiers. Below is a list of reserved keywords
+下面列出了monkey语言的保留字：
 
 * fn
 * let
@@ -167,7 +171,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * include
 * and or
 * enum
-* struct # not used
+* struct # 暂时没使用
 * do while for break continue where
 * grep map
 * case is in
@@ -177,9 +181,9 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * yield #not used
 * qw
 
-### Type conversion
+### 类型转换
 
-You can use the builtin `int()`, `float()`, `str()`, `array()` functions for type conversion.
+你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`来进行不同类型之间的转换.
 
 ```swift
 let i = 0xa
@@ -188,22 +192,22 @@ let f = float(i)   // result: 10
 let a = array(i)   // result: [10]
 ```
 
-### `qw`(Quote word) keyword
+## `qw`(Quote word)关键字
 
-The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings, the `qw` keyword can make it a lot easier for those strings.
+`qw`关键字类似perl的`qw`关键字. 当你想使用很多的双引号字符串时,`qw`就是一个好帮手.
 
 ```swift
-for str in qw<abc, def, ghi, jkl, mno> { //allowed 'qw' pair is '{}', '<>', '()'
+for str in qw<abc, def, ghi, jkl, mno> { //允许的成对操作符：'{}', '<>', '()'
   println('str={str}')
 }
 
-newArr = qw(1,2,3.5) //array with string values, not number values.
+newArr = qw(1,2,3.5) //注：这里的newArr是一个字符串数组，不是一个整形数组.
 fmt.printf("newArr=%v\n", newArr)
 ```
 
-### `enum` keyword
+## `enum`关键字
 
-In mokey, you can use enum to define constants.
+在mokey中，你可以使用`enum`来定义常量.
 
 ```swift
 LogOption = enum {
@@ -219,24 +223,24 @@ LogOption = enum {
 opt = LogOption.LstdFlags
 println(opt)
 
-//get all names of the `enum`
-for s in LogOption.getNames() { //not ordered
+//得到`enum`的所有名称
+for s in LogOption.getNames() { //非排序(non-ordered)
     println(s)
 }
 
-//get all values of the `enum`
-for s in LogOption.getValues() { //not ordered
+//得到`enum`的所有值
+for s in LogOption.getValues() { //非排序(non-ordered)
     println(s)
 }
 
-// get a specific name of the `enum`
+// 得到`enum`的一个特定的名字
 println(LogOption.getName(LogOption.Lshortfile))
 ```
 
-### Control flow
+### 控制流程
 
 * If-else
-* For/for-in
+* for-in
 * while
 * do
 * try-catch-finally
@@ -245,10 +249,10 @@ println(LogOption.getName(LogOption.Lshortfile))
 ```swift
 // if-else
 let a= 10, b = 5
-if (a > b) { // '()' is optional, but '{}' is a must
+if (a > b) { // '()'可选, 但是'{}'必须要有
     println("a > b")
 }
-elseif a == b { // could also use 'elsif'
+elseif a == b { // 也可以使用'elsif'
     println("a = b")
 }
 else {
@@ -257,7 +261,7 @@ else {
 
 // for
 i = 9
-for { // forever loop
+for { // 无限循环
     i = i + 2
     if (i > 20) { break }
     println('i = {i}')
@@ -265,7 +269,7 @@ for { // forever loop
 
 
 i = 0
-for (i = 0; i < 5; i++) {  // c-like for, '()' is a must
+for (i = 0; i < 5; i++) {  // 类似c语言的for循环， '()'必须要有
     if (i > 4) { break }
     if (i == 2) { continue }
     println('i is {i}')
@@ -311,12 +315,12 @@ for idx, v in ["a", "b", "c", "d"] {
     printf("idx=%d, v=%s\n", idx, v)
 }
 
-for item in ["a", "b", "c", "d"] where $_ % 2 == 0 { // $_ is the index
+for item in ["a", "b", "c", "d"] where $_ % 2 == 0 { // $_ 是索引
     printf("idx=%d, item=%s\n", $_, v)
 }
 
 
-//for loop is an expression, not statement, so it could be assigned to a variable
+//for循环是个表达式(expression),而不是一个语句(statement), 因此它能够被赋值给一个变量
 let plus_one = for i in [1,2,3,4] { i + 1 }
 fmt.println(plus_one)
 
@@ -334,7 +338,7 @@ do {
     if (i==3) { break }
 }
 
-// try-catch-finally(only support string type)
+// try-catch-finally(仅支持throw一个string类型的变量)
 let exceptStr = "SUMERROR"
 try {
     let th = 1 + 2
@@ -355,7 +359,7 @@ finally {
 
 // case-in/case-is
 let testStr = "123"
-case testStr in { // in(exact/partial match), is(only exact match)
+case testStr in { // in(完全或部分匹配), is(完全匹配)
     "abc", "mno" { println("testStr is 'abc' or 'mno'") }
     "def"        { println("testStr is 'def'") }
     `\d+`        { println("testStr contains digit") }
@@ -365,38 +369,38 @@ case testStr in { // in(exact/partial match), is(only exact match)
 let i = [{"a"=>1, "b"=>2}, 10]
 let x = [{"a"=>1, "b"=>2},10]
 case i in {
-    1, 2 { println("i matched 1, 2") }
-    3    { println("i matched 3") }
-    x    { println("i matched x") }
-    else { println("i not matched anything")}
+	1, 2 { println("i matched 1, 2") }
+	3    { println("i matched 3") }
+	x    { println("i matched x") }
+	else { println("i not matched anything")}
 }
 
 ```
 
-### Array
+## 数组(Array)
 
-In monkey, you could use [] to initialize an empty array:
+在Monkey中, 你可以使用[]来初始化一个空的数组:
 
 ```swift
 emptyArr = []
-emptyArr[3] = 3 //will auto expand the array
+emptyArr[3] = 3 //将会自动扩容
 println(emptyArr)
 ```
 
-Array could contain any number of different data types.
+数组可以包含任意数据类型的元素。
 
 ```swift
 mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
 ```
 
-You could use index to access array element.
+你可以使用索引来访问数组元素。
 
 ```swift
 println('mixedArr[2]={mixedArr[2]}')
 println(["a", "b", "c", "d"][2])
 ```
 
-Because array is an object, so you could use the object's method to operate on it.
+因为数组是一个对象, 因此你可以使用对象方法来操作它。
 
 ```swift
 if ([].empty()) {
@@ -406,12 +410,12 @@ if ([].empty()) {
 emptyArr.push("Hello")
 println(emptyArr)
 
-//you could also use 'addition' to add an item to an array
+//你可以使用'加算(+=)'的方式来向数组中添加一个元素:
 emptyArr += 2
 println(emptyArr)
 ```
 
-Array could be iterated using `for` loop
+可以使用`for`循环来遍历一个数组。
 
 ```swift
 numArr = [1,3,5,2,4,6,7,8,9]
@@ -424,23 +428,23 @@ for item in strArr where /^\d+/.match(item) {
     println(item)
 }
 
-for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_ is the index
+for item in ["a", "b", "c", "d"] where $_ % 2 == 0 {  //$_是索引
     printf("idx=%d, v=%s\n", $_, item)
 }
 
 ```
 
-### String
+## 字符串(String)
 
-In monkey, there are three types of `string`:
+在monkey中, 有三种类型的`string`:
 
-* Raw string
-* Double quoted string(Could not contains newline)
-* Single quoted string(Interpolated String)
+* 原生字符串(可包含`\n`)
+* 双引号字符串(不可包含`\n`)
+* 单引号字符串(可解析字符串)
 
-Raw string literals are character sequences between back quotes, as in `foo`. Within the quotes, any character may appear except back quote.
+原生字符串是一系列字符序列。使用反引号(``)来表示. 在原生字符串中，除了不能使用反引号外，你可以使用其它的任意字符。
 
-See below for some examples:
+请看下面的例子:
 
 ```swift
 normalStr = "Hello " + "world!"
@@ -452,31 +456,31 @@ rawStr = `Welcome to
 visit us!`
 println(rawStr)
 
-//when you use single quoted string, and want variable to be interpolated,
-//you just put the variable into '{}'. see below:
+//当你希望一个变量在字符串中也能够被解析时，你可以使用单引号。
+//需要被解析的字符串放在花括号('{}')中:
 str = "Hello world"
-println('str={str}') //output: "Hello world"
+println('str={str}') //输出: "Hello world"
 str[6]="W"
-println('str={str}') //output: "Hello World"
+println('str={str}') //输出: "Hello World"
 
 ```
 
-In monkey, strings are utf8-encoded, you could use utf-8 encoded name as a variable name.
+在monkey中, 字符串是utf8编码的, 这说明你可以使用utf8编码的字符作为变量名：
 
 ```swift
 三 = 3
 五 = 5
-println(三 + 五) //output : 8
+println(三 + 五) //输出 : 8
 ```
 
-strings are also object, so you could use some of the methods provided by `strings` module.
+字符串也是对象，你可以使用`strings`模块中的方法来操作字符串：
 
 ```swift
 upperStr = "hello world".upper()
-println(upperStr) //output : HELLO WORLD
+println(upperStr) //输出 : HELLO WORLD
 ```
 
-string could also be iterated:
+字符串也可以被遍历:
 
 ```swift
 for idx, v in "abcd" {
@@ -484,11 +488,11 @@ for idx, v in "abcd" {
 }
 
 for v in "Hello World" {
-    printf("idx=%d, v=%s\n", $_, v) //$_ is the index
+    printf("idx=%d, v=%s\n", $_, v) //$_是索引
 }
 ```
 
-You could concatenate an object to a string:
+你可以连接一个对象到字符串:
 
 ```swift
 joinedStr = "Hello " + "World"
@@ -496,9 +500,9 @@ joinedStr += "!"
 println(joinedStr)
 ```
 
-### Hash
+## 哈希(Hash)
 
-In monkey, you could use {} to initialize an empty hash:
+在monkey中, 使用{}来创建一个空的哈希:
 
 ```swift
 emptyHash = {}
@@ -506,7 +510,7 @@ emptyHash["key1"] = "value1"
 println(emptyHash)
 ```
 
-Hash's key could be string, int, boolean:
+哈希的键(key)可以是字符串(string)，整型(int)或布尔型(boolean):
 
 ```swift
 hashObj = {
@@ -517,7 +521,7 @@ hashObj = {
 println(hashObj)
 ```
 
-You could use '+' or '-' to add or remove an item from a hash:
+你还可以使用'+'或'-'来从一个哈希中增加或者删除一个元素:
 
 ```swift
 hashObj += {"key1" => "value1"}
@@ -528,11 +532,11 @@ hashObj -= 5
 println(hash)
 ```
 
-In monkey, Hash is also an object, so you could use them to operate on hash object:
+哈希也是一个对象,你可以使用`hash`模块中的方法来操作哈希:
 
 ```swift
 
-hashObj.push(15, "fifteen") //first parameter is the key, second is the value
+hashObj.push(15, "fifteen") //第一个参数是键，第二个参数是值
 hashObj.pop(15)
 
 keys = hashObj.keys()
@@ -542,22 +546,21 @@ values = hashObj.values()
 println(values)
 ```
 
-## Standard input/output/error
+## 标准输入/输出/错误
 
-There are three predefined object for representing standard input, standard output, standard error.
-They are `stdin`, `stdout`, `stderr`.
+Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
 
 ```swift
 fmt.fprintf(stdout, "Hello world\n")
 
 print("Please type your name:")
-name = stdin.read(1024)  //read up to 1024 bytes from stdin
+name = stdin.read(1024)  //从标准输入读最多1024字节
 println("Your name is " + name)
 ```
 
-## Error Handling of standard library
+## 标准库中的错误处理
 
-When a standard library function returns `nil` or `false`, you can use the return value's message() function for the error message:
+当标准库中的函数返回`nil`或者`false`的时候，你可以使用它们的`message()`方法类获取错误信息:
 
 ```swift
 file = newFile(filename, "r")
@@ -573,14 +576,11 @@ if (ret == false) {
 
 ```
 
-Maybe you are curious about why `nil` or `false` have message() function? Because in monkey, `nil` and `false`
-both are objects, so they have method to operate on it.
+也许你会觉得奇怪，为什么`nil`或`false`有`message()`方法？ 因为在monkey中, `nil`和`false`两个都是对象，因此它们都有方法。
 
-## About `defer` keyword
+## 关于`defer`关键字
 
-A defer statement defers the execution of a function until the surrounding function returns.
-
-The deferred call's arguments are evaluated immediately, but the function call is not executed until the surrounding function returns.
+`defer`语句推迟(defer)某个函数的执行直到函数返回。
 
 ```swift
 let add  =  fn(x,y){
@@ -592,7 +592,7 @@ let add  =  fn(x,y){
 println(add(2,2))
 ```
 
-The result is as below:
+结果如下:
 
 ```sh
 I'm in add
@@ -601,21 +601,9 @@ I'm defer1
 4
 ```
 
-```swift
-file = newFile(filename, "r")
-if (file == nil) {
-    println("opening ", filename, "for reading failed, error:", file.message())
-    return false
-}
-defer file.close()
-//do other file related stuff, and not need to worry about the file close.
-//when any file operation error occurs, it will close the file before it returns.
+## 不同类型的联接
 
-```
-
-## Concatenation of different types
-
-In monkey, you could concatenate of different types. See below for examples:
+Monkey中，你可以联接不同的类型。请看下面的例子:
 
 ```swift
 // Number plus assignment
@@ -658,28 +646,21 @@ hash -= 5
 println(hash)
 ```
 
-## grep and map
+## Grep和map
 
-The `grep` and `map` operators are just like perl's `grep` and `map`.
-
-The grep operator takes a list of values and a "testing expression." For each item in the list of values,
-the item is placed temporarily into the $_ variable, and the testing expression is evaluated. If the
-expression results in a true value, the item is considered selected.
-
-The map operator has a very similar syntax to the grep operator and shares a lot of the same operational steps.
-For example, items from a list of values are temporarily placed into $_ one at a time. However,
-the testing expression becomes a mapping expression.
+`grep`和`map`类似于perl的`grep`和`map`.
 
 ```swift
 let sourceArr = [2,4,6,8,10,12]
 
-let m = grep  $_ > 5, sourceArr
+//$_表示每次循环取得的值
+let m = grep  $_ > 5, sourceArr //对每一个sourceArr中的元素，仅返回">5"的元素
 println('m is {m}')
 
-let cp = map $_ * 2 , sourceArr
+let cp = map $_ * 2 , sourceArr //将每个元素乘以2
 println('cp is {cp}')
 
-//a little bit more complex example
+//一个复杂一点的例子
 let fields = {
                 "animal"   => "dog",
                 "building" => "house",
@@ -687,18 +668,16 @@ let fields = {
                 "fruit"    => "apple"
              }
 let pattern = `animal|fruit`
-// =~(match), !~(unmatch)
+// =~(匹配), !~(不匹配)
 let values = map { fields[$_] } grep { $_ =~ pattern } fields.keys()
 println(values)
 ```
 
-## Function
+## 函数
 
-Function in monkey is a first-class object. This means the language supports passing functions as arguments to
-other functions, returning them as the values from other functions, and assigning them to variables or storing
-them in data structures.
+在Monkey中，函数和别的基础类型一样，能够作为函数的参数，作为函数的返回值
 
-Function also could have default parameters and variadic parameters.
+函数还可以有缺省参数和可变参数。
 
 ```swift
 //define a function
@@ -728,7 +707,7 @@ for i in fn(x){ x+1 }(4)..fn(x){ x+1 }(0) where i > 2 {
 }
 
 
-// default parameter and variadic parameters
+// 缺省参数和可变参数
 add = fn (x, y=5, z=7, args...) {
     w = x + y + z
     for i in args {
@@ -741,12 +720,9 @@ w = add(2,3,4,5,6,7)
 println(w)
 ```
 
-## Pipe Operator
+## Pipe操作符
 
-The pipe operator, inspired by [Elixir](https://elixir-lang.org/).
-And thanks for the project [Aria](https://github.com/fadion/aria), I got the idea and some code from this project.
-
-See below for examples:
+`pipe`操作符来自[Elixir](https://elixir-lang.org/).
 
 ```swift
 # Test pipe operator(|>)
@@ -761,9 +737,9 @@ let mm = add(1,2) |> pow() |> subtract()
 printf("mm=%d\n", mm)
 ```
 
-## Spawn and channel
+## Spawn 和 channel
 
-You can use `spawn` to create a new thread, and `chan` to communicate with the thread.
+你可以使用`spawn`来创建一个新的线程,  `chan`来和这个线程进行交互.
 
 ```swift
 let aChan = chan()
@@ -772,24 +748,24 @@ spawn fn() {
     println('channel received message=<{message}>')
 }()
 
-//send message to thread
+//发送信息到线程
 aChan.send("Hello Channel!")
 ```
 
-## Standard module introduction
+## 标准模块介绍
 
-In monkey, there are some standard modules provided for you. e.g. json, sql, sort, fmt, os, logger, time, flag, net, http, etc...
-This is a brief introduction of some of the monkey standard modules, don't expect it to be thorough.
-If you are curious, please see the source code.
+Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, logger, time, flag, net, http等等。
 
-#### fmt module
+下面是对monkey的标准模块的一个简短的描述。
+
+#### fmt 模块
 
 ```swift
 let i = 108, f = 25.383, b=true, s = "Hello, world",
     aArr = [1, 2, 3, 4, "a", "b"],
     aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
 
-// Use '%v (value)' to print variable value, '%_' to print the variable's type
+//使用 '%v (value)' 来打印变量值, '%_' 来打印变量类型
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
 fmt.printf("i=[%_], b=[%t], f=[%f], aArr=%_, aHash=%_, s=[%s] \n", i, b, f, aArr, aHash, s)
 
@@ -799,7 +775,7 @@ fmt.printf("sp=%s", sp)
 fmt.fprintf(stdout, "Hello %s\n", "world")
 ```
 
-#### time module
+#### time 模块
 
 ```swift
 t1 = newTime()
@@ -812,16 +788,16 @@ t2 = t1.fromEpoch(Epoch)
 println(t2.toStr(format))
 ```
 
-#### logger module
+#### logger 模块
 
 ```swift
-#Log to stdout
+#输出到标准输出(stdout)
 log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
 
 log.printf("Hello, %s\n", "logger")
 fmt.printf("Logger: flags =<%d>, prefix=<%s>\n", log.flags(), log.prefix())
 
-#Log to file
+#输出到文件
 file = newFile("./logger.log", "a+")
 log.setOutput(file)
 for i in 1..5 {
@@ -829,7 +805,7 @@ for i in 1..5 {
 }
 ```
 
-#### flag module(for handling of command line options)
+#### flag 模块(处理命令行选项)
 
 ```swift
 let verV = flag.bool("version", false, "0.1")
@@ -852,7 +828,7 @@ if (flag.isSet("age")) {
 }
 ```
 
-#### json module( for json marshal & unmarshal)
+#### json 模块( json序列化(marshal)和反序列化(unmarshal) )
 
 ```swift
 let hsJson = {"key1" => 10,
@@ -863,7 +839,7 @@ let hsJson = {"key1" => 10,
               "key6" => {"subkey1"=>12, "subkey2"=>"Json"},
               "key7" => fn(x,y){x+y}(1,2)
 }
-let hashStr = json.marshal(hsJson) //same as `json.toJson(hsJson)`
+let hashStr = json.marshal(hsJson) //也可以使用 `json.toJson(hsJson)`
 println(json.indent(hashStr, "  "))
 
 let hsJson1 = json.unmarshal(hashStr)
@@ -873,14 +849,14 @@ println(hsJson1)
 let arrJson = [1,2.3,"HHF",[],{ "key" =>10, "key1" =>11}]
 let arrStr = json.marshal(arrJson)
 println(json.indent(arrStr))
-let arr1Json = json.unmarshal(arrStr)  //same as `json.fromJson(arrStr)`
+let arr1Json = json.unmarshal(arrStr)  //也可以使用 `json.fromJson(arrStr)`
 println(arr1Json)
 ```
 
-#### net module
+#### net 模块
 
 ```swift
-//A simple tcp client
+//简单的TCP客户端
 let conn = dialTCP("tcp", "127.0.0.1:9090")
 if (conn == nil) {
     println("dailTCP failed, error:", conn.message())
@@ -898,7 +874,7 @@ if (ret == false) {
     println("Server close failed, error:", ret.message())
 }
 
-//A simple tcp server
+//一个简单的TCP服务端
 let ln = listenTCP("tcp", ":9090")
 for {
     let conn = ln.acceptTCP()
@@ -919,7 +895,7 @@ if (ret == false) {
 }
 ```
 
-#### linq module
+#### linq 模块
 
 ```swift
 let mm = [1,2,3,4,5,6,7,8,9,10]
@@ -979,7 +955,7 @@ result = linq.from(thenByDescendingArr).orderBy(fn(x) {
 let thenByDescendingArrStr = json.marshal(result)
 println(json.indent(thenByDescendingArrStr, "  "))
 
-//test 'selectManyByIndexed'
+//测试 'selectManyByIndexed'
 println()
 let selectManyByIndexedArr1 = [[1, 2, 3], [4, 5, 6, 7]]
 result = linq.from(selectManyByIndexedArr1).selectManyByIndexed(
@@ -1002,10 +978,10 @@ fn(idx,x){
 println('["st", "ng"] selectManyByIndexed() = {result}')
 ```
 
-#### csv module
+#### csv 模块
 
 ```swift
-//test csv reader
+//测试 csv reader
 let r = newCsvReader("./examples/test.csv")
 if r == nil {
     printf("newCsv returns err, message:%s\n", r.message())
@@ -1025,7 +1001,7 @@ for line in ra {
     }
 }
 
-//test csv writer
+//测试 csv writer
 let ofile = newFile("./examples/demo.csv", "a+")
 let w = newCsvWriter(ofile)
 w.setOptions({"Comma"=>"	"})
@@ -1034,13 +1010,13 @@ w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
 ```
 
-#### template module
+#### template 模块
 
-The `template` module contains 'text' and 'html' template handling.
+`template` 模块包含'text'和'html'模版处理.
 
-Use `newText(...)` or `parseTextFiles(...)` to create a new 'text' template.
+使用 `newText(...)` 或者 `parseTextFiles(...)` 来创建一个新的'text'模版。
 
-Use `newHtml(...)` or `parseHtmlFiles(...)` to create a new 'html' template.
+使用 `newHtml(...)` 或者`parseHtmlFiles(...)` 来创建一个新的'html'模版。
 
 ```swift
 arr = [
@@ -1049,16 +1025,16 @@ arr = [
     { "key" => "key3", "value" => "value3" }
 ]
 
-//use parseTextFiles(), write to a string
+//使用parseTextFiles(), 来写入一个字符串
 template.parseTextFiles("./examples/looping.tmpl").execute(resultValue, arr)
 println('{resultValue}')
 
-//use parseTextFiles(), write to a file
+//使用parseTextFiles()来写入一个文件
 file = newFile("./examples/outTemplate.log", "a+")
 template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
 
-//use parse()
-//Note here: we need to use "{{-" and "-}}" to remove the newline from the output
+//使用 parse()
+//注: 我们需要使用"{{-" and "-}}"来移除输出中的回车换行(newline)
 template.newText("array").parse(`Looping
 {{- range . }}
         key={{ .key }}, value={{ .value -}}
@@ -1067,25 +1043,25 @@ template.newText("array").parse(`Looping
 println('{resultValue}')
 ```
 
-#### sql module
+#### sql 模块
 
-The `sql` module provides a lower abstraction layer for working with database.
+`sql` 模块提供了一个底层封装来操作数据库。
 
-It should correctly handle database null values, though not throughly tested.
+它可以正确的处理数据库中的null值,虽然没有经过完全的测试。
 
-For testing `sql` module, you need to do following:
+为了测试`sql`模块, 你需要做以下几个步骤:
 
-1. Download sql driver source.
+1. 下载sql驱动器(sql driver)代码.
 
-2. Include the package in 'sql.go' like below:
+2. 将驱动器的包包含到'sql.go'文件中:
 
 ```go
     _ "github.com/mattn/go-sqlite3"
 ```
 
-3. Recompile monkey source.
+3. 重新编译monkey源码.
 
-Below is a complete source of the `examples/db.my`:
+下面是一个完整的使用数据库的例子(`examples/db.my`):
 
 ```swift
 let dbOp = fn() {
@@ -1120,7 +1096,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //insert `null` value. There are five predefined values:INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
+            //插入`null`值. 有五个预定义的null常量：INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)
@@ -1143,7 +1119,7 @@ let dbOp = fn() {
     defer rows.close()
     while (rows.next()) {
         rows.scan(id, name)
-        if (name.valid()) { //check if it's `null`
+        if (name.valid()) { //检查是否为`null`
             println(id, "|", name)
         } else {
             println(id, "|", "null")
@@ -1160,62 +1136,32 @@ if (ret == nil) {
 os.exit()
 ```
 
+## 实用工具
 
-## About regular expression
+项目还包含了一些使用的工具：`formatter`和`highlighter`。
 
-In monkey, regard to regular expression, you could use:
+formatter工具能够格式化monkey语言。
+highlighter工具能够语法高亮monkey语言（提供两种输出：命令行和html）。
 
-* Regular expression literal
-* 'regexp' module
-* '=~' and '!~' operators(like perl's)
-
-```swift
-//Use regular expression literal( /pattern/.match(str) )
-let regex = /\d+\t/.match("abc 123	mnj")
-if (regex) { println("regex matched using regular expression literal") }
-
-//Use 'regexp' module
-if regexp.compile(`\d+\t`).match("abc 123	mnj") {
-    println("regex matched using 'regexp' module")
-}
-
-//Use '=~'(str =~ pattern)
-if "abc 123	mnj" =~ `\d+\t` {
-    println("regex matched using '=~'")
-}else {
-    println("regex not matched using '=~'")
-}
-
-```
+你也可以将它们合起来使用:
 
 ```sh
-Note: For detailed explanation of 'Regular Expression' pattern matching, you could see golang's regexp module for reference.
+./fmt xx.my | ./highlight  //输出到屏幕(命令行高亮不只是windows)
 ```
 
-## Useful Utilities
 
-Included has some useful utilities like `formatter` and `highlighter`.
+## 未来计划
 
-The formatter utility can format the monkey language.
-The highlighter utility can highlight the monkey language to console or html.
+下面是对项目的未来计划的描述:
 
-You could also combine the two utilities:
+* 改进标准库并增加更多的函数.
+* 写更多的测试代码!
 
-```sh
-./fmt xx.my | ./highlight  //output to console(console highlight not support windows)
-```
-
-## Futual Plans
-
-There are some other things i plan to do:
-
-* Improve the Standard Library with more functions.
-* Write more tests!
-* Improve this document with more explanation of the language.
-* Rewrite the demo program for better understanding of the language.
-* Rewrite the 'include' module logic.
-* ~~Add support for if-elseif-else expression~~.
-
-## License
+## 许可证
 
 MIT
+
+## 备注
+
+如果你喜欢此项目，请点击下面的链接，多多star，fork。谢谢！
+[monkey](https://github.com/haifenghuang/monkey)

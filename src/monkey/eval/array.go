@@ -60,7 +60,7 @@ func (a *Array) CallMethod(line string, scope *Scope, method string, args ...Obj
 		return a.First(line, args...)
 	case "last":
 		return a.Last(line, args...)
-	case "tail":
+	case "tail","rest":
 		return a.Tail(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, a.Type(), method))

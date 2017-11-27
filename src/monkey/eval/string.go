@@ -177,7 +177,7 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.Title(line, args...)
 	case "chomp":
 		return s.Chomp(line, args...)
-	case "valid":
+	case "valid", "isValid":
 		return s.IsValid(line, args...)
 	case "setValid":
 		return s.SetValid(line, args...)

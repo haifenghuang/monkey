@@ -500,6 +500,37 @@ func assertBuiltin() *Builtin {
 	}
 }
 
+
+func reverseBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+
+			switch input := args[0].(type) {
+			case *String:
+				word := []rune(input.String)
+				reverse := []rune{}
+				for i := len(word) - 1; i >= 0; i-- {
+					reverse = append(reverse, word[i])
+				}
+
+				return NewString(string(reverse))
+			case *Array:
+				reverse := &Array{}
+				for i := len(input.Members) - 1; i >= 0; i-- {
+					reverse.Members = append(reverse.Members, input.Members[i])
+				}
+				return reverse
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "reverse", "*Array|*String", args[0].Type()))
+			}
+			return NIL
+		},
+	}
+}
+
 func dialTCPBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
@@ -973,6 +1004,7 @@ func init() {
 		"type":    typeBuiltin(),
 		"chan":    chanBuiltin(),
 		"assert":  assertBuiltin(),
+		"reverse": reverseBuiltin(),
 
 		//net
 		"dialTCP":    dialTCPBuiltin(),
