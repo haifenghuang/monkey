@@ -439,7 +439,6 @@ revArr = reverse(arr)
 println("Reverse Array =", revArr)
 ```
 
-
 ### String
 
 In monkey, there are three types of `string`:
@@ -810,7 +809,7 @@ In monkey, there are some standard modules provided for you. e.g. json, sql, sor
 This is a brief introduction of some of the monkey standard modules, don't expect it to be thorough.
 If you are curious, please see the source code.
 
-#### fmt module
+### fmt module
 
 ```swift
 let i = 108, f = 25.383, b=true, s = "Hello, world",
@@ -1130,19 +1129,19 @@ let dbOp = fn() {
         println("DB exec failed! error:", exec_ret.message())
         return false
     }
-    
+
     let tx = db.begin()
-    if (tx == nil) { 
+    if (tx == nil) {
         println("db.Begin failed!, error:", tx.message())
         return false
     }
-    
+
     let stmt = tx.prepare(`insert into foo(id, name) values(?, ?)`)
     if (stmt == nil) {
         println("tx.Prepare failed!, error:", stmt.message())
         return false
     }
-    
+
     defer stmt.close()
     let i = 0
     for (i = 0; i < 105; i++) {
@@ -1153,15 +1152,15 @@ let dbOp = fn() {
         } else {
             let rs = stmt.exec(i, name)
         }
-        
+
         if (rs == nil) {
             println("statement exec failed, error:", rs.message())
             return false
         }
     } //end for
-    
+
     tx.commit()
-    
+
     let id = 0, name = ""
     let rows = db.query("select id, name from foo")
     if (rows == nil) {
@@ -1187,7 +1186,6 @@ if (ret == nil) {
 
 os.exit()
 ```
-
 
 ## About regular expression
 
@@ -1239,14 +1237,13 @@ Currently there are three kind of syntax highlight for editors:
 
 1. vim
 
-If you use vim as an editor, you could copy `misc/vim` files to `$HOME/.vim/`'s 
-corresponding directory, it will syntax highlight the monkey source.
+[vim](misc/vim)
 
-1. emeditor
+2. emeditor
 
 [emeditor](misc/emeditor)
 
-1. notepad++
+3. notepad++
 
 [notepad++](misc/notepad%2B%2B)
 

@@ -6,11 +6,11 @@ This file provides Syntax highlighting support for the monkey Language in Notepa
 
 1. Download the monkey.xml.
 
-1. On the Notepad++ toolbar menu select Language->Define your language
+2. On the Notepad++ toolbar menu select Language->Define your language
 
-1. A user defined language window should open. Click the import button and navigate to the monkey.xml file and open it.
+3. A user defined language window should open. Click the import button and navigate to the monkey.xml file and open it.
 
-1. You may need to re-open your .my files or restart notepad++ in order to see the highlighting changes.
+4. You may need to re-open your .my files or restart notepad++ in order to see the highlighting changes.
 
 ## Limitation of the notepad++'s syntax highlight
 
