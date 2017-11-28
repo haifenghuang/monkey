@@ -1,6 +1,6 @@
 # Monkey Programming Language
 
-Chinese version:[中文](https://github.com/haifenghuang/monkey/blob/master/README_cn.md)
+Chinese version: [中文](README_cn.md)
 
 ## Summary
 
@@ -1235,8 +1235,20 @@ You could also combine the two utilities:
 
 ## Syntax Highlight
 
+Currently there are three kind of syntax highlight for editors:
+
+1. vim
+
 If you use vim as an editor, you could copy `misc/vim` files to `$HOME/.vim/`'s 
 corresponding directory, it will syntax highlight the monkey source.
+
+1. emeditor
+
+[emeditor](misc/emeditor)
+
+1. notepad++
+
+[notepad++](misc/notepad%2B%2B)
 
 ## Futual Plans
 
