@@ -1,5 +1,9 @@
 # Syntax highlighter for monkey
 
+This file provides Syntax highlighting support for the monkey Language in emeditor.
+
+## Installation for Notepad++ 6
+
 Select `Tools|Select Configuration|Define Configurations...`, Then do the following:
 
 1. In the `Define Configurations` dialog, click `New` and input `monkey`.

@@ -1183,16 +1183,16 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 
 1. vim
 
-如果你使用vim作为编辑器，那么可以将`misc/vim`目录下的文件拷贝到($HOME/.vim/)
-目录下，然后打开vim编辑器编辑monkey源码，就能够看到语法高亮了。
+    [vim](misc/vim)
+
 
 2. emeditor
 
-[emeditor](misc/emeditor)
+    [emeditor](misc/emeditor)
 
 3. notepad++
 
-[notepad++](misc/notepad%2B%2B)
+    [notepad++](misc/notepad%2B%2B)
 
 
 ## 未来计划

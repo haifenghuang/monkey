@@ -1237,15 +1237,15 @@ Currently there are three kind of syntax highlight for editors:
 
 1. vim
 
-[vim](misc/vim)
+    [vim](misc/vim)
 
 2. emeditor
 
-[emeditor](misc/emeditor)
+    [emeditor](misc/emeditor)
 
 3. notepad++
 
-[notepad++](misc/notepad%2B%2B)
+    [notepad++](misc/notepad%2B%2B)
 
 ## Futual Plans
 
