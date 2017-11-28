@@ -1177,6 +1177,10 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 ./fmt xx.my | ./highlight  //输出到屏幕(命令行高亮不只是windows)
 ```
 
+## 语法高亮
+
+如果你使用vim作为编辑器，那么可以将`misc/vim`目录下的文件拷贝到($HOME/.vim/)
+目录下，然后打开vim编辑器编辑monkey源码，就能够看到语法高亮了。
 
 ## 未来计划
 

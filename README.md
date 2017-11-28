@@ -1233,6 +1233,11 @@ You could also combine the two utilities:
 ./fmt xx.my | ./highlight  //output to console(console highlight not support windows)
 ```
 
+## Syntax Highlight
+
+If you use vim as an editor, you could copy `misc/vim` files to `$HOME/.vim/`'s 
+corresponding directory, it will syntax highlight the monkey source.
+
 ## Futual Plans
 
 There are some other things i plan to do:
