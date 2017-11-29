@@ -1194,6 +1194,13 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 
     [notepad++](misc/notepad%2B%2B)
 
+4. Visual Studio Code
+
+    [VSC](misc/vscode)
+
+5. Sublime Text 3
+
+    [Sublime Text 3](misc/SublimeText3)
 
 ## 未来计划
 

@@ -1247,6 +1247,14 @@ Currently there are three kind of syntax highlight for editors:
 
     [notepad++](misc/notepad%2B%2B)
 
+4. Visual Studio Code
+
+    [VSC](misc/vscode)
+
+5. Sublime Text 3
+
+    [Sublime Text 3](misc/SublimeText3)
+
 ## Futual Plans
 
 There are some other things i plan to do:
