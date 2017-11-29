@@ -1,0 +1,26 @@
+{
+    "name": "my",
+    "displayName": "monkey",
+    "description": "Monkey language",
+    "version": "0.0.1",
+    "publisher": "monkey",
+    "engines": {
+        "vscode": "^1.17.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "monkey",
+            "aliases": ["monkey", "monkey"],
+            "extensions": [".my"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "monkey",
+            "scopeName": "source.my",
+            "path": "./syntaxes/monkey.tmLanguage"
+        }]
+    }
+}
