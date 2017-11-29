@@ -2,7 +2,7 @@
 
 This file provides Syntax highlighting support for the monkey Language in emeditor.
 
-## Installation for Notepad++ 6
+## Installation for Emeditor
 
 Select `Tools|Select Configuration|Define Configurations...`, Then do the following:
 
