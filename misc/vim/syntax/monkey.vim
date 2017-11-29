@@ -14,7 +14,7 @@ hi def link     monkeyDeclaration       Type
 
 
 syn keyword     monkeyStatement         return let spawn defer yield struct enum
-syn keyword     monkeyException		try catch finally throw
+syn keyword     monkeyException         try catch finally throw
 syn keyword     monkeyConditional       if else elseif elsif where and or case in is
 syn keyword     monkeyRepeat            do while for break continue grep map
 syn keyword     monkeyBranch            break continue

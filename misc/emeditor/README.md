@@ -1,8 +1,12 @@
 # Syntax highlighter for monkey
 
-This file provides Syntax highlighting support for the monkey Language in emeditor.
+This file provides Syntax highlighting support for the monkey Language in EmEditor.
 
-## Installation for Emeditor
+## screenshot
+
+![EmEditor](screenshot.png)
+
+## Installation for EmEditor
 
 Select `Tools|Select Configuration|Define Configurations...`, Then do the following:
 

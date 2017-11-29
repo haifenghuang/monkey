@@ -2,6 +2,10 @@
 
 This file provides Syntax highlighting support for the monkey Language in Notepad++
 
+## screenshot
+
+![Notepad++](screenshot.png)
+
 ## Installation for Notepad++ 6
 
 1. Download the monkey.xml.
