@@ -579,6 +579,8 @@ println("Reverse Hash =", revHash)
 Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
 
 ```swift
+stdout.writeLine("Hello world")
+//和上面效果一样
 fmt.fprintf(stdout, "Hello world\n")
 
 print("Please type your name:")

@@ -575,6 +575,8 @@ There are three predefined object for representing standard input, standard outp
 They are `stdin`, `stdout`, `stderr`.
 
 ```swift
+stdout.writeLine("Hello world")
+//same as above
 fmt.fprintf(stdout, "Hello world\n")
 
 print("Please type your name:")
