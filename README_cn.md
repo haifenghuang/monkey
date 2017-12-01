@@ -765,6 +765,8 @@ let subtract = fn(x) { return x - 1}
 
 let mm = add(1,2) |> pow() |> subtract()
 printf("mm=%d\n", mm)
+
+"Hello %s!\n" |> fmt.printf("world")
 ```
 
 ## Spawn 和 channel
