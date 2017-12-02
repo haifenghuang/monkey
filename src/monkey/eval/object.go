@@ -235,6 +235,7 @@ func (rv *ReturnValue) CallMethod(line string, scope *Scope, method string, args
 //	panic(NewError(line, NOMETHODERROR, method, tv.Type()))
 //}
 
+//return a Nil object with error message 's'
 func NewNil(s string) *Nil {
 	return &Nil{OptionalMsg: s}
 }

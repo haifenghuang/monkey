@@ -9,6 +9,7 @@ import (
 	"math"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 type comparer func(Object, Object) int
@@ -395,16 +396,109 @@ func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...
 // input. In this case From delegates it to FromString, FromChannel and
 // FromIterable internally.
 func (lq *LinqObj) From(line string, args ...Object) Object {
-	if len(args) != 1 {
-		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	if len(args) != 1 && len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
 	}
 
 	obj := args[0]
-	if obj.Type() != STRING_OBJ && obj.Type() != ARRAY_OBJ && obj.Type() != HASH_OBJ {
-		panic(NewError(line, PARAMTYPEERROR, "first", "from", "*Hash|*Array|*String", obj.Type()))
+	//check object type
+	if obj.Type() != STRING_OBJ && obj.Type() != ARRAY_OBJ && 
+		obj.Type() != HASH_OBJ && obj.Type() != FILE_OBJ && obj.Type() != CSV_OBJ {
+		panic(NewError(line, PARAMTYPEERROR, "first", "from", "*Hash|*Array|*String|*File|*CsvObj", obj.Type()))
 	}
 
 	switch obj.Type() {
+	case FILE_OBJ:
+		if len(args) != 2 {
+			panic(NewError(line, GENERICERROR, "File object should have 2 parameters:from(file, field-separator)"))
+		}
+
+		//get the field separator
+		fsObj, ok := args[1].(*String)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "second", "from", "*String", args[1].Type()))
+		}
+
+		arr := &Array{}
+		var lineNo int64 = 0
+		l := obj.(*FileObject).ReadLine(line)
+		for l != NIL {
+			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+			//-1 means the whole line
+			fieldIndex := NewInteger(-1)
+			hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: l}
+
+			lineNoKey := NewString("line")
+			hash.Pairs[lineNoKey.HashKey()] = HashPair{Key: lineNoKey, Value: NewInteger(lineNo)}
+
+			strArr := strings.Split(l.(*String).String, fsObj.String)
+			for idx, v := range strArr {
+				fieldIndex := NewInteger(int64(idx))
+				hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: NewString(v)}
+			}
+			arr.Members = append(arr.Members, hash)
+
+			//read the next line
+			l = obj.(*FileObject).ReadLine(line)
+			lineNo++
+		}
+
+		//Now the 'arr' variable is like below:
+		//  arr = [
+		//      {"line" =>LineNo1, -1 => line1, 0 => field0, 1 =>field1, ...},
+		//      {"line" =>LineNo2, -1 => line2, 0 => field0, 1 =>field1, ...}
+		//  ]
+		len := len(arr.Members)
+		//must return a new LinqObj
+		return &LinqObj{Query: Query{
+			Iterate: func() Iterator {
+				index := 0
+
+				return func() (item Object, ok *Boolean) {
+					ok = &Boolean{Valid:true}
+					ok.Bool = index < len
+					if ok.Bool {
+						item = arr.Members[index]
+						index++
+					}
+					return
+				}
+			},
+		}}
+	case CSV_OBJ:
+		arr := &Array{}
+		str2DArr := obj.(*CsvObj).ReadAll(line)
+		for _, fieldArr := range str2DArr.(*Array).Members {
+			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+			for idx, field := range fieldArr.(*Array).Members {
+				fieldIdx := NewInteger(int64(idx))
+				hash.Pairs[fieldIdx.HashKey()] = HashPair{Key: fieldIdx, Value: field}
+			}
+			arr.Members = append(arr.Members, hash)
+		}
+
+		//Now the 'arr' variable is like below:
+		//  arr = [
+		//      {0 => field0, 1 =>field1, ...},
+		//      {0 => field0, 1 =>field1, ...}
+		//  ]
+		len := len(arr.Members)
+		//must return a new LinqObj
+		return &LinqObj{Query: Query{
+			Iterate: func() Iterator {
+				index := 0
+
+				return func() (item Object, ok *Boolean) {
+					ok = &Boolean{Valid:true}
+					ok.Bool = index < len
+					if ok.Bool {
+						item = arr.Members[index]
+						index++
+					}
+					return
+				}
+			},
+		}}
 	case STRING_OBJ:
 		source := obj.(*String).String
 		runes := []rune(source)

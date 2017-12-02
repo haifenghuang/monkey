@@ -1008,6 +1008,28 @@ fn(idx,x){
     return x + "_"
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
+
+//test linq with "file"
+file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
+result = linq.from(file,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
+	int(x[0]) > 300000 //only 1st Field's Value > 300000
+}).sort(fn(x,y){
+	return int(x[0]) > int(y[0]) //sort with first field
+}).select(fn(x) {
+	x[4]  //only output the fourth field
+})
+println(result)
+
+
+//Another test with "file"
+r = newCsvReader("./examples/test.csv") //open test.csv file for reading
+r.setOptions({"Comma"=>";", "Comment"=>"#"})
+result = linq.from(r,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
+	x[1] == "Pike"//only 2nd Field = "Pike"
+}).sort(fn(x,y){
+	return len(x[0]) > len(y[0]) //sort with length of first field
+})
+println(result)
 ```
 
 #### csv 模块
