@@ -8,8 +8,8 @@ import (
 	"monkey/ast"
 	"math"
 	"reflect"
+	"regexp"
 	"sort"
-	"strings"
 )
 
 type comparer func(Object, Object) int
@@ -431,7 +431,8 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 			lineNoKey := NewString("line")
 			hash.Pairs[lineNoKey.HashKey()] = HashPair{Key: lineNoKey, Value: NewInteger(lineNo)}
 
-			strArr := strings.Split(l.(*String).String, fsObj.String)
+			//strArr := strings.Split(l.(*String).String, fsObj.String)
+			strArr := regexp.MustCompile(fsObj.String).Split(l.(*String).String, -1)
 			for idx, v := range strArr {
 				fieldIndex := NewInteger(int64(idx))
 				hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: NewString(v)}
