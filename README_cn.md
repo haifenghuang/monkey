@@ -1049,8 +1049,8 @@ result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第�
 }).where(fn(fields) {
 	//'fields'是一个哈希数组:
 	//  fields = [
-	//      {"line" =>LineNo1, "nf" =>line1's number of fields, -1 => line1, 0 => field0, 1 =>field1, ...},
-	//      {"line" =>LineNo2, "nf" =>line2's number of fields, -1 => line2, 0 => field0, 1 =>field1, ...}
+	//      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
+	//      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
 	//  ]
 
 	int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
@@ -1087,8 +1087,8 @@ r.setOptions({"Comma"=>";", "Comment"=>"#"})
 result = linq.from(r,",").where(fn(x) {
 	//The 'x' is an array of hashes, like below:
 	//  x = [
-	//      {"nf" =>line1's number of fields, 0 => field0, 1 =>field1, ...},
-	//      {"nf" =>line2's number of fields, 0 => field0, 1 =>field1, ...}
+	//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
+	//      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
 	//  ]
 	x[2] == "Pike"//仅选取第二个字段 = "Pike"
 }).sort(fn(x,y){

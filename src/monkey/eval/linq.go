@@ -484,8 +484,8 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 
 		//Now the 'arr' variable is like below:
 		//  arr = [
-		//      {"line" =>LineNo1, "nf" =>line1's number of fields, -1 => line1, 0 => field0, 1 =>field1, ...},
-		//      {"line" =>LineNo2, "nf" =>line2's number of fields, -1 => line2, 0 => field0, 1 =>field1, ...}
+		//      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
+		//      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
 		//  ]
 		len := len(arr.Members)
 		//must return a new LinqObj
@@ -522,8 +522,8 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 
 		//Now the 'arr' variable is like below:
 		//  arr = [
-		//      {"nf" =>line1's number of fields, 1 => field0, 2 =>field1, ...},
-		//      {"nf" =>line2's number of fields, 1 => field0, 2 =>field1, ...}
+		//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
+		//      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
 		//  ]
 		len := len(arr.Members)
 		//must return a new LinqObj
