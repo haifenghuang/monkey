@@ -1032,6 +1032,71 @@ result = linq.from(r,",").where(fn(x) { //the second parameter of 'from' is the 
 println(result)
 ```
 
+#### Linq for file支持
+
+现在，monkey有了一个支持`linq for file`的功能。这个功能类似awk。
+请看下面的代码:
+
+```swift
+//test: linq for "file"
+file = newFile("./examples/linqSample.csv", "r") //以读取方式打开linqSample.csv
+result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第三个参数为注释函数(comment function)
+	if line.trim().hasPrefix("#") { //如果行以'#'开头
+		return true //返回'true'表示忽略这一行
+	} else {
+		return false
+	}
+}).where(fn(fields) {
+	//'fields'是一个哈希数组:
+	//  fields = [
+	//      {"line" =>LineNo1, "nf" =>line1's number of fields, -1 => line1, 0 => field0, 1 =>field1, ...},
+	//      {"line" =>LineNo2, "nf" =>line2's number of fields, -1 => line2, 0 => field0, 1 =>field1, ...}
+	//  ]
+
+	int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
+}).sort(fn(field1,field2){
+	return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
+}).select(fn(fields) {
+	fields[5]  //仅输出第五个字段
+})
+println(result)
+
+
+//another test: linq for "file"
+file = newFile("./examples/linqSample.csv", "r") //以读取方式打开linqSample.csv
+result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第三个参数为注释函数(comment function)
+	if line.trim().hasPrefix("#") { //如果行以'#'开头
+		return true //返回'true'表示忽略这一行
+	} else {
+		return false
+	}
+}).where(fn(fields) {
+	int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
+}).sort(fn(field1,field2){
+	return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
+}).selectMany(fn(fields) {
+	row = [[fields[0]]] //fields[0]为整行数据。 注意：我们需要使用两个[], 否则selectMany将会flatten输出结果
+	linq.from(row)  //输出整行数据
+})
+println(result)
+
+
+//test: linq for "csv"
+r = newCsvReader("./examples/test.csv") //以读取方式打开test.csv
+r.setOptions({"Comma"=>";", "Comment"=>"#"})
+result = linq.from(r,",").where(fn(x) {
+	//The 'x' is an array of hashes, like below:
+	//  x = [
+	//      {"nf" =>line1's number of fields, 0 => field0, 1 =>field1, ...},
+	//      {"nf" =>line2's number of fields, 0 => field0, 1 =>field1, ...}
+	//  ]
+	x[2] == "Pike"//仅选取第二个字段 = "Pike"
+}).sort(fn(x,y){
+	return len(x[1]) > len(y[1]) //以第一个字段的长度排序
+})
+println(result)
+```
+
 #### csv 模块
 
 ```swift

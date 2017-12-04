@@ -1,12 +1,13 @@
 package eval
+
 /*
-	NOTE: MOST OF THE CODE COME FROM `https://github.com/ahmetb/go-linq` 
+	NOTE: MOST OF THE CODE COME FROM `https://github.com/ahmetb/go-linq`
 	WITH MINOR MODIFICATIONS
 */
 import (
 	_ "fmt"
-	"monkey/ast"
 	"math"
+	"monkey/ast"
 	"reflect"
 	"regexp"
 	"sort"
@@ -97,17 +98,17 @@ func (q Query) lessSort(scope *Scope, less *Function) (r []Object) {
 	}
 
 	s := sorter{
-			items: r, 
-			less: func(i, j Object) bool {
-				scope.Set(less.Literal.Parameters[0].(*ast.Identifier).Value, i)
-				scope.Set(less.Literal.Parameters[1].(*ast.Identifier).Value, j)
-				cond := Eval(less.Literal.Body, scope)
-				if obj, ok1 := cond.(*ReturnValue); ok1 {
-					cond = obj.Value
-				}
-				if IsTrue(cond) {
-					return true
-				}
+		items: r,
+		less: func(i, j Object) bool {
+			scope.Set(less.Literal.Parameters[0].(*ast.Identifier).Value, i)
+			scope.Set(less.Literal.Parameters[1].(*ast.Identifier).Value, j)
+			cond := Eval(less.Literal.Body, scope)
+			if obj, ok1 := cond.(*ReturnValue); ok1 {
+				cond = obj.Value
+			}
+			if IsTrue(cond) {
+				return true
+			}
 			return false
 		}}
 
@@ -116,6 +117,7 @@ func (q Query) lessSort(scope *Scope, less *Function) (r []Object) {
 }
 
 const KEYVALUE_OBJ = "KEYVALUE_OBJ"
+
 // KeyValue is a type that is used to iterate over a map (if query is created
 // from a map). This type is also used by ToMap() method to output result of a
 // query into a map.
@@ -123,6 +125,7 @@ type KeyValueObj struct {
 	Key   Object
 	Value Object
 }
+
 func (kv *KeyValueObj) Inspect() string {
 	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
 	if hashable, ok := kv.Key.(Hashable); ok {
@@ -162,8 +165,8 @@ func (kv *KeyValueObj) Value_(line string, args ...Object) Object {
 	return kv.Value
 }
 
-
 const GROUP_OBJ = "GROUP_OBJ"
+
 // Group is a type that is used to store the result of GroupBy method.
 type GroupObj struct {
 	Key   Object
@@ -252,13 +255,14 @@ func toSlice(lq *LinqObj) (result *Array) {
 }
 
 const LINQ_OBJ = "LINQ_OBJ"
+
 type LinqObj struct {
-	Query Query
+	Query        Query
 	OrderedQuery OrderedQuery
 }
 
 //lq:linq
-func (lq *LinqObj) Inspect() string  { 
+func (lq *LinqObj) Inspect() string {
 	r := toSlice(lq)
 	return r.Inspect()
 }
@@ -268,7 +272,7 @@ func (lq *LinqObj) Type() ObjectType { return LINQ_OBJ }
 func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
 	case "from":
-		return lq.From(line, args...)
+		return lq.From(line, scope, args...)
 	case "range":
 		return lq.Range(line, args...)
 	case "repeat":
@@ -373,7 +377,7 @@ func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...
 		return lq.Average(line, args...)
 	case "orderBy":
 		return lq.OrderBy(line, scope, args...)
-	case  "orderByDescending":
+	case "orderByDescending":
 		return lq.OrderByDescending(line, scope, args...)
 	case "thenBy":
 		return lq.ThenBy(line, scope, args...)
@@ -395,46 +399,80 @@ func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...
 // String, channel or struct implementing Iterable interface can be used as an
 // input. In this case From delegates it to FromString, FromChannel and
 // FromIterable internally.
-func (lq *LinqObj) From(line string, args ...Object) Object {
-	if len(args) != 1 && len(args) != 2 {
-		panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
+func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
+	if len(args) != 1 && len(args) != 2 && len(args) != 3 {
+		panic(NewError(line, ARGUMENTERROR, "1|2|3", len(args)))
 	}
 
 	obj := args[0]
 	//check object type
-	if obj.Type() != STRING_OBJ && obj.Type() != ARRAY_OBJ && 
+	if obj.Type() != STRING_OBJ && obj.Type() != ARRAY_OBJ &&
 		obj.Type() != HASH_OBJ && obj.Type() != FILE_OBJ && obj.Type() != CSV_OBJ {
 		panic(NewError(line, PARAMTYPEERROR, "first", "from", "*Hash|*Array|*String|*File|*CsvObj", obj.Type()))
 	}
 
 	switch obj.Type() {
 	case FILE_OBJ:
-		if len(args) != 2 {
-			panic(NewError(line, GENERICERROR, "File object should have 2 parameters:from(file, field-separator)"))
+		if len(args) != 1 && len(args) != 2 && len(args) != 3 {
+			panic(NewError(line, GENERICERROR, "File object should have 1|2|3 parameter(s):from(file, [field-separator], [commentFn])"))
 		}
 
-		//get the field separator
-		fsObj, ok := args[1].(*String)
-		if !ok {
-			panic(NewError(line, PARAMTYPEERROR, "second", "from", "*String", args[1].Type()))
+		var fsStr string = "," //field separator(default is ",")
+		if len(args) == 2 {
+			//get the field separator
+			fsObj, ok := args[1].(*String)
+			if !ok {
+				panic(NewError(line, PARAMTYPEERROR, "second", "from", "*String", args[1].Type()))
+			}
+			fsStr = fsObj.String
 		}
 
+		var commentFn *Function = nil
+		if len(args) == 3 {
+			//get the comment function
+			var ok bool
+			commentFn, ok = args[2].(*Function)
+			if !ok {
+				panic(NewError(line, PARAMTYPEERROR, "third", "from", "*Function", args[2].Type()))
+			}
+		}
+
+		scop := NewScope(scope)
 		arr := &Array{}
 		var lineNo int64 = 0
 		l := obj.(*FileObject).ReadLine(line)
 		for l != NIL {
+			//ignore comment if it has
+			if commentFn != nil {
+				scop.Set(commentFn.Literal.Parameters[0].(*ast.Identifier).Value, l.(*String))
+				cond := Eval(commentFn.Literal.Body, scop)
+				if obj, ok1 := cond.(*ReturnValue); ok1 {
+					cond = obj.Value
+				}
+				if IsTrue(cond) {
+					//read the next line
+					l = obj.(*FileObject).ReadLine(line)
+					lineNo++
+					continue
+				}
+			}
+
 			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
 			//-1 means the whole line
-			fieldIndex := NewInteger(-1)
+			fieldIndex := NewInteger(0)
 			hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: l}
 
 			lineNoKey := NewString("line")
 			hash.Pairs[lineNoKey.HashKey()] = HashPair{Key: lineNoKey, Value: NewInteger(lineNo)}
 
-			//strArr := strings.Split(l.(*String).String, fsObj.String)
-			strArr := regexp.MustCompile(fsObj.String).Split(l.(*String).String, -1)
+			//strArr := strings.Split(l.(*String).String, fsStr)
+			strArr := regexp.MustCompile(fsStr).Split(l.(*String).String, -1)
+
+			nfKey := NewString("nf") //nf : number of fields
+			hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(strArr)))}
+
 			for idx, v := range strArr {
-				fieldIndex := NewInteger(int64(idx))
+				fieldIndex := NewInteger(int64(idx+1))
 				hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: NewString(v)}
 			}
 			arr.Members = append(arr.Members, hash)
@@ -446,8 +484,8 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 
 		//Now the 'arr' variable is like below:
 		//  arr = [
-		//      {"line" =>LineNo1, -1 => line1, 0 => field0, 1 =>field1, ...},
-		//      {"line" =>LineNo2, -1 => line2, 0 => field0, 1 =>field1, ...}
+		//      {"line" =>LineNo1, "nf" =>line1's number of fields, -1 => line1, 0 => field0, 1 =>field1, ...},
+		//      {"line" =>LineNo2, "nf" =>line2's number of fields, -1 => line2, 0 => field0, 1 =>field1, ...}
 		//  ]
 		len := len(arr.Members)
 		//must return a new LinqObj
@@ -456,7 +494,7 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = arr.Members[index]
@@ -471,8 +509,12 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 		str2DArr := obj.(*CsvObj).ReadAll(line)
 		for _, fieldArr := range str2DArr.(*Array).Members {
 			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+
+			nfKey := NewString("nf") //nf : number of fields
+			hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(fieldArr.(*Array).Members)))}
+
 			for idx, field := range fieldArr.(*Array).Members {
-				fieldIdx := NewInteger(int64(idx))
+				fieldIdx := NewInteger(int64(idx+1))
 				hash.Pairs[fieldIdx.HashKey()] = HashPair{Key: fieldIdx, Value: field}
 			}
 			arr.Members = append(arr.Members, hash)
@@ -480,8 +522,8 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 
 		//Now the 'arr' variable is like below:
 		//  arr = [
-		//      {0 => field0, 1 =>field1, ...},
-		//      {0 => field0, 1 =>field1, ...}
+		//      {"nf" =>line1's number of fields, 1 => field0, 2 =>field1, ...},
+		//      {"nf" =>line2's number of fields, 1 => field0, 2 =>field1, ...}
 		//  ]
 		len := len(arr.Members)
 		//must return a new LinqObj
@@ -490,7 +532,7 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = arr.Members[index]
@@ -511,7 +553,7 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = NewString(string(runes[index]))
@@ -532,7 +574,7 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = arr.Members[index]
@@ -542,12 +584,12 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				}
 			},
 		}}
-		
+
 	case HASH_OBJ:
 		hash := obj.(*Hash)
 		len := len(hash.Pairs)
 
-		return &LinqObj{Query:Query{
+		return &LinqObj{Query: Query{
 			Iterate: func() Iterator {
 				index := 0
 
@@ -559,7 +601,7 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				}
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						key := keys.Members[index]
@@ -574,8 +616,8 @@ func (lq *LinqObj) From(line string, args ...Object) Object {
 				}
 			},
 		}}
-		default:
-			return &LinqObj{Query: Query{Iterate: obj.(*LinqObj).Query.Iterate}}
+	default:
+		return &LinqObj{Query: Query{Iterate: obj.(*LinqObj).Query.Iterate}}
 	} //end switch
 
 	return NIL
@@ -604,10 +646,10 @@ func (lq *LinqObj) Range(line string, args ...Object) Object {
 
 			return func() (item Object, ok *Boolean) {
 				if index >= countObj.Int64 {
-					return NIL, &Boolean{Bool:false, Valid:true}
+					return NIL, &Boolean{Bool: false, Valid: true}
 				}
 
-				item, ok = NewInteger(current), &Boolean{Bool:true, Valid:true}
+				item, ok = NewInteger(current), &Boolean{Bool: true, Valid: true}
 
 				index++
 				current++
@@ -639,10 +681,10 @@ func (lq *LinqObj) Repeat(line string, args ...Object) Object {
 
 			return func() (item Object, ok *Boolean) {
 				if index >= countObj.Int64 {
-					return NIL, &Boolean{Bool:false, Valid:true}
+					return NIL, &Boolean{Bool: false, Valid: true}
 				}
 
-				item, ok = valueObj, &Boolean{Bool:true, Valid:true}
+				item, ok = valueObj, &Boolean{Bool: true, Valid: true}
 
 				index++
 				return
@@ -726,7 +768,9 @@ func (lq *LinqObj) First(line string, args ...Object) Object {
 
 	item, _ := lq.Query.Iterate()()
 
-	if item == nil { return NIL }
+	if item == nil {
+		return NIL
+	}
 	return item
 }
 
@@ -873,7 +917,7 @@ func (lq *LinqObj) Take(line string, args ...Object) Object {
 			n := iObj.Int64
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:true, Valid:true}
+				ok = &Boolean{Bool: true, Valid: true}
 				if n <= 0 {
 					ok.Bool = false
 					return
@@ -929,7 +973,7 @@ func (lq *LinqObj) TakeWhile(line string, scope *Scope, args ...Object) Object {
 				}
 
 				done = true
-				return NIL, &Boolean{Bool:false, Valid:true}
+				return NIL, &Boolean{Bool: false, Valid: true}
 			}
 		},
 	}}
@@ -952,7 +996,7 @@ func (lq *LinqObj) TakeWhileIndexed(line string, scope *Scope, args ...Object) O
 
 	s := NewScope(scope)
 
-	return &LinqObj{Query: 	Query{
+	return &LinqObj{Query: Query{
 		Iterate: func() Iterator {
 			next := lq.Query.Iterate()
 			done := false
@@ -982,7 +1026,7 @@ func (lq *LinqObj) TakeWhileIndexed(line string, scope *Scope, args ...Object) O
 				}
 
 				done = true
-				return NIL, &Boolean{Bool:false, Valid:true}
+				return NIL, &Boolean{Bool: false, Valid: true}
 			}
 		},
 	}}
@@ -1170,7 +1214,7 @@ func (lq *LinqObj) GroupBy(line string, scope *Scope, args ...Object) Object {
 
 			index := 0
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Valid:true}
+				ok = &Boolean{Valid: true}
 				ok.Bool = index < len
 				if ok.Bool {
 					item = groups[index]
@@ -1274,7 +1318,7 @@ func (lq *LinqObj) Join(line string, scope *Scope, args ...Object) Object {
 					item = obj.Value
 				}
 				innerIndex++
-				return item, &Boolean{Bool:true, Valid:true}
+				return item, &Boolean{Bool: true, Valid: true}
 			}
 		},
 	}}
@@ -1323,10 +1367,10 @@ func (lq *LinqObj) Zip(line string, scope *Scope, args ...Object) Object {
 					if obj, ok1 := result.(*ReturnValue); ok1 {
 						result = obj.Value
 					}
-					return result, &Boolean{Bool:true, Valid:true}
+					return result, &Boolean{Bool: true, Valid: true}
 				}
 
-				return NIL, &Boolean{Bool:false, Valid:true}
+				return NIL, &Boolean{Bool: false, Valid: true}
 			}
 		},
 	}}
@@ -1349,7 +1393,7 @@ func (lq *LinqObj) Union(line string, args ...Object) Object {
 
 	return &LinqObj{Query: Query{
 		Iterate: func() Iterator {
-	next := lq.Query.Iterate()
+			next := lq.Query.Iterate()
 			next2 := lq2.Query.Iterate()
 
 			set := make(map[Object]bool)
@@ -1374,12 +1418,12 @@ func (lq *LinqObj) Union(line string, args ...Object) Object {
 				}
 
 				for item, ok = next2(); ok.Bool; item, ok = next2() {
-						for k, _ := range set {
-							if reflect.DeepEqual(k, item) {
-								set[item] = true
-								break
-							}
+					for k, _ := range set {
+						if reflect.DeepEqual(k, item) {
+							set[item] = true
+							break
 						}
+					}
 					if _, has := set[item]; !has {
 						set[item] = true
 						return
@@ -1414,7 +1458,7 @@ func (lq *LinqObj) SelectMany(line string, scope *Scope, args ...Object) Object 
 			var innernext Iterator
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:false, Valid:true}
+				ok = &Boolean{Bool: false, Valid: true}
 				for !ok.Bool {
 					if inner == NIL {
 
@@ -1477,7 +1521,7 @@ func (lq *LinqObj) SelectManyIndexed(line string, scope *Scope, args ...Object) 
 			var innernext Iterator
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:false, Valid:true} 
+				ok = &Boolean{Bool: false, Valid: true}
 				for !ok.Bool {
 					if inner == NIL {
 						inner, ok = outernext()
@@ -1537,14 +1581,13 @@ func (lq *LinqObj) SelectManyBy(line string, scope *Scope, args ...Object) Objec
 			var innernext Iterator
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:false, Valid:true}
+				ok = &Boolean{Bool: false, Valid: true}
 				for !ok.Bool {
 					if outer == NIL {
 						outer, ok = outernext()
 						if !ok.Bool {
 							return
 						}
-
 
 						s.Set(selector.Literal.Parameters[0].(*ast.Identifier).Value, outer)
 						lq := Eval(selector.Literal.Body, s)
@@ -1604,7 +1647,7 @@ func (lq *LinqObj) SelectManyByIndexed(line string, scope *Scope, args ...Object
 			var innernext Iterator
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:false, Valid:true}
+				ok = &Boolean{Bool: false, Valid: true}
 				for !ok.Bool {
 					if outer == NIL {
 						outer, ok = outernext()
@@ -1664,7 +1707,7 @@ func (lq *LinqObj) Reverse(line string, args ...Object) Object {
 
 			index := len(items) - 1
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Bool:false, Valid:true}
+				ok = &Boolean{Bool: false, Valid: true}
 				if index < 0 {
 					return
 				}
@@ -1781,7 +1824,6 @@ func (lq *LinqObj) ExceptBy(line string, scope *Scope, args ...Object) Object {
 	}}
 }
 
-
 // Append inserts an item to the end of a collection, so it becomes the last
 // item.
 func (lq *LinqObj) Append(line string, args ...Object) Object {
@@ -1802,10 +1844,10 @@ func (lq *LinqObj) Append(line string, args ...Object) Object {
 
 				if !appended {
 					appended = true
-					return args[0], &Boolean{Bool:true, Valid:true}
+					return args[0], &Boolean{Bool: true, Valid: true}
 				}
 
-				return NIL, &Boolean{Bool:false, Valid:true}
+				return NIL, &Boolean{Bool: false, Valid: true}
 			}
 		},
 	}}
@@ -1848,7 +1890,6 @@ func (lq *LinqObj) Concat(line string, args ...Object) Object {
 	}}
 }
 
-
 func (lq *LinqObj) Prepend(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
@@ -1865,7 +1906,7 @@ func (lq *LinqObj) Prepend(line string, args ...Object) Object {
 				}
 
 				prepended = true
-				return args[0], &Boolean{Bool:true, Valid:true}
+				return args[0], &Boolean{Bool: true, Valid: true}
 			}
 		},
 	}}
@@ -2063,7 +2104,6 @@ func (lq *LinqObj) IntersectBy(line string, scope *Scope, args ...Object) Object
 	}}
 }
 
-
 // Aggregate applies an accumulator function over a sequence.
 //
 // Aggregate method makes it simple to perform a calculation over a sequence of
@@ -2099,7 +2139,7 @@ func (lq *LinqObj) Aggregate(line string, scope *Scope, args ...Object) Object {
 		result = Eval(fn.Literal.Body, scop)
 		if obj, ok1 := result.(*ReturnValue); ok1 {
 			result = obj.Value
-		}		
+		}
 	}
 
 	return result
@@ -2197,7 +2237,7 @@ func (lq *LinqObj) AggregateWithSeedBy(line string, scope *Scope, args ...Object
 	}
 
 	scop.Set(resultSelector.Literal.Parameters[0].(*ast.Identifier).Value, result)
-	result =  Eval(resultSelector.Literal.Body, scop)
+	result = Eval(resultSelector.Literal.Body, scop)
 	if obj, ok1 := result.(*ReturnValue); ok1 {
 		result = obj.Value
 	}
@@ -2280,8 +2320,8 @@ func (lq *LinqObj) Contains(line string, args ...Object) Object {
 	next := lq.Query.Iterate()
 
 	for item, ok := next(); ok.Bool; item, ok = next() {
-	//using `if item == args[0]` is not correct, we need DeepEqual
-	if reflect.DeepEqual(item,args[0]) {
+		//using `if item == args[0]` is not correct, we need DeepEqual
+		if reflect.DeepEqual(item, args[0]) {
 			return TRUE
 		}
 	}
@@ -2346,7 +2386,6 @@ func (lq *LinqObj) SequenceEqual(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "sequenceEqual", "*LinqObj", args[0].Type()))
 	}
 
-
 	next := lq.Query.Iterate()
 	next2 := lq2.Query.Iterate()
 
@@ -2363,7 +2402,6 @@ func (lq *LinqObj) SequenceEqual(line string, args ...Object) Object {
 	}
 	return TRUE
 }
-
 
 // Single returns the only element of a collection, and nil if there is not
 // exactly one element in the collection.
@@ -2564,17 +2602,17 @@ func (lq *LinqObj) OrderBy(line string, scope *Scope, args ...Object) Object {
 	}
 
 	scop := NewScope(scope)
-	return &LinqObj{Query:lq.Query, OrderedQuery:OrderedQuery{
-		orders:   []order{{selector: selector, scope:scop}},
+	return &LinqObj{Query: lq.Query, OrderedQuery: OrderedQuery{
+		orders:   []order{{selector: selector, scope: scop}},
 		original: lq.Query,
 		Query: Query{
 			Iterate: func() Iterator {
-				items := lq.Query.sort([]order{{selector: selector, scope:scop}})
+				items := lq.Query.sort([]order{{selector: selector, scope: scop}})
 				len := len(items)
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = items[index]
@@ -2601,17 +2639,17 @@ func (lq *LinqObj) OrderByDescending(line string, scope *Scope, args ...Object) 
 	}
 
 	scop := NewScope(scope)
-	return &LinqObj{Query:lq.Query, OrderedQuery:OrderedQuery{
-		orders:   []order{{selector: selector, scope:scop, desc: true}},
+	return &LinqObj{Query: lq.Query, OrderedQuery: OrderedQuery{
+		orders:   []order{{selector: selector, scope: scop, desc: true}},
 		original: lq.Query,
 		Query: Query{
 			Iterate: func() Iterator {
-				items := lq.Query.sort([]order{{selector: selector, scope:scope, desc: true}})
+				items := lq.Query.sort([]order{{selector: selector, scope: scope, desc: true}})
 				len := len(items)
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = items[index]
@@ -2639,17 +2677,17 @@ func (lq *LinqObj) ThenBy(line string, scope *Scope, args ...Object) Object {
 	}
 
 	scop := NewScope(scope)
-	return &LinqObj{Query:lq.Query, OrderedQuery:OrderedQuery{
-		orders:   append(lq.OrderedQuery.orders, order{selector: selector, scope:scop}),
+	return &LinqObj{Query: lq.Query, OrderedQuery: OrderedQuery{
+		orders:   append(lq.OrderedQuery.orders, order{selector: selector, scope: scop}),
 		original: lq.OrderedQuery.original,
 		Query: Query{
 			Iterate: func() Iterator {
-				items := lq.OrderedQuery.original.sort(append(lq.OrderedQuery.orders, order{selector: selector, scope:scop}))
+				items := lq.OrderedQuery.original.sort(append(lq.OrderedQuery.orders, order{selector: selector, scope: scop}))
 				len := len(items)
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = items[index]
@@ -2677,17 +2715,17 @@ func (lq *LinqObj) ThenByDescending(line string, scope *Scope, args ...Object) O
 	}
 
 	scop := NewScope(scope)
-	return &LinqObj{Query:lq.Query, OrderedQuery:OrderedQuery{
-		orders:   append(lq.OrderedQuery.orders, order{selector: selector, scope:scop, desc: true}),
+	return &LinqObj{Query: lq.Query, OrderedQuery: OrderedQuery{
+		orders:   append(lq.OrderedQuery.orders, order{selector: selector, scope: scop, desc: true}),
 		original: lq.OrderedQuery.original,
 		Query: Query{
 			Iterate: func() Iterator {
-				items := lq.OrderedQuery.original.sort(append(lq.OrderedQuery.orders, order{selector: selector, scope:scop, desc: true}))
+				items := lq.OrderedQuery.original.sort(append(lq.OrderedQuery.orders, order{selector: selector, scope: scop, desc: true}))
 				len := len(items)
 				index := 0
 
 				return func() (item Object, ok *Boolean) {
-					ok = &Boolean{Valid:true}
+					ok = &Boolean{Valid: true}
 					ok.Bool = index < len
 					if ok.Bool {
 						item = items[index]
@@ -2751,14 +2789,14 @@ func (lq *LinqObj) Sort(line string, scope *Scope, args ...Object) Object {
 	}
 
 	scop := NewScope(scope)
-	return &LinqObj{Query:Query{
+	return &LinqObj{Query: Query{
 		Iterate: func() Iterator {
 			items := lq.Query.lessSort(scop, less)
 			len := len(items)
 			index := 0
 
 			return func() (item Object, ok *Boolean) {
-				ok = &Boolean{Valid:true}
+				ok = &Boolean{Valid: true}
 				ok.Bool = index < len
 				if ok.Bool {
 					item = items[index]
@@ -2770,7 +2808,6 @@ func (lq *LinqObj) Sort(line string, scope *Scope, args ...Object) Object {
 		},
 	}}
 }
-
 
 func (lq *LinqObj) ToMap(line string, scope *Scope, args ...Object) Object {
 	if len(args) != 2 {
@@ -2806,10 +2843,9 @@ func (lq *LinqObj) ToMap(line string, scope *Scope, args ...Object) Object {
 
 		hash.Push(line, key, value)
 	}
-	
+
 	return hash
 }
-
 
 func getComparer(data Object) comparer {
 	switch data.(type) {

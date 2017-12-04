@@ -1031,26 +1031,68 @@ fn(idx,x){
     return x + "_"
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
+```
+#### Linq for file
 
-//test linq with "file"
+Now, monkey has a powerful `linq for file` support. it can be used to operate
+files a little bit like awk. See below for example:
+
+```swift
+//test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
-result = linq.from(file,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
-	int(x[0]) > 300000 //only 1st Field's Value > 300000
-}).sort(fn(x,y){
-	return int(x[0]) > int(y[0]) //sort with first field
-}).select(fn(x) {
-	x[4]  //only output the fourth field
+result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a comment function
+	if line.trim().hasPrefix("#") { //if line start '#'
+		return true // return 'true' means we ignore this line
+	} else {
+		return false
+	}
+}).where(fn(fields) {
+	//The 'fields' is an array of hashes, like below:
+	//  fields = [
+	//      {"line" =>LineNo1, "nf" =>line1's number of fields, -1 => line1, 0 => field0, 1 =>field1, ...},
+	//      {"line" =>LineNo2, "nf" =>line2's number of fields, -1 => line2, 0 => field0, 1 =>field1, ...}
+	//  ]
+
+	int(fields[1]) > 300000 //only 1st Field's Value > 300000
+}).sort(fn(field1,field2){
+	return int(field1[1]) > int(field2[1]) //sort with first field(descending)
+}).select(fn(fields) {
+	fields[5]  //only output the fifth field
 })
 println(result)
 
 
-//Another test with "file"
+//another test: linq for "file"
+file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
+result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a comment function
+	if line.trim().hasPrefix("#") { //if line start '#'
+		return true //return 'true' means we ignore this line
+	} else {
+		return false
+	}
+}).where(fn(fields) {
+	int(fields[1]) > 300000 //only 1st Field's Value > 300000
+}).sort(fn(field1,field2){
+	return int(field1[1]) > int(field2[1]) //sort with first field(descending)
+}).selectMany(fn(fields) {
+	row = [[fields[0]]] //fields[0] is the whole line, we need to two [], otherwise selectMany will flatten the output.
+	linq.from(row)  //output the whold records
+})
+println(result)
+
+
+//test: linq for "csv"
 r = newCsvReader("./examples/test.csv") //open test.csv file for reading
 r.setOptions({"Comma"=>";", "Comment"=>"#"})
 result = linq.from(r,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
-	x[1] == "Pike"//only 2nd Field = "Pike"
+	//The 'x' is an array of hashes, like below:
+	//  x = [
+	//      {"nf" =>line1's number of fields, 0 => field0, 1 =>field1, ...},
+	//      {"nf" =>line2's number of fields, 0 => field0, 1 =>field1, ...}
+	//  ]
+	x[2] == "Pike"//only 2nd Field = "Pike"
 }).sort(fn(x,y){
-	return len(x[0]) > len(y[0]) //sort with length of first field
+	return len(x[1]) > len(y[1]) //sort with length of first field
 })
 println(result)
 ```
