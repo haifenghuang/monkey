@@ -1040,7 +1040,7 @@ files a little bit like awk. See below for example:
 ```swift
 //test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
-result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a comment function
+result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a selector function
 	if line.trim().hasPrefix("#") { //if line start '#'
 		return true // return 'true' means we ignore this line
 	} else {
@@ -1064,7 +1064,7 @@ println(result)
 
 //another test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
-result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a comment function
+result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a selector function
 	if line.trim().hasPrefix("#") { //if line start '#'
 		return true //return 'true' means we ignore this line
 	} else {
@@ -1075,8 +1075,8 @@ result = linq.from(file,",",fn(line){ //the second parameter is field separator,
 }).sort(fn(field1,field2){
 	return int(field1[1]) > int(field2[1]) //sort with first field(descending)
 }).selectMany(fn(fields) {
-	row = [[fields[0]]] //fields[0] is the whole line, we need to two [], otherwise selectMany will flatten the output.
-	linq.from(row)  //output the whold records
+	row = [[fields[0]]] //fields[0] is the whole line, we need two "[]"s, otherwise selectMany() will flatten the output.
+	linq.from(row)  //output the whole records
 })
 println(result)
 
@@ -1084,7 +1084,7 @@ println(result)
 //test: linq for "csv"
 r = newCsvReader("./examples/test.csv") //open test.csv file for reading
 r.setOptions({"Comma"=>";", "Comment"=>"#"})
-result = linq.from(r,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
+result = linq.from(r).where(fn(x) {
 	//The 'x' is an array of hashes, like below:
 	//  x = [
 	//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},

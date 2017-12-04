@@ -1008,28 +1008,6 @@ fn(idx,x){
     return x + "_"
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
-
-//test linq with "file"
-file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
-result = linq.from(file,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
-	int(x[0]) > 300000 //only 1st Field's Value > 300000
-}).sort(fn(x,y){
-	return int(x[0]) > int(y[0]) //sort with first field
-}).select(fn(x) {
-	x[4]  //only output the fourth field
-})
-println(result)
-
-
-//Another test with "file"
-r = newCsvReader("./examples/test.csv") //open test.csv file for reading
-r.setOptions({"Comma"=>";", "Comment"=>"#"})
-result = linq.from(r,",").where(fn(x) { //the second parameter of 'from' is the Field Separator
-	x[1] == "Pike"//only 2nd Field = "Pike"
-}).sort(fn(x,y){
-	return len(x[0]) > len(y[0]) //sort with length of first field
-})
-println(result)
 ```
 
 #### Linq for file支持
@@ -1075,7 +1053,7 @@ result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第�
 }).sort(fn(field1,field2){
 	return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
 }).selectMany(fn(fields) {
-	row = [[fields[0]]] //fields[0]为整行数据。 注意：我们需要使用两个[], 否则selectMany将会flatten输出结果
+	row = [[fields[0]]] //fields[0]为整行数据。 注意：我们需要使用两个[], 否则selectMany()将会flatten输出结果
 	linq.from(row)  //输出整行数据
 })
 println(result)
@@ -1084,7 +1062,7 @@ println(result)
 //test: linq for "csv"
 r = newCsvReader("./examples/test.csv") //以读取方式打开test.csv
 r.setOptions({"Comma"=>";", "Comment"=>"#"})
-result = linq.from(r,",").where(fn(x) {
+result = linq.from(r).where(fn(x) {
 	//The 'x' is an array of hashes, like below:
 	//  x = [
 	//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},

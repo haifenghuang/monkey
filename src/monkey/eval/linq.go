@@ -414,7 +414,7 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 	switch obj.Type() {
 	case FILE_OBJ:
 		if len(args) != 1 && len(args) != 2 && len(args) != 3 {
-			panic(NewError(line, GENERICERROR, "File object should have 1|2|3 parameter(s):from(file, [field-separator], [commentFn])"))
+			panic(NewError(line, GENERICERROR, "File object should have 1|2|3 parameter(s):from(file, [field-separator], [selector])"))
 		}
 
 		var fsStr string = "," //field separator(default is ",")
@@ -427,11 +427,11 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 			fsStr = fsObj.String
 		}
 
-		var commentFn *Function = nil
+		var selector *Function = nil
 		if len(args) == 3 {
-			//get the comment function
+			//get the selector function
 			var ok bool
-			commentFn, ok = args[2].(*Function)
+			selector, ok = args[2].(*Function)
 			if !ok {
 				panic(NewError(line, PARAMTYPEERROR, "third", "from", "*Function", args[2].Type()))
 			}
@@ -442,10 +442,9 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 		var lineNo int64 = 0
 		l := obj.(*FileObject).ReadLine(line)
 		for l != NIL {
-			//ignore comment if it has
-			if commentFn != nil {
-				scop.Set(commentFn.Literal.Parameters[0].(*ast.Identifier).Value, l.(*String))
-				cond := Eval(commentFn.Literal.Body, scop)
+			if selector != nil {
+				scop.Set(selector.Literal.Parameters[0].(*ast.Identifier).Value, l.(*String))
+				cond := Eval(selector.Literal.Body, scop)
 				if obj, ok1 := cond.(*ReturnValue); ok1 {
 					cond = obj.Value
 				}
@@ -458,7 +457,7 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 			}
 
 			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-			//-1 means the whole line
+			//0 means the whole line
 			fieldIndex := NewInteger(0)
 			hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: l}
 
