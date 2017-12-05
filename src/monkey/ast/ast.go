@@ -736,6 +736,51 @@ func (fl *FunctionLiteral) String() string {
 }
 
 ///////////////////////////////////////////////////////////
+//                 Named FUNCTION LITERAL                //
+///////////////////////////////////////////////////////////
+type NamedFunction struct {
+	Token           token.Token
+	Ident           *Identifier //Function name
+	FunctionLiteral *FunctionLiteral
+}
+
+func (nf *NamedFunction) Pos() token.Position {
+	return nf.Token.Pos
+}
+
+func (nf *NamedFunction) End() token.Position {
+	return nf.FunctionLiteral.Body.End()
+}
+
+func (nf *NamedFunction) statementNode() {}
+func (nf *NamedFunction) TokenLiteral() string { return nf.Token.Literal }
+func (nf *NamedFunction) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("fn ")
+	out.WriteString(nf.Ident.String())
+
+	params := []string{}
+	for i, p := range nf.FunctionLiteral.Parameters {
+		param := p.String()
+		if nf.FunctionLiteral.Variadic && i == len(nf.FunctionLiteral.Parameters)-1 {
+			param = "..." + param
+		}
+
+		params = append(params, p.String())
+
+	}
+	out.WriteString(" (")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString("{ ")
+	out.WriteString(nf.FunctionLiteral.Body.String())
+	out.WriteString(" }")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
 //                      STRING LITERAL                   //
 ///////////////////////////////////////////////////////////
 type StringLiteral struct {

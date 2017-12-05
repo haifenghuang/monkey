@@ -65,6 +65,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalReturnStatment(node, scope)
 	case *ast.DeferStmt:
 		return evalDeferStatment(node, scope)
+	case *ast.NamedFunction:
+		return evalNamedFnStatement(node, scope)
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.IntegerLiteral:
@@ -777,6 +779,13 @@ func evalEnumLiteral(e *ast.EnumLiteral, scope *Scope) Object {
 		}
 	}
 	return &Enum{Scope: enumScope}
+}
+
+func evalNamedFnStatement(namedFn *ast.NamedFunction, scope *Scope) Object {
+	fnObj := evalFunctionLiteral(namedFn.FunctionLiteral, scope)
+	scope.Set(namedFn.Ident.String(), fnObj) //save to scope
+
+	return NIL
 }
 
 func evalFunctionLiteral(fl *ast.FunctionLiteral, scope *Scope) Object {

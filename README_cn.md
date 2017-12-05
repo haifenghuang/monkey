@@ -750,6 +750,15 @@ w = add(2,3,4,5,6,7)
 println(w)
 ```
 
+你也可以像下面这样创建一个命名函数：
+
+```
+fn sub(x,y=2) {
+    return x - y
+}
+println(sub(10)) //结果 : 8
+```
+
 ## Pipe操作符
 
 `pipe`操作符来自[Elixir](https://elixir-lang.org/).

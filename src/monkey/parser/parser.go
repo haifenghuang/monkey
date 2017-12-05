@@ -230,6 +230,15 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseIncludeStatement()
 	case token.THROW:
 		return p.parseThrowStatement()
+	case token.FUNCTION:
+		if p.peekTokenIs(token.IDENT) {
+			return p.parseNamedFunction()
+		} else {
+			// if we reach here, it means the "FN" token is
+			// assumed to be the beginning of an expression.
+			return nil
+		}
+		
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -1160,6 +1169,17 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 	return ce
 }
 
+func (p *Parser) parseNamedFunction() ast.Statement {
+	namedFn := &ast.NamedFunction{Token: p.curToken}
+
+	p.nextToken()
+	namedFn.Ident = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	namedFn.FunctionLiteral = p.parseFunctionLiteral().(*ast.FunctionLiteral)
+
+	return namedFn
+}
+
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken, Variadic: false}
 	if !p.expectPeek(token.LPAREN) {
@@ -1446,7 +1466,7 @@ func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 	return a
 }
 
-// IDENT() -> IDENT()
+// IDENT() |> IDENT()
 func (p *Parser) parsePipeExpression(left ast.Expression) ast.Expression {
 	expression := &ast.Pipe{
 		Token: p.curToken,

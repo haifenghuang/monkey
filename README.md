@@ -769,6 +769,14 @@ add = fn (x, y=5, z=7, args...) {
 w = add(2,3,4,5,6,7)
 println(w)
 ```
+You could also declare named function like below:
+
+```
+fn sub(x,y=2) {
+    return x - y
+}
+println(sub(10)) //output : 8
+```
 
 ## Pipe Operator
 
