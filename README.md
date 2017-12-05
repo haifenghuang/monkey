@@ -1269,7 +1269,7 @@ In monkey, regard to regular expression, you could use:
 
 * Regular expression literal
 * 'regexp' module
-* '=~' and '!~' operators(like perl's)
+* =&#126; and !&#126; operators(like perl's)
 
 ```swift
 //Use regular expression literal( /pattern/.match(str) )
