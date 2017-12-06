@@ -593,6 +593,10 @@ file = newFile(filename, "r")
 if (file == nil) {
     println("opening ", filename, "for reading failed, error:", file.message())
 }
+//do something with the file
+
+//close the file
+file.close()
 
 
 let ret = http.listenAndServe("127.0.0.1:9090")
@@ -866,6 +870,7 @@ log.setOutput(file)
 for i in 1..5 {
     log.printf("This is <%d>\n", i)
 }
+file.close() //do not forget to close the file
 ```
 
 #### flag module(for handling of command line options)
@@ -1068,7 +1073,7 @@ result = linq.from(file,",",fn(line){ //the second parameter is field separator,
 	fields[5]  //only output the fifth field
 })
 println(result)
-
+file.close() //do not forget to close the file
 
 //another test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
@@ -1087,6 +1092,7 @@ result = linq.from(file,",",fn(line){ //the second parameter is field separator,
 	linq.from(row)  //output the whole records
 })
 println(result)
+file.close() //do not forget to close the file
 
 
 //test: linq for "csv"
@@ -1103,6 +1109,7 @@ result = linq.from(r).where(fn(x) {
 	return len(x[1]) > len(y[1]) //sort with length of first field
 })
 println(result)
+r.close() //do not forget to close the reader
 ```
 
 #### csv module
@@ -1127,6 +1134,7 @@ for line in ra {
         println("	", record)
     }
 }
+r.close() //do not forget to close the reader
 
 //test csv writer
 let ofile = newFile("./examples/demo.csv", "a+")
@@ -1135,6 +1143,7 @@ w.setOptions({"Comma"=>"	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
+ofile.close() //do not forget to close the file
 ```
 
 #### template module
@@ -1159,6 +1168,7 @@ println('{resultValue}')
 //use parseTextFiles(), write to a file
 file = newFile("./examples/outTemplate.log", "a+")
 template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
+file.close() //do not to forget to close the file
 
 //use parse()
 //Note here: we need to use "{{-" and "-}}" to remove the newline from the output

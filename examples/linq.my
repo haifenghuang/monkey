@@ -1085,6 +1085,7 @@ result = linq.from(file,",",fn(line){ //the second parameter is field separator,
 	linq.from(row)  //output the whole records
 })
 println(result)
+file.close() //do not forget to close the file
 
 
 //test: linq for "csv"
@@ -1096,3 +1097,4 @@ result = linq.from(r).where(fn(x) {
 	return len(x[1]) > len(y[1]) //sort with length of first field
 })
 println(result)
+r.closeReader() //do not forget to close the reader

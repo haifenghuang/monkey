@@ -2,6 +2,7 @@ package eval
 
 import (
 	"encoding/csv"
+	"os"
 )
 
 const (
@@ -25,8 +26,10 @@ var optionsKeyMap = map[string]bool{
 }
 
 type CsvObj struct {
-	Reader *csv.Reader
-	Writer *csv.Writer
+	Reader     *csv.Reader
+	ReaderFile *os.File
+
+	Writer     *csv.Writer
 }
 
 func (c *CsvObj) Inspect() string  { return csv_name }
@@ -38,6 +41,8 @@ func (c *CsvObj) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return c.Read(line, args...)
 	case "readAll":
 		return c.ReadAll(line, args...)
+	case "closeReader", "close":
+		return c.CloseReader(line, args...)
 	case "write":
 		return c.Write(line, args...)
 	case "writeAll":
@@ -88,6 +93,20 @@ func (c *CsvObj) ReadAll(line string, args ...Object) Object {
 	}
 
 	return r
+}
+
+func (c *CsvObj) CloseReader(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if c.ReaderFile != nil {
+		err := c.ReaderFile.Close()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+	}
+	return NIL
 }
 
 func (c *CsvObj) Write(line string, args ...Object) Object {

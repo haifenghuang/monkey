@@ -598,6 +598,12 @@ if (file == nil) {
     println("opening ", filename, "for reading failed, error:", file.message())
 }
 
+//操作文件
+//...
+
+//关闭文件
+file.close()
+
 
 let ret = http.listenAndServe("127.0.0.1:9090")
 if (ret == false) {
@@ -844,6 +850,7 @@ log.setOutput(file)
 for i in 1..5 {
     log.printf("This is <%d>\n", i)
 }
+file.close() //别忘记关闭文件
 ```
 
 #### flag 模块(处理命令行选项)
@@ -1047,6 +1054,7 @@ result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第�
 	fields[5]  //仅输出第五个字段
 })
 println(result)
+file.close() //别忘记关闭文件
 
 
 //another test: linq for "file"
@@ -1066,6 +1074,7 @@ result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第�
 	linq.from(row)  //输出整行数据
 })
 println(result)
+file.close() //别忘记关闭文件
 
 
 //test: linq for "csv"
@@ -1082,6 +1091,7 @@ result = linq.from(r).where(fn(x) {
 	return len(x[1]) > len(y[1]) //以第一个字段的长度排序
 })
 println(result)
+r.close() //别忘记关闭Reader
 ```
 
 #### csv 模块
@@ -1106,6 +1116,7 @@ for line in ra {
         println("	", record)
     }
 }
+r.close() //do not to forget to close the reader
 
 //测试 csv writer
 let ofile = newFile("./examples/demo.csv", "a+")
@@ -1114,6 +1125,7 @@ w.setOptions({"Comma"=>"	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
+ofile.close() //do not to forget to close the file
 ```
 
 #### template 模块
@@ -1138,6 +1150,7 @@ println('{resultValue}')
 //使用parseTextFiles()来写入一个文件
 file = newFile("./examples/outTemplate.log", "a+")
 template.parseTextFiles("./examples/looping.tmpl").execute(file, arr)
+file.close() //do not to forget to close the file
 
 //使用 parse()
 //注: 我们需要使用"{{-" and "-}}"来移除输出中的回车换行(newline)

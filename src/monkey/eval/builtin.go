@@ -967,7 +967,7 @@ func newCsvReaderBuiltin() *Builtin {
 				return NewNil(err.Error())
 			}
 
-			return &CsvObj{Reader: csv.NewReader(f)}
+			return &CsvObj{Reader: csv.NewReader(f), ReaderFile:f}
 		},
 	}
 }
