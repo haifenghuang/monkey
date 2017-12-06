@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -24,6 +25,8 @@ var (
 )
 
 var includeScope *Scope
+var importedCache map[string]Object
+var mux sync.Mutex
 
 func Eval(node ast.Node, scope *Scope) Object {
 	defer func() {
@@ -201,9 +204,15 @@ func loadIncludes(includes map[string]*ast.IncludeStatement, scope *Scope) {
 
 // Statements...
 func evalIncludeStatement(i *ast.IncludeStatement, scope *Scope) Object {
-	if i.IsModule {
-		return evalProgram(i.Program, scope)
+
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Check the cache
+	if cache, ok := importedCache[i.IncludePath.String()]; ok {
+		return cache
 	}
+
 	imported := &IncludedObject{Name: i.IncludePath.String(), Scope: NewScope(nil)}
 
 	// capture stdout to suppress output during evaluating import
@@ -218,6 +227,9 @@ func evalIncludeStatement(i *ast.IncludeStatement, scope *Scope) Object {
 	// restore stdout
 	w.Close()
 	os.Stdout = so
+
+	//store the evaluated result to cache
+	importedCache[i.IncludePath.String()] = imported
 
 	return imported
 }

@@ -1150,7 +1150,6 @@ func (ls *LetStatement) String() string {
 type IncludeStatement struct {
 	Token       token.Token
 	IncludePath Expression
-	IsModule    bool
 	Program     *Program
 }
 

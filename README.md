@@ -775,7 +775,7 @@ println(w)
 ```
 You could also declare named function like below:
 
-```
+```swift
 fn sub(x,y=2) {
     return x - y
 }

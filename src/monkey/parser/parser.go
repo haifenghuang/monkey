@@ -556,33 +556,36 @@ func (p *Parser) parseIncludeStatement() *ast.IncludeStatement {
 	if p.expectPeek(token.IDENT) {
 		stmt.IncludePath = p.parseExpressionStatement().Expression
 	}
-	program, module, err := p.getIncludedStatements(stmt.IncludePath.String())
+	program, err := p.getIncludedStatements(stmt.IncludePath.String())
 	if err != nil {
 		p.errors = append(p.errors, err.Error())
 	}
 	stmt.Program = program
-	stmt.IsModule = module
 	return stmt
 }
 
-func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, bool, error) {
-	module := false
+func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, error) {
 	path := p.path
 
 	fn := path + "/" + importpath + ".my"
 	f, err := ioutil.ReadFile(fn)
-	if err != nil {
-		path = path + "/" + importpath
-		_, err := os.Stat(path)
-		if err != nil {
-			return nil, module, fmt.Errorf("no file or directory: %s.my, %s", importpath, path)
+	if err != nil { //error occurred, maybe the file do not exists.
+		// Check for 'MONKEY_ROOT' environment variable
+		includeRoot := os.Getenv("MONKEY_ROOT")
+		if len(includeRoot) == 0 { //'MONKEY_ROOT' environment variable is not set
+			return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, path)
+		} else {
+			if includeRoot[len(includeRoot)-1:] == "/" {
+				fn = includeRoot + importpath + ".my"
+			} else {
+				fn = includeRoot + "/" + importpath + ".my"
+			}
+			e, err := ioutil.ReadFile(fn)
+			if err != nil {
+				return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, includeRoot)
+			}
+			f = e
 		}
-		m, err := ioutil.ReadFile(path + "/module.my")
-		if err != nil {
-			return nil, module, err
-		}
-		module = true
-		f = m
 	}
 
 	l := lexer.New(fn, string(f))
@@ -591,7 +594,7 @@ func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, bool, e
 	if len(ps.errors) != 0 {
 		p.errors = append(p.errors, ps.errors...)
 	}
-	return parsed, module, nil
+	return parsed, nil
 }
 
 func (p *Parser) parseDoLoopExpression() ast.Expression {

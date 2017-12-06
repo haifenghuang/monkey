@@ -758,7 +758,7 @@ println(w)
 
 你也可以像下面这样创建一个命名函数：
 
-```
+```swift
 fn sub(x,y=2) {
     return x - y
 }
