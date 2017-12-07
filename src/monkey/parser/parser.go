@@ -479,25 +479,29 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
+	//parse left hand side of the assignment
 	for {
 		p.nextToken()
 		name := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 		stmt.Names = append(stmt.Names, name)
 
-		if p.expectPeek(token.ASSIGN) {
-			p.nextToken()
-			v := p.parseExpressionStatement().Expression
-			stmt.Values = append(stmt.Values, v)
-		}
-
-		if p.peekTokenIs(token.COMMA) {
-			p.nextToken()
-		} else {
+		p.nextToken()
+		if p.curTokenIs(token.ASSIGN) {
 			break
 		}
+	}
 
-	} //end for
+	p.nextToken()
+	for {
+		v := p.parseExpressionStatement().Expression
+		stmt.Values = append(stmt.Values, v)
 
+		if !p.peekTokenIs(token.COMMA) {
+			break
+		}
+		p.nextToken()
+		p.nextToken()
+	}
 	return stmt
 }
 

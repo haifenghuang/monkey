@@ -149,7 +149,7 @@ Variables in Monkey could start with the keyword `let`, or nothing with the
 form `variable=value`.
 
 ```swift
-let a = 1, b = "hello world", c = [1,2,3]
+let a, b, c = 1, "hello world", [1,2,3]
 d = 4
 e = 5
 姓 = "黄"
@@ -244,7 +244,7 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ```swift
 // if-else
-let a= 10, b = 5
+let a, b = 10, 5
 if (a > b) { // '()' is optional, but '{}' is a must
     println("a > b")
 }
@@ -828,9 +828,9 @@ If you are curious, please see the source code.
 ### fmt module
 
 ```swift
-let i = 108, f = 25.383, b=true, s = "Hello, world",
-    aArr = [1, 2, 3, 4, "a", "b"],
-    aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
+let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
+    [1, 2, 3, 4, "a", "b"],
+    { "key1" => 1, "key2" => 2, "key3" => "abc"}
 
 // Use '%v (value)' to print variable value, '%_' to print the variable's type
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
@@ -1247,7 +1247,7 @@ let dbOp = fn() {
 
     tx.commit()
 
-    let id = 0, name = ""
+    let id, name = 0, ""
     let rows = db.query("select id, name from foo")
     if (rows == nil) {
         println("db queue failed, error:", rows.message())

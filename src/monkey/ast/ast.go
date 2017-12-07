@@ -1124,13 +1124,19 @@ func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer
 
+	valuesLen := len(ls.Values)
+
 	out.WriteString(ls.TokenLiteral() + " ")
 	for idx, item := range ls.Names {
 		out.WriteString(item.String())
 		out.WriteString(" = ")
 
-		if ls.Values[idx] != nil {
-			out.WriteString(ls.Values[idx].String())
+		if idx >= valuesLen {
+			out.WriteString("")
+		} else {
+			if ls.Values[idx] != nil {
+				out.WriteString(ls.Values[idx].String())
+			}
 		}
 		if idx != len(ls.Names)-1 {
 			out.WriteString(", ")

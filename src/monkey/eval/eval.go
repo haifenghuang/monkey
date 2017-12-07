@@ -235,12 +235,18 @@ func evalIncludeStatement(i *ast.IncludeStatement, scope *Scope) Object {
 }
 
 func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
+	valuesLen := len(l.Values)
+
 	for idx, item := range l.Names {
-		val = Eval(l.Values[idx], scope)
-		if val.Type() != ERROR_OBJ {
-			scope.Set(item.String(), val)
+		if idx >= valuesLen { //There are more Values than Names
+			scope.Set(item.String(), NIL)
 		} else {
-			return
+			val = Eval(l.Values[idx], scope)
+			if val.Type() != ERROR_OBJ {
+				scope.Set(item.String(), val)
+			} else {
+				return
+			}
 		}
 	}
 
@@ -905,7 +911,6 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 		return evalArrayInfixExpression(node, left, right)
 	case left.Type() == STRING_OBJ && right.Type() == STRING_OBJ:
 		return evalStringInfixExpression(node, left, right)
-	//case (left.Type() == STRING_OBJ || right.Type() == STRING_OBJ) && (hasNumArg):
 	case (left.Type() == STRING_OBJ || right.Type() == STRING_OBJ):
 		return evalMixedTypeInfixExpression(node, left, right)
 	case (left.Type() == HASH_OBJ && right.Type() == HASH_OBJ):
@@ -950,6 +955,7 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 
 		return nativeBoolToBooleanObject(left != right)
 	}
+
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
 
@@ -1150,6 +1156,34 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 			return NewString(strings.Repeat(left.Inspect(), int(integer)))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
+		if left.Type() != STRING_OBJ || right.Type() != STRING_OBJ {
+			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+		}
+
+		if left.(*String).String == right.(*String).String {
+			return TRUE
+		}
+		return FALSE
+
+	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
+
+		if left.Type() != STRING_OBJ || right.Type() != STRING_OBJ {
+			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+		}
+
+		if left.(*String).String != right.(*String).String {
+			return TRUE
+		}
+		return FALSE
+
 	default:
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	}

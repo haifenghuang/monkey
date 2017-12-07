@@ -130,14 +130,14 @@ finally {
 }
 
 # multiple variable assignment
-let d1 = "Hello World", d2 = [1,2,3], d3 = (3+1-2)*5, w1 = fn(x,y) { x + y }
+let d1, d2, d3, w1 = "Hello World", [1,2,3], (3+1-2)*5, fn(x,y) { x + y }
 println(d1)
 println(d2)
 println(d3)
 println(w1(1,2))
 
 # support utf8
-let 姓="黄", 名="海峰", 问候="您好！"
+let 姓, 名, 问候 = "黄", "海峰", "您好！"
 println(姓, 名, 问候)
 println('{姓}{名}, {问候}')
 let 五 = 5
@@ -166,10 +166,10 @@ let regex = /\d+\t/.match("abc 123	mnj")
 if (regex) {println("regex matched")}
 
 # some other examples
-let aFloat = 1.02E3, aInt = 0x80, aStr = "0x80", u1 = 1+5<<2*3, u2 = 100+20>>2*2
+let aFloat, aInt, aStr, u1, u2 = 1.02E3, 0x80, "0x80", 1+5<<2*3, 100+20>>2*2
 println('aFloat={aFloat}, aInt={aInt}, aStr={int(aStr)}, u1={u1}, u2={u2}')
 
-let aBin = 0b10101, aBinStr="0b10101"
+let aBin, aBinStr = 0b10101, "0b10101"
 println('aBin={aBin}, aBinStr={int(aBinStr)}')
 
 let subs = "Hello World".substr(6, 10)
@@ -179,7 +179,7 @@ let kk = 5.1 + " hello"
 print("kk is ", kk)
 println("")
 
-let yu1 = "hello ", yu2 = "world!", yu3 = 123, yu4 = [1,2,3,4], yu5 = {"a"=>10, "b"=>"test"}, yu6 = fn(x){ x + 1 }
+let yu1, yu2, yu3, yu4, yu5, yu6 = "hello ", "world!", 123, [1,2,3,4], {"a"=>10, "b"=>"test"}, fn(x){ x + 1 }
 printf("%s    %s    %d    %s    %s    %s\n", yu1, yu2, yu3, yu4, yu5, yu6)  # use '%s' only
 printf("%s\n", "おはようございます")
 
@@ -448,7 +448,7 @@ let ExampleWaitGroup = fn() {
 ExampleWaitGroup()
 
 #Testing `fmt` module
-let i = 108, f = 25.383, b=true, s = "Hello, world"
+let i, f, b, s = 108, 25.383,true, "Hello, world"
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)
 
 let sp = fmt.sprintf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s]\n", i, i, b, f, s)

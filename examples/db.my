@@ -44,7 +44,7 @@ let dbOp = fn() {
 
 	tx.commit()
 
-	let id = 0, name = ""
+	let id, name = 0, ""
 	let rows = db.query("select id, name from foo")
 	if (rows == nil) {
 		println("db queue failed, error:", rows.message())
