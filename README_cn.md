@@ -159,6 +159,13 @@ e = 5
 姓="黄"
 ```
 
+如果你不使用`let`来给变量赋值，那么你将不能使用多变量赋值。下面的语句是错误的：
+
+```swift
+//错误,多变量赋值必须使用let关键字
+a, b, c = 1, "hello world", [1,2,3]
+```
+
 ## 保留字
 
 下面列出了monkey语言的保留字：
@@ -763,6 +770,26 @@ fn sub(x,y=2) {
     return x - y
 }
 println(sub(10)) //结果 : 8
+```
+
+Monkey不支持多个返回值, 但有很多方法可以达到目的.
+
+下面是其中的一种实现方式:
+
+```swift
+fn div(x, y) {
+	if y == 0 {
+		return [nil, "y could not be zero"]
+	}
+	return [x/y, ""]
+}
+
+ret = div(10,5)
+if ret[1] != "" {
+	println(ret[1])
+} else {
+	println(ret[0])
+}
 ```
 
 ## Pipe操作符

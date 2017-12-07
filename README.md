@@ -155,6 +155,15 @@ e = 5
 姓 = "黄"
 ```
 
+Note however, if you do not use the keyword `let`, you could not do multiple variable assignments.
+Below code is not correct：
+
+```swift
+//Error, multiple variable assignments must be use `let` keyword
+a, b, c = 1, "hello world", [1,2,3]
+```
+
+
 ### Reserved keywords
 
 Keywords are predefined, reserved identifiers that have special meanings to the compiler. They cannot be used as identifiers. Below is a list of reserved keywords
@@ -780,6 +789,26 @@ fn sub(x,y=2) {
     return x - y
 }
 println(sub(10)) //output : 8
+```
+
+Monkey do not support multiple return values, But there are many ways to do it.
+
+Below suggest a way of doing it:
+
+```swift
+fn div(x, y) {
+	if y == 0 {
+		return [nil, "y could not be zero"]
+	}
+	return [x/y, ""]
+}
+
+ret = div(10,5)
+if ret[1] != "" {
+	println(ret[1])
+} else {
+	println(ret[0])
+}
 ```
 
 ## Pipe Operator
