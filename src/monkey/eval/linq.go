@@ -407,8 +407,9 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 	obj := args[0]
 	//check object type
 	if obj.Type() != STRING_OBJ && obj.Type() != ARRAY_OBJ &&
-		obj.Type() != HASH_OBJ && obj.Type() != FILE_OBJ && obj.Type() != CSV_OBJ {
-		panic(NewError(line, PARAMTYPEERROR, "first", "from", "*Hash|*Array|*String|*File|*CsvObj", obj.Type()))
+		obj.Type() != HASH_OBJ && obj.Type() != FILE_OBJ && obj.Type() != CSV_OBJ &&
+		obj.Type() != CHANNEL_OBJ {
+		panic(NewError(line, PARAMTYPEERROR, "first", "from", "*Hash|*Array|*String|*File|*CsvObj|*ChanObject", obj.Type()))
 	}
 
 	switch obj.Type() {
@@ -611,6 +612,20 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 						index++
 					}
 
+					return
+				}
+			},
+		}}
+	case CHANNEL_OBJ:
+		channel := obj.(*ChanObject)
+
+		//must return a new LinqObj
+		return &LinqObj{Query: Query{
+			Iterate: func() Iterator {
+				return func() (item Object, ok *Boolean) {
+					ok = &Boolean{Valid: true}
+					item = channel.Recv(line)
+					ok.Bool = channel.done
 					return
 				}
 			},

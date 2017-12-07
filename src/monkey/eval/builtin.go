@@ -466,13 +466,13 @@ func chanBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
 			if len(args) == 0 {
-				return &ChanObject{make(chan Object)}
+				return &ChanObject{ch:make(chan Object)}
 			} else if len(args) == 1 {
 				v, ok := args[0].(*Integer)
 				if !ok {
 					panic(NewError(line, PARAMTYPEERROR, "first", "chan", "*Integer", args[0].Type()))
 				}
-				return &ChanObject{make(chan Object, v.Int64)}
+				return &ChanObject{ch:make(chan Object, v.Int64)}
 			}
 			panic(NewError(line, ARGUMENTERROR, "Not 0|1", len(args)))
 		},

@@ -1098,3 +1098,19 @@ result = linq.from(r).where(fn(x) {
 })
 println(result)
 r.closeReader() //do not forget to close the reader
+
+
+//test linq from channel
+let aChan1 = chan(3)
+spawn fn() {
+	aChan1.send(10)
+	aChan1.send(15)
+	aChan1.send(-3)
+	aChan1.close()
+}()
+
+result = linq.from(aChan1).select(fn(x) {
+	x = x + 2
+})
+println('channel result={result}')
+

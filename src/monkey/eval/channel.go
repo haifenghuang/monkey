@@ -6,6 +6,7 @@ import (
 
 type ChanObject struct {
 	ch chan Object
+	done bool
 }
 
 func (c *ChanObject) Inspect() string  { return fmt.Sprintf("channel<%p>", c.ch) }
@@ -37,7 +38,8 @@ func (c *ChanObject) Recv(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
-	obj := <-c.ch
+	obj, more := <-c.ch
+	c.done = more
 	return obj
 }
 
