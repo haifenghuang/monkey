@@ -7,6 +7,7 @@ import (
 	"monkey/lexer"
 	"monkey/token"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -553,10 +554,25 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 func (p *Parser) parseIncludeStatement() *ast.IncludeStatement {
 	stmt := &ast.IncludeStatement{Token: p.curToken}
 
-	if p.expectPeek(token.IDENT) {
-		stmt.IncludePath = p.parseExpressionStatement().Expression
+	p.nextToken()
+	if p.curToken.Type != token.STRING && p.curToken.Type != token.IDENT {
+		msg := fmt.Sprintf("Syntax Error: %v - expected token to be STRING|IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
 	}
-	program, err := p.getIncludedStatements(stmt.IncludePath.String())
+
+	oldToken := p.curToken
+	stmt.IncludePath = p.parseExpressionStatement().Expression
+	includePath := stmt.IncludePath.String()
+	if oldToken.Type == token.STRING { //if token type is STRING, we need to extract the basename of the path.
+		path := stmt.IncludePath.(*ast.StringLiteral).Value
+		includePath = path
+		baseName := filepath.Base(path)
+		oldToken.Literal = baseName
+		stmt.IncludePath = &ast.StringLiteral{Token: oldToken, Value: baseName}
+	}
+
+	program, err := p.getIncludedStatements(includePath)
 	if err != nil {
 		p.errors = append(p.errors, err.Error())
 	}
