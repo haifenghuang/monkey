@@ -1062,9 +1062,7 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 			panic(NewError(node.Pos().Sline(), DIVIDEBYZERO))
 		}
 		val := leftVal / rightVal
-		if isInt {
-			return NewInteger(int64(val))
-		}
+		//Should Always return float
 		return NewFloat(val)
 	case "%":
 		if isInt {
