@@ -689,6 +689,24 @@ hash -= 5
 println(hash)
 ```
 
+## 列表推导
+
+Monkey也支持列表推导(列表可以为数组,字符串，哈希)。请看下面的例子:
+
+```swift
+//数组
+x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
+println(x)
+
+//字符串
+y = [ c.upper() for c in "huanghaifeng" where $_ % 2 != 0] //$_ is the index
+println(y)
+
+//哈希
+z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
+println(z)
+```
+
 ## Grep和map
 
 `grep`和`map`类似于perl的`grep`和`map`.

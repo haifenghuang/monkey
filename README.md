@@ -700,6 +700,24 @@ hash -= 5
 println(hash)
 ```
 
+## Comprehensions
+
+Monkey also support list(array or string) or map comprehensions, please see following examples:
+
+```swift
+//array comprehension
+x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
+println(x)
+
+//string comprehension (here string is treated like an array)
+y = [ c.upper() for c in "huanghaifeng" where $_ % 2 != 0] //$_ is the index
+println(y)
+
+//hash comprehension
+z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
+println(z)
+```
+
 ## grep and map
 
 The `grep` and `map` operators are just like perl's `grep` and `map`.

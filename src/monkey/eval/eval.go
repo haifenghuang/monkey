@@ -141,6 +141,10 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalForEachDotRangeExpression(node, scope)
 	case *ast.ForEachMapLoop:
 		return evalForEachMapExpression(node, scope)
+	case *ast.ListComprehension:
+		return evalListComprehension(node, scope)
+	case *ast.MapComprehension:
+		return evalMapComprehension(node, scope)
 	case *ast.BreakExpression:
 		return BREAK
 	case *ast.ContinueExpression:
@@ -1501,6 +1505,105 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 	return result
 }
 
+//[x+1 for x in arr <where cond>]
+//[ str for str in strs <where cond>]
+func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+	aValue := Eval(lc.Value, innerScope)
+	if aValue.Type() == ERROR_OBJ {
+		return aValue
+	}
+
+	_, ok := aValue.(Iterable) //must be listable
+	if !ok {
+		panic(NewError(lc.Pos().Sline(), NOTITERABLE))
+	}
+
+	var members []Object
+	if aValue.Type() == STRING_OBJ {
+		aStr, _ := aValue.(*String)
+		runes := []rune(aStr.String)
+		for _, rune := range runes {
+			members = append(members, NewString(string(rune)))
+		}
+	} else if aValue.Type() == ARRAY_OBJ {
+		arr, _ := aValue.(*Array)
+		members = arr.Members
+	}
+
+	ret := &Array{}
+	var result Object
+	for idx, value := range members {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set("$_", NewInteger(int64(idx)))
+		newSubScope.Set(lc.Var, value)
+		if lc.Cond != nil {
+			cond := Eval(lc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		result = Eval(lc.Expr, newSubScope)
+		if result.Type() == ERROR_OBJ {
+			return result
+		}
+
+		ret.Members = append(ret.Members, result)
+	}
+
+	return ret
+}
+
+//[ expr for k,v in hash <where cond>]
+func evalMapComprehension(mc *ast.MapComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+	aValue := Eval(mc.X, innerScope)
+	if aValue.Type() == ERROR_OBJ {
+		return aValue
+	}
+
+	_, ok := aValue.(Iterable) //must be listable
+	if !ok {
+		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
+	}
+
+	//must be a *Hash, if not, panic
+	hash, _ := aValue.(*Hash)
+
+	ret := &Array{}
+	var result Object
+	for _, pair := range hash.Pairs {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set(mc.Key, pair.Key)
+		newSubScope.Set(mc.Value, pair.Value)
+
+		if mc.Cond != nil {
+			cond := Eval(mc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		result = Eval(mc.Expr, newSubScope)
+		if result.Type() == ERROR_OBJ {
+			return result
+		}
+
+		ret.Members = append(ret.Members, result)
+	}
+
+	return ret
+}
+
 func evalCaseExpression(ce *ast.CaseExpr, scope *Scope) Object {
 	rv := Eval(ce.Expr, scope) //case expression
 	if rv.Type() == ERROR_OBJ {
@@ -1786,6 +1889,8 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 		panic(NewError(fml.Pos().Sline(), NOTITERABLE))
 	}
 
+	//for index, value in arr
+	//for index, value in string
 	if aValue.Type() == STRING_OBJ || aValue.Type() == ARRAY_OBJ {
 		return evalForEachArrayWithIndex(fml, aValue, innerScope)
 	}

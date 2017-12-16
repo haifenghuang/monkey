@@ -1901,3 +1901,93 @@ func (e *EnumLiteral) String() string {
 
 	return out.String()
 }
+
+///////////////////////////////////////////////////////////
+//             List Comprehension                        //
+///////////////////////////////////////////////////////////
+//[ x+1 for x in arr <where cond>]
+//[ str for str in strs <where cond>]
+type ListComprehension struct {
+	Token token.Token
+	Var   string
+	Value Expression //value(array or string) to range over
+	Cond  Expression //conditional clause(nil if there is no 'WHERE' clause)
+	Expr  Expression //the result expression
+}
+
+func (lc *ListComprehension) Pos() token.Position {
+	return lc.Token.Pos
+}
+
+func (lc *ListComprehension) End() token.Position {
+	if lc.Cond != nil {
+		return lc.Cond.End()
+	}
+	return lc.Value.End()
+}
+
+func (lc *ListComprehension) expressionNode()      {}
+func (lc *ListComprehension) TokenLiteral() string { return lc.Token.Literal }
+
+func (lc *ListComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[ ")
+	out.WriteString(lc.Expr.String())
+	out.WriteString(" for ")
+	out.WriteString(lc.Var)
+	out.WriteString(" in ")
+	out.WriteString(lc.Value.String())
+	if lc.Cond != nil {
+		out.WriteString(" WHERE ")
+		out.WriteString(lc.Cond.String())
+	}
+	out.WriteString("] ")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//                 Map Comprehension                     //
+///////////////////////////////////////////////////////////
+//[ expr for k,v in hash <where cond>]
+type MapComprehension struct {
+	Token token.Token
+	Key   string
+	Value string
+	X     Expression //value(hash) to range over
+	Cond  Expression //Conditional clause(nil if there is no 'WHERE' clause)
+	Expr Expression  //the result expression
+}
+
+func (mc *MapComprehension) Pos() token.Position {
+	return mc.Token.Pos
+}
+
+func (mc *MapComprehension) End() token.Position {
+	if mc.Cond != nil {
+		return mc.Cond.End()
+	}
+	return mc.Expr.End()
+}
+
+func (mc *MapComprehension) expressionNode()      {}
+func (mc *MapComprehension) TokenLiteral() string { return mc.Token.Literal }
+
+func (mc *MapComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[ ")
+	out.WriteString(mc.Expr.String())
+	out.WriteString(" for ")
+	out.WriteString(mc.Key + ", " + mc.Value)
+	out.WriteString(" in ")
+	out.WriteString(mc.X.String())
+	if mc.Cond != nil {
+		out.WriteString(" WHERE ")
+		out.WriteString(mc.Cond.String())
+	}
+	out.WriteString("]")
+
+	return out.String()
+}

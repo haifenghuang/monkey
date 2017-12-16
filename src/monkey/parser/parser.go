@@ -1109,12 +1109,117 @@ func (p *Parser) parseStructExpression() ast.Expression {
 	return s
 }
 
+//func (p *Parser) parseArrayExpression() ast.Expression {
+//	array := &ast.ArrayLiteral{Token: p.curToken}
+//	array.Members = p.parseExpressionArray(array.Members, token.RBRACKET)
+//	return array
+//}
+
 func (p *Parser) parseArrayExpression() ast.Expression {
-	array := &ast.ArrayLiteral{Token: p.curToken}
-	array.Members = p.parseExpressionArray(array.Members, token.RBRACKET)
+	curToken := p.curToken
+	temp, b := p.parseExpressionArrayEx([]ast.Expression{}, token.RBRACKET)
+	if b { //list comprehension or map comprehension
+		p.nextToken() //skip 'for'
+		if !p.expectPeek(token.IDENT) {
+			return nil
+		}
+
+		variable := p.curToken.Literal
+
+		if p.peekTokenIs(token.COMMA) { //map comprehension
+			return p.parseMapComprehension(curToken, temp[0], variable, token.RBRACKET) //here 'variable' is the key of the map
+		}
+
+		//list comprehension
+		return p.parseListComprehension(curToken, temp[0], variable, token.RBRACKET)
+	}
+
+	array := &ast.ArrayLiteral{Token: curToken}
+	array.Members = temp
 	return array
 }
 
+func (p *Parser) parseListComprehension(curToken token.Token, expr ast.Expression, variable string, closure token.TokenType) ast.Expression {
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	aValue := p.parseExpression(LOWEST)
+
+	var aCond ast.Expression
+	if p.peekTokenIs(token.WHERE) {
+		p.nextToken()
+		p.nextToken()
+		aCond = p.parseExpression(LOWEST)
+	}
+
+	if !p.expectPeek(closure) {
+		return nil
+	}
+
+	result := &ast.ListComprehension{Token: curToken, Var: variable, Value: aValue, Cond: aCond, Expr: expr}
+	return result
+}
+
+func (p *Parser) parseMapComprehension(curToken token.Token, expr ast.Expression, variable string, closure token.TokenType) ast.Expression {
+
+	if !p.expectPeek(token.COMMA) {
+		return nil
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+	Value := p.curToken.Literal
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	X := p.parseExpression(LOWEST)
+
+	var aCond ast.Expression
+	if p.peekTokenIs(token.WHERE) {
+		p.nextToken()
+		p.nextToken()
+		aCond = p.parseExpression(LOWEST)
+	}
+
+	if !p.expectPeek(closure) {
+		return nil
+	}
+
+	result := &ast.MapComprehension{Token: curToken, Key: variable, Value: Value, X:X, Cond: aCond, Expr: expr}
+	return result
+}
+
+func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenType) ([]ast.Expression, bool) {
+	if p.peekTokenIs(closure) {
+		p.nextToken()
+		return a, false
+	}
+
+	p.nextToken()
+	v := p.parseExpressionStatement().Expression
+
+	a = append(a, v)
+	if p.peekTokenIs(token.FOR) { //list comprehension
+		return a, true
+	}
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		a = append(a, p.parseExpression(LOWEST))
+	}
+	if !p.expectPeek(closure) {
+		return nil, false
+	}
+	return a, false
+}
 // case expr in {
 //    expr,expr { expr }
 //    expr { expr }
