@@ -204,7 +204,7 @@ let h = hash(("key", "value"))  // result: {"key"=>"value}
 你可以从一个数组创建一个tuple:
 
 ```swift
-let t = tuple([10,, 20])   //result:(10,20)
+let t = tuple([10, 20])   //result:(10,20)
 ```
 
 同样的, 你也可以从一个tuple创建一个数组:
@@ -724,12 +724,18 @@ if t.empty() {  //正确
 let ht = {(1,2,3) => 10, (2,3,4) =>20} //错误!
 println(ht[(1,2,3)])  //错误!
 println(ht[(2,3,4)])  //错误!
+
+key1=(1,2,3)
+key2=(2,3,4)
+let ht = {key1 => 10, key2 =>20} //正确
+println(ht[key1]) // result: 10  //正确
+println(ht[key2]) // result: 20  //正确
+
 ```
 
 元祖的json序列化(反序列化)的结果都为数组，而不是元祖
 
 ```swift
-
 let tupleJson = ("key1","key2")
 let tupleStr = json.marshal(tupleJson)
 //结果:  [
@@ -737,7 +743,6 @@ let tupleStr = json.marshal(tupleJson)
 //        "key2"，
 //       ]
 println(json.indent(tupleStr, "  "))
-
 
 let tupleJson1 = json.unmarshal(tupleStr)
 println(tupleJson1) //结果: ["key1", "key2"]

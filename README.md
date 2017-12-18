@@ -195,13 +195,13 @@ let i = 0xa
 let s = str(i)                  // result: "10"
 let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
-let t = tuple(i)               // result:(10)
-let h = hash(("key", "value")) //result: {"key"=>"value}
+let t = tuple(i)                // result:(10)
+let h = hash(("key", "value"))  // result: {"key"=>"value}
 ```
 You could create a tuple from an array:
 
 ```swift
-let t = tuple([10,, 20])   //result:(10,20)
+let t = tuple([10, 20])   //result:(10,20)
 ```
 
 Similarly, you could also create an array from a tuple:
@@ -227,7 +227,8 @@ let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
 
 ### `qw`(Quote word) keyword
 
-The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings, the `qw` keyword can make it a lot easier for those strings.
+The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings, 
+the `qw` keyword can make it a lot easier for those strings.
 
 ```swift
 for str in qw<abc, def, ghi, jkl, mno> { //allowed 'qw' pair is '{}', '<>', '()'
@@ -707,6 +708,10 @@ if t {
 There are some limitations of the current implementation of tuple:
 
 ```swift
+
+t1 = () //Error
+t2 =(,) //OK, create a new empty tuple
+
 if (1,).empty() {  //Error
     println("tuple is empty!")
 } else {
@@ -720,12 +725,22 @@ if t.empty() {  //OK
     println("tuple is not empty!")
 }
 
+let ht = {(1,2,3) => 10, (2,3,4) =>20} //Error!
+println(ht[(1,2,3)])  //Error!
+println(ht[(2,3,4)])  //Error!
+
+key1=(1,2,3)
+key2=(2,3,4)
+let ht = {key1 => 10, key2 =>20} //ok
+println(ht[key1]) // result: 10  //ok
+println(ht[key2]) // result: 20  //ok
+
+
 ```
 
 Tuple's json marshaling and unmarshaling will be treated as array:
 
 ```swift
-
 let tupleJson = ("key1","key2")
 let tupleStr = json.marshal(tupleJson)
 //Result:[
@@ -734,9 +749,9 @@ let tupleStr = json.marshal(tupleJson)
 //       ]
 println(json.indent(tupleStr, "  "))
 
-
 let tupleJson1 = json.unmarshal(tupleStr)
-println(tupleJson1) //Result: ["key1", "key2"]
+println(tupleJson1) //result: ["key1", "key2"]
+```
 
 Tuple plus an array will return an new array, not a tuple
 
@@ -744,16 +759,6 @@ Tuple plus an array will return an new array, not a tuple
 t2 = (1,2,3) + [4,5,6]
 println(t2) // result: [(1, 2, 3), 4, 5, 6]
 ```
-
-You could also use the builtin `reverse` function to reverse tuple element:
-
-```swift
-let tp = (1,3,5,2,4,6,7,8,9)
-println("Source tuple =", tp)
-```
-
-revTuple = reverse(tp)
-println("Reverse tuple =", revTuple)
 
 You could also use the builtin `reverse` function to reverse tuples's elements:
 
