@@ -84,6 +84,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalIdentifier(node, scope)
 	case *ast.ArrayLiteral:
 		return evalArrayLiteral(node, scope)
+	case *ast.TupleLiteral:
+		return evalTupleLiteral(node, scope)
 	case *ast.HashLiteral:
 		return evalHashLiteral(node, scope)
 	case *ast.StructLiteral:
@@ -422,6 +424,8 @@ func evalStrAssignExpression(a *ast.AssignExpression, name string, left Object, 
 
 }
 
+//array = item
+//array += item
 func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	leftVals := left.(*Array).Members
 
@@ -476,6 +480,12 @@ func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	}
 
+	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
+}
+
+
+func evalTupleAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
+	//Tuple is an immutable sequence of values
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 }
 
@@ -640,6 +650,9 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 	case HASH_OBJ:
 		val = evalHashAssignExpression(a, name, left, scope, val)
 		return
+	case TUPLE_OBJ:
+		val = evalTupleAssignExpression(a, name, left, scope, val)
+		return
 	}
 
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
@@ -724,6 +737,10 @@ func evalInterpolatedString(is *ast.InterpolatedString, scope *Scope) Object {
 
 func evalArrayLiteral(a *ast.ArrayLiteral, scope *Scope) Object {
 	return &Array{Members: evalArgs(a.Members, scope)}
+}
+
+func evalTupleLiteral(t *ast.TupleLiteral, scope *Scope) Object {
+	return &Tuple{Members: evalArgs(t.Members, scope)}
 }
 
 func evalRegExLiteral(re *ast.RegExLiteral) Object {
@@ -915,6 +932,8 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 		return evalNumberInfixExpression(node, left, right)
 	case (left.Type() == ARRAY_OBJ || right.Type() == ARRAY_OBJ):
 		return evalArrayInfixExpression(node, left, right)
+	case (left.Type() == TUPLE_OBJ || right.Type() == TUPLE_OBJ):
+		return evalTupleInfixExpression(node, left, right)
 	case left.Type() == STRING_OBJ && right.Type() == STRING_OBJ:
 		return evalStringInfixExpression(node, left, right)
 	case (left.Type() == STRING_OBJ || right.Type() == STRING_OBJ):
@@ -985,6 +1004,11 @@ func objectToNativeBoolean(o Object) bool {
 		}
 		return true
 	case *Array:
+		if len(obj.Members) == 0 {
+			return false
+		}
+		return true
+	case *Tuple:
 		if len(obj.Members) == 0 {
 			return false
 		}
@@ -1195,6 +1219,11 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 	//panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
 
+//array + item
+//item + array
+//array + array
+//array == array
+//array != array
 func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
 	switch node.Operator {
 	case "+":
@@ -1270,6 +1299,90 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
 
+//Almost same as evalArrayInfixExpression
+//tuple + item
+//item + tuple
+//tuple + tuple
+//tuple == tuple
+//tuple != tuple
+func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
+	switch node.Operator {
+	case "+":
+		if left.Type() == TUPLE_OBJ {
+			leftVals := left.(*Tuple).Members
+
+			if right.Type() == TUPLE_OBJ {
+				rightVals := right.(*Tuple).Members
+				leftVals = append(leftVals, rightVals...)
+			} else {
+				leftVals = append(leftVals, right)
+			}
+			return &Tuple{Members: leftVals}
+		}
+
+		//right is array
+		rightVals := right.(*Tuple).Members
+		if left.Type() == TUPLE_OBJ {
+			leftVals := left.(*Tuple).Members
+			rightVals = append(rightVals, leftVals...)
+			return &Tuple{Members: rightVals}
+		} else {
+			ret := &Tuple{}
+			ret.Members = append(ret.Members, left)
+			ret.Members = append(ret.Members, rightVals...)
+			return ret
+		}
+
+	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
+		if left.Type() != TUPLE_OBJ || right.Type() != TUPLE_OBJ {
+			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+		}
+
+		leftVals := left.(*Tuple).Members
+		rightVals := right.(*Tuple).Members
+		if len(leftVals) != len(rightVals) {
+			return FALSE
+		}
+
+		for i := range leftVals {
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			if !IsTrue(aBool) {
+				return FALSE
+			}
+		}
+		return TRUE
+	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
+
+		if left.Type() != TUPLE_OBJ || right.Type() != TUPLE_OBJ {
+			panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+		}
+		leftVals := left.(*Tuple).Members
+		rightVals := right.(*Tuple).Members
+		if len(leftVals) != len(rightVals) {
+			return TRUE
+		}
+
+		for i := range leftVals {
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			if IsTrue(aBool) {
+				return TRUE
+			}
+		}
+		return FALSE
+	}
+	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+}
+
+//hash + item
+//hast == hash
+//hash != hash
 func evalHashInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
 	leftVals := left.(*Hash).Pairs
 	rightVals := right.(*Hash).Pairs
@@ -1433,6 +1546,9 @@ func evalGrepExpression(ge *ast.GrepExpr, scope *Scope) Object {
 	} else if aValue.Type() == ARRAY_OBJ {
 		arr, _ := aValue.(*Array)
 		members = arr.Members
+	} else if aValue.Type() == TUPLE_OBJ {
+		tuple, _ := aValue.(*Tuple)
+		members = tuple.Members
 	}
 
 	result := &Array{}
@@ -1481,6 +1597,9 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 	} else if aValue.Type() == ARRAY_OBJ {
 		arr, _ := aValue.(*Array)
 		members = arr.Members
+	} else if aValue.Type() == TUPLE_OBJ {
+		tuple, _ := aValue.(*Tuple)
+		members = tuple.Members
 	}
 
 	result := &Array{}
@@ -1507,6 +1626,7 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 
 //[x+1 for x in arr <where cond>]
 //[ str for str in strs <where cond>]
+//[ x for x in tuple <where cond>]
 func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 	innerScope := NewScope(scope)
 	aValue := Eval(lc.Value, innerScope)
@@ -1529,6 +1649,9 @@ func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 	} else if aValue.Type() == ARRAY_OBJ {
 		arr, _ := aValue.(*Array)
 		members = arr.Members
+	} else if aValue.Type() == TUPLE_OBJ {
+		tuple, _ := aValue.(*Tuple)
+		members = tuple.Members
 	}
 
 	ret := &Array{}
@@ -1822,6 +1945,9 @@ func evalForEverLoopExpression(fel *ast.ForEverLoop, scope *Scope) Object {
 	return e
 }
 
+//for item in array
+//for item in string
+//for item in tuple
 func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object { //fal:For Array Loop
 	innerScope := NewScope(scope)
 
@@ -1845,6 +1971,9 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 	} else if aValue.Type() == ARRAY_OBJ {
 		arr, _ := aValue.(*Array)
 		members = arr.Members
+	} else if aValue.Type() == TUPLE_OBJ {
+		tuple, _ := aValue.(*Tuple)
+		members = tuple.Members
 	}
 
 	ret := &Array{}
@@ -1902,6 +2031,9 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 	return ret
 }
 
+//for index, value in string
+//for index, value in array
+//for index, value in tuple
 func evalForEachArrayWithIndex(fml *ast.ForEachMapLoop, val Object, scope *Scope) Object {
 	var members []Object
 	if val.Type() == STRING_OBJ {
@@ -1913,6 +2045,9 @@ func evalForEachArrayWithIndex(fml *ast.ForEachMapLoop, val Object, scope *Scope
 	} else if val.Type() == ARRAY_OBJ {
 		arr, _ := val.(*Array)
 		members = arr.Members
+	} else if val.Type() == TUPLE_OBJ {
+		tuple, _ := val.(*Tuple)
+		members = tuple.Members
 	}
 
 	ret := &Array{}
@@ -1976,7 +2111,7 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 
 	//for index, value in arr
 	//for index, value in string
-	if aValue.Type() == STRING_OBJ || aValue.Type() == ARRAY_OBJ {
+	if aValue.Type() == STRING_OBJ || aValue.Type() == ARRAY_OBJ || aValue.Type() == TUPLE_OBJ {
 		return evalForEachArrayWithIndex(fml, aValue, innerScope)
 	}
 
@@ -2168,6 +2303,10 @@ func IsTrue(obj Object) bool {
 			}
 		case HASH_OBJ:
 			if len(obj.(*Hash).Pairs) == 0 {
+				return false
+			}
+		case TUPLE_OBJ:
+			if len(obj.(*Tuple).Members) == 0 {
 				return false
 			}
 		}
@@ -2392,10 +2531,9 @@ func evalArgs(args []ast.Expression, scope *Scope) []Object {
 	return e
 }
 
-// Index Expressions, i.e. array[0], array[2:4] or hash["mykey"]
+// Index Expressions, i.e. array[0], array[2:4], tuple[3] or hash["mykey"]
 func evalIndexExpression(ie *ast.IndexExpression, scope *Scope) Object {
 	left := Eval(ie.Left, scope)
-
 	switch iterable := left.(type) {
 	case *Array:
 		return evalArrayIndex(iterable, ie, scope)
@@ -2403,6 +2541,8 @@ func evalIndexExpression(ie *ast.IndexExpression, scope *Scope) Object {
 		return evalHashKeyIndex(iterable, ie, scope)
 	case *String:
 		return evalStringIndex(iterable, ie, scope)
+	case *Tuple:
+		return evalTupleIndex(iterable, ie, scope)
 	}
 	panic(NewError(ie.Pos().Sline(), NOINDEXERROR, left.Type()))
 }
@@ -2549,6 +2689,72 @@ func evalArrayIndex(array *Array, ie *ast.IndexExpression, scope *Scope) Object 
 		return NIL
 	}
 	return array.Members[idx]
+}
+
+//Almost same as evalArraySliceExpression
+func evalTupleSliceExpression(tuple *Tuple, se *ast.SliceExpression, scope *Scope) Object {
+	var idx int64
+	var slice int64
+	length := int64(len(tuple.Members))
+
+	startIdx := Eval(se.StartIndex, scope)
+	if startIdx.Type() == ERROR_OBJ {
+		return startIdx
+	}
+	idx = startIdx.(*Integer).Int64
+	if idx < 0 {
+		panic(NewError(se.Pos().Sline(), INDEXERROR, idx))
+	}
+
+	if idx >= length {
+		return NIL
+	}
+
+	if se.EndIndex == nil {
+		slice = length
+	} else {
+		slIndex := Eval(se.EndIndex, scope)
+		if slIndex.Type() == ERROR_OBJ {
+			return slIndex
+		}
+		slice = slIndex.(*Integer).Int64
+		if slice >= (length+1) || slice < 0 {
+			panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
+		}
+	}
+	if idx == 0 && slice == length {
+		return tuple
+	}
+
+	if slice < idx {
+		panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
+	}
+
+	if slice == length {
+		return &Tuple{Members: tuple.Members[idx:]}
+	}
+	return &Tuple{Members: tuple.Members[idx:slice]}
+}
+
+//Almost same as evalArrayIndex
+func evalTupleIndex(tuple *Tuple, ie *ast.IndexExpression, scope *Scope) Object {
+	var idx int64
+	length := int64(len(tuple.Members))
+	if exp, success := ie.Index.(*ast.SliceExpression); success {
+		return evalTupleSliceExpression(tuple, exp, scope)
+	}
+	index := Eval(ie.Index, scope)
+	if index.Type() == ERROR_OBJ {
+		return index
+	}
+	idx = index.(*Integer).Int64
+	if idx < 0 {
+		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
+	}
+	if idx >= length {
+		return NIL
+	}
+	return tuple.Members[idx]
 }
 
 func evalPostfixExpression(left Object, node *ast.PostfixExpression) Object {
@@ -2754,6 +2960,16 @@ func obj2Expression(obj Object) ast.Expression {
 			array.Members = append(array.Members, result)
 		}
 		return array
+	case *Tuple:
+		tuple := &ast.TupleLiteral{}
+		for _, v := range value.Members {
+			result := obj2Expression(v)
+			if result == nil {
+				return nil
+			}
+			tuple.Members = append(tuple.Members, result)
+		}
+		return tuple
 	case *Hash:
 		hash := &ast.HashLiteral{}
 		hash.Pairs = make(map[ast.Expression]ast.Expression)

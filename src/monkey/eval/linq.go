@@ -584,7 +584,26 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 				}
 			},
 		}}
+	case TUPLE_OBJ:
+		tuple := obj.(*Tuple)
+		len := len(tuple.Members)
 
+		//must return a new LinqObj
+		return &LinqObj{Query: Query{
+			Iterate: func() Iterator {
+				index := 0
+
+				return func() (item Object, ok *Boolean) {
+					ok = &Boolean{Valid: true}
+					ok.Bool = index < len
+					if ok.Bool {
+						item = tuple.Members[index]
+						index++
+					}
+					return
+				}
+			},
+		}}
 	case HASH_OBJ:
 		hash := obj.(*Hash)
 		len := len(hash.Pairs)

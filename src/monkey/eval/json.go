@@ -78,6 +78,13 @@ func (j *Json) Marshal(line string, args ...Object) Object {
 			return NewNil(err.Error())
 		}
 		return NewString(string(res))
+	case *Tuple:
+		value := args[0].(*Tuple)
+		res, err := value.MarshalJSON()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return NewString(string(res))
 	case *Hash:
 		value := args[0].(*Hash)
 		res, err := value.MarshalJSON()

@@ -190,13 +190,42 @@ a, b, c = 1, "hello world", [1,2,3]
 
 ### 类型转换
 
-你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`来进行不同类型之间的转换.
+你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`, `tuple`, `hash`来进行不同类型之间的转换.
 
 ```swift
 let i = 0xa
-let s = str(i)     // result: "10"
-let f = float(i)   // result: 10
-let a = array(i)   // result: [10]
+let s = str(i)                  // result: "10"
+let f = float(i)                // result: 10
+let a = array(i)                // result: [10]
+let t = tuple(i)                // result: (10)
+let h = hash(("key", "value"))  // result: {"key"=>"value}
+```
+
+你可以从一个数组创建一个tuple:
+
+```swift
+let t = tuple([10,, 20])   //result:(10,20)
+```
+
+同样的, 你也可以从一个tuple创建一个数组:
+
+```swift
+let arr = array((10,20))  //result:[10,20]
+```
+
+你只能从数组或者tuple来创建一个hash:
+
+```swift
+//创建一个空的哈希
+let h1 = hash()  //same as h1 = {}
+
+//从数组创建哈希
+let h1 = hash([10, 20])     //result: {10 => 20}
+let h2 = hash([10,20,30])   //result: {10 => 20, 30 => nil}
+
+//从tuple创建哈希
+let h3 = hash((10, 20))     //result: {10 => 20}
+let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
 ```
 
 ## `qw`(Quote word)关键字
@@ -581,6 +610,156 @@ revHash = reverse(hs)
 println("Reverse Hash =", revHash)
 ```
 
+### 元祖(Tuple)
+
+在Monkey中, `tuple`与数组非常类似, 但一旦你创建了一个元祖，你就不能够更改它。
+
+Tuples使用括号来创建:
+
+```swift
+//创建一个空元祖
+let t1 = tuple()
+
+//效果同上。注意：我们必须放一个",", 否则编译器将报错
+let t2 = (,)
+
+// 创建仅有一个元素的元祖. 
+// 注意: 结尾的","是必须的，否则将会被解析为(1), 而不是元祖
+let t3 = (1,) 
+
+//创建有两个元素的元祖
+let t4 = (2,3)
+```
+
+你可以使用内置函数`tuple`，将任何类型的对象装换为元祖。
+
+```swift
+let t = tuple("hello")
+println(t)  // 结果: ("hello")
+```
+
+类似于数组, 元祖也可以被索引(indexed)，或切片(sliced)。
+索引表达式`tuple[i]`返回第i个索引位置的元祖元素, 切片表达式
+tuple[i:j]返回一个子元祖.
+
+```swift
+let t = (1,2,3)[2]
+print(t) // result:3
+```
+
+元祖还可以被遍历(类似数组)，所以元祖可以使用在for循环中，用在
+列表推导中。
+
+```swift
+//for循环
+for i in (1,2,3) {
+    println(i)
+}
+
+//元祖推导(comprehension)
+let t1 =  [x+1 for x in (2,4,6)]
+println(t1) //result: [3, 5, 7]. 注意: 结果是数组，不是元祖
+```
+
+与数组不同，元祖不能够被修改。但是元祖内部的可变元素是可以被修改的.
+
+```swift
+arr1 = [1,2,3]
+t = (0, arr1, 5, 6)
+println(t)    // 结果: (0, [1, 2, 3], 5, 6)
+arr1.push(4)
+println(t)    //结果:  (0, [1, 2, 3, 4], 5, 6)
+```
+
+元祖也可以用作哈希的键。
+
+```swift
+key1=(1,2,3)
+key2=(2,3,4)
+let ht = {key1 => 10, key2 =>20}
+println(ht[key1]) // result: 10
+println(ht[key2]) // result: 20
+```
+
+元祖可以使用`+`来连接，它会创建一个新的元祖。
+
+```swift
+let t = (1, 2) + (3, 4)
+println(t) // 结果: (1, 2, 3, 4)
+```
+
+如果将元祖用在布尔环境中，那么如果元祖的元素数量大于0， 那么返回结果是true。
+
+```swift
+let t = (1,)
+if t {
+    println("t is not empty!")
+} else {
+    println("t is empty!")
+}
+
+//结果 : "t is not empty!"
+```
+
+在当前的`tuple`实现中，对`tuple`的操作还有一些不完善的地方，下面一并列举:
+
+```swift
+
+t1 = () //错误。
+t2 =(,) //正确。创建一个空的tuple
+
+if (1,).empty() {  //错误
+    println("tuple is empty!")
+} else {
+    println("tuple is not empty!")
+}
+
+t = (1,)
+if t.empty() {  //正确
+    println("tuple is empty!")
+} else {
+    println("tuple is not empty!")
+}
+
+let ht = {(1,2,3) => 10, (2,3,4) =>20} //错误!
+println(ht[(1,2,3)])  //错误!
+println(ht[(2,3,4)])  //错误!
+```
+
+元祖的json序列化(反序列化)的结果都为数组，而不是元祖
+
+```swift
+
+let tupleJson = ("key1","key2")
+let tupleStr = json.marshal(tupleJson)
+//结果:  [
+//        "key1"，
+//        "key2"，
+//       ]
+println(json.indent(tupleStr, "  "))
+
+
+let tupleJson1 = json.unmarshal(tupleStr)
+println(tupleJson1) //结果: ["key1", "key2"]
+```
+
+元祖与一个数组相加，返回结果为一个数组，而不是元祖.
+
+```swift
+t2 = (1,2,3) + [4,5,6]
+println(t2) // 结果: [(1, 2, 3), 4, 5, 6]
+```
+
+你也可以使用内置函数`reverse`来反转元祖中的元素:
+
+```swift
+let tp = (1,3,5,2,4,6,7,8,9)
+println(tp) //结果: (1, 3, 5, 2, 4, 6, 7, 8, 9)
+
+revTuple = reverse(tp)
+println(revTuple) //结果: (9, 8, 7, 6, 4, 2, 5, 3, 1)
+```
+
 ## 标准输入/输出/错误
 
 Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
@@ -691,13 +870,9 @@ println(hash)
 
 ## 列表推导(Comprehensions)
 
-Monkey也支持列表推导(列表可以为数组,字符串，哈希)。请看下面的例子:
+Monkey也支持列表推导(列表可以为数组,字符串，Range，Tuple, 哈希)。请看下面的例子:
 
 ```swift
-//范围
-w = [i + 1 for i in 1..10]
-println(w)
-
 //数组
 x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
 println(x)
@@ -705,6 +880,14 @@ println(x)
 //字符串
 y = [ c.upper() for c in "huanghaifeng" where $_ % 2 != 0] //$_ is the index
 println(y)
+
+//范围
+w = [i + 1 for i in 1..10]
+println(w)
+
+//tuple
+v = [x+1 for x in (12,34,56)]
+println(v)
 
 //哈希
 z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
@@ -993,6 +1176,16 @@ if (ret == false) {
 ```
 
 #### linq 模块
+
+在Monkey中, `linq`模块支持下面的其中类型的对象:
+
+* File对象 (使用内置函数`newFile`创建)
+* Csv reader对象(使用内置函数`newCsvReader`创建)
+* String对象
+* Array对象
+* Tuple对象
+* Hash对象
+* Channel对象(使用内置函数`chan`创建)
 
 ```swift
 let mm = [1,2,3,4,5,6,7,8,9,10]

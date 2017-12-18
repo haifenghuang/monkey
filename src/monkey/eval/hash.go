@@ -93,6 +93,29 @@ func (s *String) HashKey() HashKey {
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
 
+func (t *Tuple) HashKey() HashKey {
+	// https://en.wikipedia.org/wiki/Jenkins_hash_function
+	var hash uint64 = 0
+	for _, v := range t.Members {
+		hashable, ok := v.(Hashable)
+		if !ok {
+			errStr := fmt.Sprintf("key error: type %s is not hashable", v.Type())
+			panic(errStr)
+		}
+
+		h := hashable.HashKey()
+
+		hash += h.Value
+		hash += hash << 10
+		hash ^= hash >> 6
+	}
+	hash += hash << 3
+	hash ^= hash >> 11
+	hash += hash << 15
+
+	return HashKey{Type: t.Type(), Value: hash}
+}
+
 func (h *Hash) Filter(line string, scope *Scope, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))

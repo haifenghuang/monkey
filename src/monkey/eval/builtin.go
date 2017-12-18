@@ -194,6 +194,10 @@ func newFileBuiltin() *Builtin {
 func intBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty int(defaults to 0)
+				return NewInteger(0)
+			}
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
@@ -233,6 +237,10 @@ func intBuiltin() *Builtin {
 func floatBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty float(defaults to 0.0)
+				return NewFloat(0.0)
+			}
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
@@ -282,6 +290,10 @@ func floatBuiltin() *Builtin {
 func strBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty string
+				return NewString("")
+			}
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
@@ -299,15 +311,121 @@ func strBuiltin() *Builtin {
 func arrayBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty array
+				return &Array{Members: []Object{}}
+			}
+
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
 			switch input := args[0].(type) {
 			case *Array:
 				return input
+			case *Tuple:
+				length := len(input.Members)
+				newMembers := make([]Object, length)
+				copy(newMembers, input.Members)
+				return &Array{Members: newMembers}
 			default:
 				return &Array{Members: []Object{input}}
 			}
+		},
+	}
+}
+
+func tupleBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty tuple
+				return &Tuple{Members: []Object{}}
+			}
+
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+			switch input := args[0].(type) {
+			case *Tuple:
+				return input
+			case *Array:
+				length := len(input.Members)
+				newMembers := make([]Object, length)
+				copy(newMembers, input.Members)
+				return &Tuple{Members: newMembers}
+			default:
+				return &Tuple{Members: []Object{input}}
+			}
+		},
+	}
+}
+
+func hashBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty hash
+				return &Hash{Pairs: make(map[HashKey]HashPair)}
+			}
+
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+			switch input := args[0].(type) {
+			case *Hash:
+				return input
+			case *Tuple:
+				length := len(input.Members)
+				if length == 0 { //empty tuple
+					//return empty hash
+					return &Hash{Pairs: make(map[HashKey]HashPair)}
+				}
+				newMembers := make([]Object, length)
+				copy(newMembers, input.Members)
+
+				if length % 2 != 0 {
+					length = length + 1
+					newMembers = append(newMembers, NIL)
+				}
+
+				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+				for i := 0; i <= length / 2; {
+					if hashable, ok := newMembers[i].(Hashable); ok {
+						hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
+						i = i + 2
+					} else {
+						panic(NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i)))
+					}
+				}
+
+				return hash
+			case *Array:
+				length := len(input.Members)
+				if length == 0 { //empty tuple
+					//return empty hash
+					return &Hash{Pairs: make(map[HashKey]HashPair)}
+				}
+				newMembers := make([]Object, length)
+				copy(newMembers, input.Members)
+
+				if length % 2 != 0 {
+					length = length + 1
+					newMembers = append(newMembers, NIL)
+				}
+
+				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+				for i := 0; i <= length / 2; {
+					if hashable, ok := newMembers[i].(Hashable); ok {
+						hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
+						i = i + 2
+					} else {
+						panic(NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i)))
+					}
+				}
+
+				return hash
+			}
+			panic(NewError(line, PARAMTYPEERROR, "first", "hash", "*Tuple|*Array|*Hash", args[0].Type()))
 		},
 	}
 }
@@ -323,6 +441,8 @@ func lenBuiltin() *Builtin {
 				n := utf8.RuneCountInString(arg.String)
 				return NewInteger(int64(n))
 			case *Array:
+				return NewInteger(int64(len(arg.Members)))
+			case *Tuple:
 				return NewInteger(int64(len(arg.Members)))
 			case *Hash:
 				return NewInteger(int64(len(arg.Pairs)))
@@ -500,7 +620,6 @@ func assertBuiltin() *Builtin {
 	}
 }
 
-
 func reverseBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
@@ -519,6 +638,12 @@ func reverseBuiltin() *Builtin {
 				return NewString(string(reverse))
 			case *Array:
 				reverse := &Array{}
+				for i := len(input.Members) - 1; i >= 0; i-- {
+					reverse.Members = append(reverse.Members, input.Members[i])
+				}
+				return reverse
+			case *Tuple:
+				reverse := &Tuple{}
 				for i := len(input.Members) - 1; i >= 0; i-- {
 					reverse.Members = append(reverse.Members, input.Members[i])
 				}
@@ -1005,6 +1130,8 @@ func init() {
 		"float":   floatBuiltin(),
 		"str":     strBuiltin(),
 		"array":   arrayBuiltin(),
+		"tuple":   tupleBuiltin(),
+		"hash":    hashBuiltin(),
 		"len":     lenBuiltin(),
 		"methods": methodsBuiltin(),
 		"ord":     ordBuiltin(),

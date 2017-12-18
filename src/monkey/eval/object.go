@@ -36,14 +36,13 @@ const (
 	STRING_OBJ       = "STRING"
 	BUILTIN_OBJ      = "BUILTIN"
 	ARRAY_OBJ        = "ARRAY"
+	TUPLE_OBJ        = "TUPLE"
 	HASH_OBJ         = "HASH"
 	INCLUDED_OBJ     = "INCLUDE"
 	STRUCT_OBJ       = "STRUCT"
 	ENUM_OBJ         = "ENUM"
 	FILE_OBJ         = "FILE"
 	REGEX_OBJ        = "REGEX"
-	//	THROW_OBJ        = "THROW"
-	RANGE_OBJ   = "RANGE"
 	CHANNEL_OBJ = "CHANNEL"
 	NIL_OBJ     = "NIL_OBJ"
 )
@@ -59,12 +58,12 @@ type Number interface {
 	number()
 }
 
-//Whether the Object is iterable (HASH, ARRAY, RANGE, STRING)
+//Whether the Object is iterable (HASH, ARRAY, RANGE, STRING, TUPLE)
 type Iterable interface {
 	iter()
 }
 
-//Whether the Object is Listable (ARRAY, RANGE)
+//Whether the Object is Listable (ARRAY, RANGE, TUPLE)
 type Listable interface {
 	list()
 }
@@ -604,21 +603,6 @@ func (b *Boolean) UnmarshalJSON(bytes []byte) error {
 	}
 	return errors.New(string(bytes) + " is not a valid JSON bool")
 }
-
-type Range struct {
-	StartIdx int64
-	EndIdx   int64
-}
-
-func (r *Range) iter() {}
-func (r *Range) list() {}
-
-func (r *Range) Type() ObjectType { return RANGE_OBJ }
-func (r *Range) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
-	panic(NewError(line, NOMETHODERROR, method, r.Type()))
-}
-
-func (r *Range) Inspect() string { return fmt.Sprintf("%d..%d", r.StartIdx, r.EndIdx) }
 
 type Break struct{}
 

@@ -2038,3 +2038,41 @@ func (mc *MapComprehension) String() string {
 
 	return out.String()
 }
+
+///////////////////////////////////////////////////////////
+//                      Tuple LITERAL                    //
+///////////////////////////////////////////////////////////
+type TupleLiteral struct {
+	Token   token.Token
+	Members []Expression
+}
+
+func (t *TupleLiteral) Pos() token.Position {
+	return t.Token.Pos
+}
+
+func (t *TupleLiteral) End() token.Position {
+	aLen := len(t.Members)
+	if aLen > 0 {
+		return t.Members[aLen-1].End()
+	}
+	return t.Token.Pos
+}
+
+func (t *TupleLiteral) expressionNode()      {}
+func (t *TupleLiteral) TokenLiteral() string { return t.Token.Literal }
+func (t *TupleLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+
+	members := []string{}
+	for _, m := range t.Members {
+		members = append(members, m.String())
+	}
+
+	out.WriteString(strings.Join(members, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}

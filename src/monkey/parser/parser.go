@@ -304,14 +304,55 @@ func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
+	curToken := p.curToken
 	p.nextToken()
 
+	if p.curTokenIs(token.COMMA) {
+		if !p.expectPeek(token.RPAREN) { //empty tuple
+			return nil
+		}
+		ret := &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
+		return ret
+	}
+
 	exp := p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		ret := p.parseTupleExpression(curToken, exp)
+		return ret
+	}
+
 	if !p.expectPeek(token.RPAREN) {
 		return nil
 	}
 
 	return exp
+}
+
+func (p *Parser)parseTupleExpression(tok token.Token, expr ast.Expression) ast.Expression {
+	members := []ast.Expression{expr}
+
+	for {
+		switch p.curToken.Type {
+		case token.RPAREN:
+			ret := &ast.TupleLiteral{Token: tok, Members: members}
+			return ret
+		case token.COMMA:
+			p.nextToken()
+			//For a 1-tuple: "(1,)", the trailing comma is necessary to distinguish it
+			//from the parenthesized expression (1).
+			if p.curTokenIs(token.RPAREN) {  //e.g.  let x = (1,)
+				ret := &ast.TupleLiteral{Token: tok, Members: members}
+				return ret
+			}
+			members = append(members, p.parseExpression(LOWEST))
+			p.nextToken()
+		default:
+			msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ',' or ')', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+			p.errors = append(p.errors, msg)
+		}
+	}
 }
 
 func (p *Parser) parseTryStatement() ast.Expression {
