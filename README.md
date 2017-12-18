@@ -705,6 +705,10 @@ println(hash)
 Monkey also support list(array or string) or map comprehensions, please see following examples:
 
 ```swift
+//range comprehension
+w = [i + 1 for i in 2..10]
+println(w)
+
 //array comprehension
 x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
 println(x)

@@ -1903,7 +1903,7 @@ func (e *EnumLiteral) String() string {
 }
 
 ///////////////////////////////////////////////////////////
-//             List Comprehension                        //
+//        List Comprehension(for array & string)         //
 ///////////////////////////////////////////////////////////
 //[ x+1 for x in arr <where cond>]
 //[ str for str in strs <where cond>]
@@ -1938,6 +1938,53 @@ func (lc *ListComprehension) String() string {
 	out.WriteString(lc.Var)
 	out.WriteString(" in ")
 	out.WriteString(lc.Value.String())
+	if lc.Cond != nil {
+		out.WriteString(" WHERE ")
+		out.WriteString(lc.Cond.String())
+	}
+	out.WriteString("] ")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//             List Comprehension(for range)             //
+///////////////////////////////////////////////////////////
+//[exp for i in start..end <where cond>]
+type ListRangeComprehension struct {
+	Token    token.Token
+	Var      string
+	StartIdx Expression
+	EndIdx   Expression
+	Cond     Expression //conditional clause(nil if there is no 'WHERE' clause)
+	Expr     Expression
+}
+
+func (lc *ListRangeComprehension) Pos() token.Position {
+	return lc.Token.Pos
+}
+
+func (lc *ListRangeComprehension) End() token.Position {
+	if lc.Cond != nil {
+		return lc.Cond.End()
+	}
+	return lc.EndIdx.End()
+}
+
+func (lc *ListRangeComprehension) expressionNode()      {}
+func (lc *ListRangeComprehension) TokenLiteral() string { return lc.Token.Literal }
+
+func (lc *ListRangeComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[ ")
+	out.WriteString(lc.Expr.String())
+	out.WriteString(" for ")
+	out.WriteString(lc.Var)
+	out.WriteString(" in ")
+	out.WriteString(lc.StartIdx.String())
+	out.WriteString("..")
+	out.WriteString(lc.EndIdx.String())
 	if lc.Cond != nil {
 		out.WriteString(" WHERE ")
 		out.WriteString(lc.Cond.String())

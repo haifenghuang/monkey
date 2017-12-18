@@ -689,11 +689,15 @@ hash -= 5
 println(hash)
 ```
 
-## 列表推导
+## 列表推导(Comprehensions)
 
 Monkey也支持列表推导(列表可以为数组,字符串，哈希)。请看下面的例子:
 
 ```swift
+//范围
+w = [i + 1 for i in 1..10]
+println(w)
+
 //数组
 x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
 println(x)

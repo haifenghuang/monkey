@@ -256,18 +256,6 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return stmt
 }
 
-// Check if a token is ignored in expression parsing.
-func (p *Parser) isIgnoredAsExpression(tok token.TokenType) bool {
-	ignored := []token.TokenType{token.EOF, token.RBRACKET, token.DO, token.COMMA}
-	for _, v := range ignored {
-		if v == tok {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
@@ -1140,13 +1128,22 @@ func (p *Parser) parseArrayExpression() ast.Expression {
 }
 
 func (p *Parser) parseListComprehension(curToken token.Token, expr ast.Expression, variable string, closure token.TokenType) ast.Expression {
+	var isRange bool = false
 
 	if !p.expectPeek(token.IN) {
 		return nil
 	}
 	p.nextToken()
 
-	aValue := p.parseExpression(LOWEST)
+	aValue1 := p.parseExpression(LOWEST)
+
+	var aValue2 ast.Expression
+	if p.peekTokenIs(token.DOTDOT) {
+		isRange = true
+		p.nextToken()
+		p.nextToken()
+		aValue2 = p.parseExpression(DOTDOT)
+	}
 
 	var aCond ast.Expression
 	if p.peekTokenIs(token.WHERE) {
@@ -1159,7 +1156,13 @@ func (p *Parser) parseListComprehension(curToken token.Token, expr ast.Expressio
 		return nil
 	}
 
-	result := &ast.ListComprehension{Token: curToken, Var: variable, Value: aValue, Cond: aCond, Expr: expr}
+	var result ast.Expression
+	if !isRange {
+		result = &ast.ListComprehension{Token: curToken, Var: variable, Value: aValue1, Cond: aCond, Expr: expr}
+	} else {
+		result = &ast.ListRangeComprehension{Token: curToken, Var: variable, StartIdx: aValue1, EndIdx: aValue2, Cond: aCond, Expr: expr}
+	}
+	
 	return result
 }
 

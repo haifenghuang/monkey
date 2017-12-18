@@ -143,6 +143,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalForEachMapExpression(node, scope)
 	case *ast.ListComprehension:
 		return evalListComprehension(node, scope)
+	case *ast.ListRangeComprehension:
+		return evalListRangeComprehension(node, scope)
 	case *ast.MapComprehension:
 		return evalMapComprehension(node, scope)
 	case *ast.BreakExpression:
@@ -1532,6 +1534,91 @@ func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 	ret := &Array{}
 	var result Object
 	for idx, value := range members {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set("$_", NewInteger(int64(idx)))
+		newSubScope.Set(lc.Var, value)
+		if lc.Cond != nil {
+			cond := Eval(lc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		result = Eval(lc.Expr, newSubScope)
+		if result.Type() == ERROR_OBJ {
+			return result
+		}
+
+		ret.Members = append(ret.Members, result)
+	}
+
+	return ret
+}
+
+//[x for x in a..b <where cond>]
+//Almost same as evalForEachDotRangeExpression() function
+func evalListRangeComprehension(lc *ast.ListRangeComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+
+	startIdx := Eval(lc.StartIdx, innerScope)
+	endIdx := Eval(lc.EndIdx, innerScope)
+
+	var j int64
+	arr := &Array{}
+
+	switch startIdx.(type) {
+	case *Integer:
+		startVal := startIdx.(*Integer).Int64
+		if endIdx.Type() != INTEGER_OBJ {
+			panic(NewError(lc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ, endIdx.Type()))
+		}
+		endVal := endIdx.(*Integer).Int64
+
+		if startVal >= endVal {
+			for j = startVal; j >= endVal; j = j - 1 {
+				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		} else {
+			for j = startVal; j <= endVal; j = j + 1 {
+				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		}
+	case *String:
+		startVal := startIdx.(*String).String
+		if endIdx.Type() != STRING_OBJ {
+			panic(NewError(lc.Pos().Sline(), RANGETYPEERROR, STRING_OBJ, endIdx.Type()))
+		}
+		endVal := endIdx.(*String).String
+
+		//only support single character with lowercase
+		alphabet := "0123456789abcdefghijklmnopqrstuvwxyz"
+
+		//convert to int for easy comparation
+		leftByte := []int32(strings.ToLower(startVal))[0]
+		rightByte := []int32(strings.ToLower(endVal))[0]
+		if leftByte >= rightByte { // z -> a
+			for i := len(alphabet) - 1; i >= 0; i-- {
+				v := int32(alphabet[i])
+				if v <= leftByte && v >= rightByte {
+					arr.Members = append(arr.Members, NewString(string(v)))
+				}
+			}
+		} else { // a -> z
+			for _, v := range alphabet {
+				if v >= leftByte && v <= rightByte {
+					arr.Members = append(arr.Members, NewString(string(v)))
+				}
+			}
+		}
+	}
+
+	ret := &Array{}
+	var result Object
+	for idx, value := range arr.Members {
 		newSubScope := NewScope(innerScope)
 		newSubScope.Set("$_", NewInteger(int64(idx)))
 		newSubScope.Set(lc.Var, value)
