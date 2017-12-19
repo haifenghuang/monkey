@@ -6,7 +6,7 @@ import (
 	"monkey/token"
 	"strings"
 	"unicode"
-	//	"fmt"
+	_ "fmt"
 )
 
 const bom = 0xFEFF // byte order mark, only permitted as very first character
@@ -518,6 +518,8 @@ func (l *Lexer) readNumber() (string, error) {
 			if l.ch == '.' {
 				if l.peek() == '.' { //range operator
 					return string(ret), nil
+				} else if !isDigit(l.peek()) && l.peek() != 'e' && l.peek() != 'E' { //should be a method calling, e.g. 10.next()
+					return string(ret), nil
 				}
 			} //end if
 
@@ -549,9 +551,9 @@ func (l *Lexer) readNumber() (string, error) {
 				l.readNext()
 			}
 		}
-		if isLetter(l.ch) {
-			return "", errors.New("identifier starts immediately after numeric literal")
-		}
+//		if isLetter(l.ch) {
+//			return "", errors.New("identifier starts immediately after numeric literal")
+//		}
 	}
 	return string(ret), nil
 }

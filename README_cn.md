@@ -418,7 +418,57 @@ case i in {
 
 ```
 
-## 数组(Array)
+### 整型(Integer)
+
+在Monkey中，整型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
+
+```swift
+x = (-1).next()
+println(x) //0
+
+x = -1.next() //equals 'x = -(1.next())
+println(x) //-2
+
+x = (-1).prev()
+println(x) //-2
+
+x = -1.prev() //equals 'x = -(1.prev())
+println(x) //0
+
+x = [i for i in 10.upto(15)]
+println(x) //[10, 11, 12, 13, 14, 15]
+
+for i in 10.downto(5) {
+    print(i, "") //10 9 8 7 6 5
+
+}
+println()
+
+if 10.isEven() {
+    println("10 is even")
+}
+
+if 9.isOdd() {
+    println("9 is odd")
+}
+```
+
+### 浮点型(Float)
+
+在Monkey中，浮点型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
+
+```swift
+f0 = 15.20
+println(f0)
+
+f1 = 15.20.ceil()
+println(f1)
+
+f2 = 15.20.floor()
+println(f2)
+```
+
+### 数组(Array)
 
 在Monkey中, 你可以使用[]来初始化一个空的数组:
 
@@ -484,7 +534,7 @@ revArr = reverse(arr)
 println("Reverse Array =", revArr)
 ```
 
-## 字符串(String)
+### 字符串(String)
 
 在monkey中, 有三种类型的`string`:
 
@@ -560,7 +610,7 @@ println("Reverse str =", revStr)
 ```
 
 
-## 哈希(Hash)
+### 哈希(Hash)
 
 在monkey中, 使用{}来创建一个空的哈希:
 

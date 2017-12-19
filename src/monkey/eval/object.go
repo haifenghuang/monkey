@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"monkey/ast"
 	"os"
 	"reflect"
@@ -303,6 +304,18 @@ func (i *Integer) CallMethod(line string, scope *Scope, method string, args ...O
 		return i.IsValid(line, args...)
 	case "setValid":
 		return i.SetValid(line, args...)
+	case "next":
+		return i.Next(line, args...)
+	case "prev":
+		return i.Prev(line, args...)
+	case "isEven":
+		return i.IsEven(line, args...)
+	case "isOdd":
+		return i.IsOdd(line, args...)
+	case "downto":
+		return i.Downto(line, args...)
+	case "upto":
+		return i.Upto(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, i.Type()))
 }
@@ -336,6 +349,92 @@ func (i *Integer) SetValid(line string, args ...Object) Object {
 
 	i.Int64, i.Valid = val.Int64, true
 	return i
+}
+
+func (i *Integer) Next(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		return NewInteger(i.Int64 + 1)
+	}
+	return NewFalseObj("Integer is not valid\n")
+}
+
+func (i *Integer) Prev(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		return NewInteger(i.Int64 - 1)
+	}
+	return NewFalseObj("Integer is not valid\n")
+}
+
+func (i *Integer) IsEven(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		if i.Int64 % 2 == 0 {
+			return TRUE
+		}
+		return FALSE
+	}
+	return NewFalseObj("Integer is not valid\n")
+}
+
+func (i *Integer) IsOdd(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		if i.Int64 % 2 != 0 {
+			return TRUE
+		}
+		return FALSE
+	}
+	return NewFalseObj("Integer is not valid\n")
+}
+
+func (i *Integer) Downto(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	val, ok := args[0].(*Integer)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "downto", "*Integer", args[0].Type()))
+	}
+
+	retArr := &Array{}
+	for x := i.Int64; x >= val.Int64; x-- {
+		retArr.Members = append(retArr.Members, NewInteger(x))
+	}
+	return retArr
+}
+
+func (i *Integer) Upto(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	val, ok := args[0].(*Integer)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "upto", "*Integer", args[0].Type()))
+	}
+
+	retArr := &Array{}
+	for x := i.Int64; x <= val.Int64; x++ {
+		retArr.Members = append(retArr.Members, NewInteger(x))
+	}
+	return retArr
 }
 
 //Implements sql's Scanner Interface.
@@ -410,6 +509,10 @@ func (f *Float) CallMethod(line string, scope *Scope, method string, args ...Obj
 		return f.IsValid(line, args...)
 	case "setValid":
 		return f.SetValid(line, args...)
+	case "ceil":
+		return f.Ceil(line, args...)
+	case "floor":
+		return f.Floor(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, f.Type()))
 }
@@ -443,6 +546,29 @@ func (f *Float) SetValid(line string, args ...Object) Object {
 
 	f.Float64, f.Valid = val.Float64, true
 	return f
+}
+
+func (f *Float) Ceil(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if f.Valid {
+		return NewFloat(math.Ceil(f.Float64))
+	}
+	return NewFalseObj("Float is not valid\n")
+}
+
+func (f *Float) Floor(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if f.Valid {
+		return NewFloat(math.Floor(f.Float64))
+	}
+
+	return NewFalseObj("Float is not valid\n")
 }
 
 func (f *Float) Scan(value interface{}) error {
