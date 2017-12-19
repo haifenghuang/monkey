@@ -1032,7 +1032,7 @@ func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
 	ic := []*ast.IfConditionExpr{p.parseConditionalExpression()}
 
 	//else-if
-	for p.peekTokenIs(token.ELSEIF) || p.peekTokenIs(token.ELSIF) { //could be 'elseif' or 'elsif'
+	for p.peekTokenIs(token.ELSEIF) || p.peekTokenIs(token.ELSIF) || p.peekTokenIs(token.ELIF) { //could be 'elseif' or 'elsif' or 'elif'
 		p.nextToken()
 		ic = append(ic, p.parseConditionalExpression())
 	}

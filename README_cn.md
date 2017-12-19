@@ -82,22 +82,23 @@ Monkey仅支持单行注释.
 
 ### 数据类型
 
-Monkey支持7种基本类型: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` 和`Nil`
+Monkey支持8种基本类型: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash`, `Tuple`和`Nil`
 
 ```swift
-s1 = "hello, 黄"      # strings are UTF-8 encoded
+s1 = "hello, 黄"       # strings are UTF-8 encoded
 s2 = `hello, "world"`  # raw string
 i = 10                 # int
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
 h = { "a"=>1, "b"=>2}  # hash
+t = (1,2,3)            # tuple
 n = nil
 ```
 
 ### 常量(字面值)
 
-Monkey中，主要有9种类型的常量(字面量).
+Monkey中，主要有10种类型的常量(字面量).
 
 * Integer
 * Float
@@ -105,6 +106,7 @@ Monkey中，主要有9种类型的常量(字面量).
 * 正则表达式
 * Array
 * Hash
+* Tuple
 * Nil
 * Boolean
 * Function
@@ -135,6 +137,9 @@ a = [1+2, 3, 4, "5", 3]
 
 // Hash literals
 h = { "a"=>1, "b"=>2, "c"=>2}
+
+//Tuple literals
+t = (1, 2+3, "Hello", 5)
 
 // Nil literal
 n = nil
@@ -173,7 +178,7 @@ a, b, c = 1, "hello world", [1,2,3]
 * fn
 * let
 * true false nil
-* if elsif elseif else
+* if elsif elseif elif else
 * return
 * include
 * and or
@@ -288,7 +293,7 @@ let a, b = 10, 5
 if (a > b) { // '()'可选, 但是'{}'必须要有
     println("a > b")
 }
-elseif a == b { // 也可以使用'elsif'
+elseif a == b { // 也可以使用'elsif'和'elif'
     println("a = b")
 }
 else {

@@ -386,6 +386,8 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 }
 
+//str[idx] = item
+//str += item
 func evalStrAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	leftVal := left.(*String).String
 	var ok bool
@@ -424,7 +426,7 @@ func evalStrAssignExpression(a *ast.AssignExpression, name string, left Object, 
 
 }
 
-//array = item
+//array[idx] = item
 //array += item
 func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	leftVals := left.(*Array).Members
@@ -486,6 +488,10 @@ func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object
 
 func evalTupleAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
 	//Tuple is an immutable sequence of values
+	if a.Token.Literal == "=" { //tuple[idx] = item
+		str := fmt.Sprintf("%s[IDX]", TUPLE_OBJ)
+		panic(NewError(a.Pos().Sline(), INFIXOP, str, a.Token.Literal, val.Type()))
+	}
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 }
 

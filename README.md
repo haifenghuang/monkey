@@ -77,22 +77,23 @@ Monkey only support single line comment.
 
 ### Data Types
 
-Monkey supports 7 basic data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash` and `Nil`
+Monkey supports 8 basic data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash`, `Tuple` and `Nil`
 
 ```swift
-s1 = "hello, 黄"      # strings are UTF-8 encoded
+s1 = "hello, 黄"       # strings are UTF-8 encoded
 s2 = `hello, "world"`  # raw string
 i = 10                 # int
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
 h = { "a"=>1, "b"=>2}  # hash
+t = (1,2,3)            # tuple
 n = nil
 ```
 
 ### Constants(Literal)
 
-In monkey, there are mainly nine types of constants(Literals).
+In monkey, there are mainly ten types of constants(Literals).
 
 * Integer
 * Float
@@ -100,6 +101,7 @@ In monkey, there are mainly nine types of constants(Literals).
 * Regular expression
 * Array
 * Hash
+* Tuple
 * Nil
 * Boolean
 * Function
@@ -130,6 +132,9 @@ a = [1+2, 3, 4, "5", 3]
 
 // Hash literals
 h = { "a"=>1, "b"=>2, "c"=>2}
+
+//Tuple literals
+t = (1, 2+3, "Hello", 5)
 
 // Nil literal
 n = nil
@@ -171,7 +176,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * fn
 * let
 * true false nil
-* if elsif elseif else
+* if elsif elseif elif else
 * return
 * include
 * and or
@@ -210,7 +215,7 @@ Similarly, you could also create an array from a tuple:
 let arr = array((10,20))  //result:[10,20]
 ```
 
-You could only create an hash from an array or a tuple:
+You could only create a hash from an array or a tuple:
 
 ```swift
 //create an empty hash
@@ -286,7 +291,7 @@ let a, b = 10, 5
 if (a > b) { // '()' is optional, but '{}' is a must
     println("a > b")
 }
-elseif a == b { // could also use 'elsif'
+elseif a == b { // could also use 'elsif' or 'elif'
     println("a = b")
 }
 else {
