@@ -17,6 +17,7 @@ const (
 	LOWEST
 	PIPE
 	ASSIGN
+	THINARROW
 	CONDOR
 	CONDAND
 	EQUALS
@@ -79,6 +80,7 @@ var precedences = map[token.TokenType]int{
 	token.LBRACKET:   INDEX,
 	token.INCREMENT:  INCREMENT,
 	token.DECREMENT:  INCREMENT,
+	token.THINARROW:  THINARROW,
 }
 
 type Parser struct {
@@ -189,6 +191,7 @@ func New(l *lexer.Lexer, wd string) *Parser {
 	p.registerInfix(token.INCREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.PIPE, p.parsePipeExpression)
+	p.registerInfix(token.THINARROW, p.parseThinArrowFunction)
 	p.nextToken()
 	p.nextToken()
 
@@ -313,6 +316,13 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 		}
 		ret := &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
 		return ret
+	}
+
+	// NOTE: if previous token is toke.LPAREN, and the current
+	//       token is token.RPAREN, that is an empty parentheses(e.g. '() -> 5'), 
+	//       we need to return earlier.
+	if curToken.Type == token.LPAREN && p.curTokenIs(token.RPAREN) {
+		return nil
 	}
 
 	exp := p.parseExpression(LOWEST)
@@ -1649,6 +1659,46 @@ func (p *Parser) parsePipeExpression(left ast.Expression) ast.Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 	return expression
+}
+
+// EXPRESSION -> EXPRESSION
+//(x, y) -> x + y + 5      left expression is *TupleLiteral
+//(x) -> x + 5             left expression is *Identifier
+//()  -> 5 + 5             left expression is nil
+func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
+	fn := &ast.FunctionLiteral{Token: p.curToken, Variadic: false}
+	switch exprType := left.(type) {
+	case nil:
+		//no argument.
+	case *ast.Identifier:
+		// single argument.
+		fn.Parameters = append(fn.Parameters, exprType)
+	case *ast.TupleLiteral:
+		// a list of arguments(maybe one element tuple, or multiple elements tuple).
+		for _, v := range exprType.Members {
+			switch param := v.(type) {
+			case *ast.Identifier:
+				fn.Parameters = append(fn.Parameters, param)
+			default:
+				msg := fmt.Sprintf("Syntax Error: %v - Arrow function expects a list of identifiers as arguments", p.curToken.Pos)
+				p.errors = append(p.errors, msg)
+				return nil
+			}
+		}
+	default:
+		msg := fmt.Sprintf("Syntax Error: %v - Arrow function expects identifiers as arguments", p.curToken.Pos)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	p.nextToken()
+	fn.Body = &ast.BlockStatement{
+		Statements: []ast.Statement{
+			p.parseExpressionStatement(),
+		},
+	}
+
+	return fn
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {

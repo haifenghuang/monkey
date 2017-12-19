@@ -1037,6 +1037,26 @@ fn sub(x,y=2) {
 println(sub(10)) //结果 : 8
 ```
 
+你还可以使用`短箭头(short arraw)`语法来创建一个匿名函数:
+
+```swift
+let x = () -> 5 + 5
+println(x())  //结果: 10
+
+let y = (x) -> x * 5
+println(y(2)) //结果: 10
+
+let z = (x,y) -> x * y + 5
+println(z(3,4)) //结果 :17
+
+
+let add = fn (x, factor) {
+  x + factor(x)
+}
+result = add(5, (x) -> x * 2)
+println(result)  //结果 : 15
+```
+
 Monkey不支持多个返回值, 但有很多方法可以达到目的.
 
 下面是其中的一种实现方式:

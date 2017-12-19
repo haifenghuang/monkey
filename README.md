@@ -1066,6 +1066,26 @@ fn sub(x,y=2) {
 println(sub(10)) //output : 8
 ```
 
+You could also create a function using the `short arrow` syntax:
+
+```swift
+let x = () -> 5 + 5
+println(x())  //result: 10
+
+let y = (x) -> x * 5
+println(y(2)) //result: 10
+
+let z = (x,y) -> x * y + 5
+println(z(3,4)) //result :17
+
+
+let add = fn (x, factor) {
+  x + factor(x)
+}
+result = add(5, (x) -> x * 2)
+println(result)  //result : 15
+```
+
 Monkey do not support multiple return values, But there are many ways to do it.
 
 Below suggest a way of doing it:

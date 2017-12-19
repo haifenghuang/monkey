@@ -49,6 +49,7 @@ const (
 	DOTDOT   // ..  (PARTIAL IMPLEMENTED, ONLY SUPPORT INTEGER/SingleString RANGE, AND ONLY USED IN 'FOR X IN A..B {}' )
 	ELLIPSIS //... Function Variadic parameters
 	PIPE     // |>
+	THINARROW // ->
 	FATARROW // =>
 
 	INCREMENT // ++
@@ -228,6 +229,8 @@ func (tt TokenType) String() string {
 		return "..."
 	case PIPE:
 		return "|>"
+	case THINARROW:
+		return "->"
 	case FATARROW:
 		return "=>"
 	case INCREMENT:

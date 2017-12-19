@@ -134,6 +134,9 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '=' {
 				tok = token.Token{Type: token.MINUS_A, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if l.peek() == '>' {
+				tok = token.Token{Type: token.THINARROW, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.MINUS, l.ch)
 			}
