@@ -160,7 +160,7 @@ func (fal *ForEachArrayLoop) String() string {
 	out.WriteString(" in ")
 	out.WriteString(fal.Value.String())
 	if fal.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(fal.Cond.String())
 	}
 	out.WriteString(" { ")
@@ -198,7 +198,7 @@ func (fml *ForEachMapLoop) String() string {
 	out.WriteString(" in ")
 	out.WriteString(fml.X.String())
 	if fml.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(fml.Cond.String())
 	}
 	out.WriteString(" { ")
@@ -266,7 +266,7 @@ func (fdr *ForEachDotRange) String() string {
 	out.WriteString(" .. ")
 	out.WriteString(fdr.EndIdx.String())
 	if fdr.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(fdr.Cond.String())
 	}
 	out.WriteString(" { ")
@@ -1905,8 +1905,7 @@ func (e *EnumLiteral) String() string {
 ///////////////////////////////////////////////////////////
 //        List Comprehension(for array & string)         //
 ///////////////////////////////////////////////////////////
-//[ x+1 for x in arr <where cond>]
-//[ str for str in strs <where cond>]
+// [ Expr for Var in Value <where Cond> ] ---> Value could be array or string
 type ListComprehension struct {
 	Token token.Token
 	Var   string
@@ -1939,10 +1938,10 @@ func (lc *ListComprehension) String() string {
 	out.WriteString(" in ")
 	out.WriteString(lc.Value.String())
 	if lc.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(lc.Cond.String())
 	}
-	out.WriteString("] ")
+	out.WriteString(" ]")
 
 	return out.String()
 }
@@ -1950,14 +1949,14 @@ func (lc *ListComprehension) String() string {
 ///////////////////////////////////////////////////////////
 //             List Comprehension(for range)             //
 ///////////////////////////////////////////////////////////
-//[exp for i in start..end <where cond>]
+//[Expr for Var in StartIdx..EndIdx <where Cond>]
 type ListRangeComprehension struct {
 	Token    token.Token
 	Var      string
 	StartIdx Expression
 	EndIdx   Expression
 	Cond     Expression //conditional clause(nil if there is no 'WHERE' clause)
-	Expr     Expression
+	Expr     Expression //the result expression
 }
 
 func (lc *ListRangeComprehension) Pos() token.Position {
@@ -1986,19 +1985,19 @@ func (lc *ListRangeComprehension) String() string {
 	out.WriteString("..")
 	out.WriteString(lc.EndIdx.String())
 	if lc.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(lc.Cond.String())
 	}
-	out.WriteString("] ")
+	out.WriteString(" ]")
 
 	return out.String()
 }
 
 ///////////////////////////////////////////////////////////
-//                 Map Comprehension                     //
+//                LIST Map Comprehension                 //
 ///////////////////////////////////////////////////////////
-//[ expr for k,v in hash <where cond>]
-type MapComprehension struct {
+//[ Expr for Key,Value in X <where Cond>]
+type ListMapComprehension struct {
 	Token token.Token
 	Key   string
 	Value string
@@ -2007,21 +2006,21 @@ type MapComprehension struct {
 	Expr Expression  //the result expression
 }
 
-func (mc *MapComprehension) Pos() token.Position {
+func (mc *ListMapComprehension) Pos() token.Position {
 	return mc.Token.Pos
 }
 
-func (mc *MapComprehension) End() token.Position {
+func (mc *ListMapComprehension) End() token.Position {
 	if mc.Cond != nil {
 		return mc.Cond.End()
 	}
 	return mc.Expr.End()
 }
 
-func (mc *MapComprehension) expressionNode()      {}
-func (mc *MapComprehension) TokenLiteral() string { return mc.Token.Literal }
+func (mc *ListMapComprehension) expressionNode()      {}
+func (mc *ListMapComprehension) TokenLiteral() string { return mc.Token.Literal }
 
-func (mc *MapComprehension) String() string {
+func (mc *ListMapComprehension) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("[ ")
@@ -2031,10 +2030,155 @@ func (mc *MapComprehension) String() string {
 	out.WriteString(" in ")
 	out.WriteString(mc.X.String())
 	if mc.Cond != nil {
-		out.WriteString(" WHERE ")
+		out.WriteString(" where ")
 		out.WriteString(mc.Cond.String())
 	}
-	out.WriteString("]")
+	out.WriteString(" ]")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//        Hash Comprehension(for array & string)         //
+///////////////////////////////////////////////////////////
+//{ KeyExpr:ValExpr for Var in Value <where Cond> }  -->Value could be array or string
+type HashComprehension struct {
+	Token   token.Token
+	Var     string
+	Value   Expression //value(array or string) to range over
+	Cond    Expression //conditional clause(nil if there is no 'WHERE' clause)
+	KeyExpr Expression //the result Key expression
+	ValExpr Expression //the result Value expression
+}
+
+func (hc *HashComprehension) Pos() token.Position {
+	return hc.Token.Pos
+}
+
+func (hc *HashComprehension) End() token.Position {
+	if hc.Cond != nil {
+		return hc.Cond.End()
+	}
+	return hc.Value.End()
+}
+
+func (hc *HashComprehension) expressionNode()      {}
+func (hc *HashComprehension) TokenLiteral() string { return hc.Token.Literal }
+
+func (hc *HashComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{ ")
+	out.WriteString(hc.KeyExpr.String())
+	out.WriteString(" : ")
+	out.WriteString(hc.ValExpr.String())
+	out.WriteString(" for ")
+	out.WriteString(hc.Var)
+	out.WriteString(" in ")
+	out.WriteString(hc.Value.String())
+	if hc.Cond != nil {
+		out.WriteString(" where ")
+		out.WriteString(hc.Cond.String())
+	}
+	out.WriteString(" }")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//             Hash Comprehension(for range)             //
+///////////////////////////////////////////////////////////
+//{ KeyExp:ValExp for Var in StartIdx..EndIdx <where Cond> }
+type HashRangeComprehension struct {
+	Token    token.Token
+	Var      string
+	StartIdx Expression
+	EndIdx   Expression
+	Cond     Expression //conditional clause(nil if there is no 'WHERE' clause)
+	KeyExpr  Expression //the result Key expression
+	ValExpr  Expression //the result Value expression
+}
+
+func (hc *HashRangeComprehension) Pos() token.Position {
+	return hc.Token.Pos
+}
+
+func (hc *HashRangeComprehension) End() token.Position {
+	if hc.Cond != nil {
+		return hc.Cond.End()
+	}
+	return hc.EndIdx.End()
+}
+
+func (hc *HashRangeComprehension) expressionNode()      {}
+func (hc *HashRangeComprehension) TokenLiteral() string { return hc.Token.Literal }
+
+func (hc *HashRangeComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{ ")
+	out.WriteString(hc.KeyExpr.String())
+	out.WriteString(" : ")
+	out.WriteString(hc.ValExpr.String())
+	out.WriteString(" for ")
+	out.WriteString(hc.Var)
+	out.WriteString(" in ")
+	out.WriteString(hc.StartIdx.String())
+	out.WriteString("..")
+	out.WriteString(hc.EndIdx.String())
+	if hc.Cond != nil {
+		out.WriteString(" where ")
+		out.WriteString(hc.Cond.String())
+	}
+	out.WriteString(" }")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//                Hash Map Comprehension                 //
+///////////////////////////////////////////////////////////
+//{ KeyExpr:ValExpr for Key,Value in X <where Cond> }
+type HashMapComprehension struct {
+	Token   token.Token
+	Key     string
+	Value   string
+	X       Expression //value(hash) to range over
+	Cond    Expression //Conditional clause(nil if there is no 'WHERE' clause)
+	KeyExpr Expression  //the result Key expression
+	ValExpr Expression  //the result Value expression
+}
+
+func (mc *HashMapComprehension) Pos() token.Position {
+	return mc.Token.Pos
+}
+
+func (mc *HashMapComprehension) End() token.Position {
+	if mc.Cond != nil {
+		return mc.Cond.End()
+	}
+	return mc.X.End()
+}
+
+func (mc *HashMapComprehension) expressionNode()      {}
+func (mc *HashMapComprehension) TokenLiteral() string { return mc.Token.Literal }
+
+func (mc *HashMapComprehension) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{ ")
+	out.WriteString(mc.KeyExpr.String())
+	out.WriteString(" : ")
+	out.WriteString(mc.ValExpr.String())
+	out.WriteString(" for ")
+	out.WriteString(mc.Key + ", " + mc.Value)
+	out.WriteString(" in ")
+	out.WriteString(mc.X.String())
+	if mc.Cond != nil {
+		out.WriteString(" where ")
+		out.WriteString(mc.Cond.String())
+	}
+	out.WriteString(" }")
 
 	return out.String()
 }

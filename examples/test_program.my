@@ -24,7 +24,7 @@ do {
   y = y + 1
 }
 
-z = "a b c d e f".split().map(fn(x) {
+z = "a b c d e f".split(" ").map(fn(x) {
   println(x.upper())
   x.upper()
 })

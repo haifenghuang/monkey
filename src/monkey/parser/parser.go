@@ -1103,23 +1103,143 @@ func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseHashExpression() ast.Expression {
-	hash := &ast.HashLiteral{Token: p.curToken}
-	hash.Pairs = make(map[ast.Expression]ast.Expression)
-	if p.peekTokenIs(token.RBRACE) {
+	curToken := p.curToken //save current token
+
+	if p.peekTokenIs(token.RBRACE) { //empty hash
 		p.nextToken()
+		hash := &ast.HashLiteral{Token: curToken}
+		hash.Pairs = make(map[ast.Expression]ast.Expression)
+
 		return hash
 	}
-	for !p.curTokenIs(token.RBRACE) {
-		p.nextToken()
-		key := p.parseExpression(LOWEST)
-		if !p.expectPeek(token.FATARROW) {
+
+	p.nextToken() //skip the '{'
+	keyExpr := p.parseExpression(SLICE) //note the precedence
+
+	if p.peekTokenIs(token.COLON) { //a hash comprehension
+		p.nextToken() //skip current token
+		p.nextToken() //skip the ':'
+
+		valueExpr := p.parseExpression(LOWEST)
+		if !p.expectPeek(token.FOR) {
 			return nil
 		}
-		p.nextToken()
-		hash.Pairs[key] = p.parseExpression(LOWEST)
-		p.nextToken()
+
+		if !p.expectPeek(token.IDENT) { //must be an identifier
+			return nil
+		}
+
+		//{ k:k+1 for k in arr }     -----> k is a variable in an array
+		//{ k:k+1 for k,v in hash }  -----> k is a key in a hash
+		keyOrVariable := p.curToken.Literal
+
+		if p.peekTokenIs(token.COMMA) { //hash map comprehension
+			return p.parseHashMapComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
+		}
+
+		// hash list comprehension
+		return p.parseHashListComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
+
+	} else if p.peekTokenIs(token.FATARROW) { //a hash
+		hash := &ast.HashLiteral{Token: curToken}
+		hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+		p.nextToken() //skip current token
+		p.nextToken() //skip the '=>'
+
+		hash.Pairs[keyExpr] = p.parseExpression(LOWEST)
+		p.nextToken() //skip current token
+		for !p.curTokenIs(token.RBRACE) {
+			p.nextToken() //skip the ','
+
+			key := p.parseExpression(SLICE)
+			if !p.expectPeek(token.FATARROW) {
+				return nil
+			}
+
+			p.nextToken() //skip the '=>'
+			hash.Pairs[key] = p.parseExpression(LOWEST)
+			p.nextToken()
+		}
+		return hash
+	} else {
+		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ':' or '=>', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
 	}
-	return hash
+
+	return nil
+}
+
+func (p *Parser) parseHashMapComprehension(curToken token.Token, key string, keyExpr ast.Expression, valueExpr ast.Expression, closure token.TokenType) ast.Expression {
+	if !p.expectPeek(token.COMMA) {
+		return nil
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+	value := p.curToken.Literal
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	X := p.parseExpression(LOWEST)
+
+	var aCond ast.Expression
+	if p.peekTokenIs(token.WHERE) {
+		p.nextToken()
+		p.nextToken()
+		aCond = p.parseExpression(LOWEST)
+	}
+
+	if !p.expectPeek(closure) {
+		return nil
+	}
+
+	result := &ast.HashMapComprehension{Token: curToken, Key: key, Value: value, X:X, Cond: aCond, KeyExpr:keyExpr, ValExpr:valueExpr}
+	return result
+}
+
+func (p *Parser) parseHashListComprehension(curToken token.Token, variable string, keyExpr ast.Expression, valueExpr ast.Expression, closure token.TokenType) ast.Expression {
+	var isRange bool = false
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	aValue1 := p.parseExpression(LOWEST)
+
+	var aValue2 ast.Expression
+	if p.peekTokenIs(token.DOTDOT) {
+		isRange = true
+		p.nextToken()
+		p.nextToken()
+		aValue2 = p.parseExpression(DOTDOT)
+	}
+
+	var aCond ast.Expression
+	if p.peekTokenIs(token.WHERE) {
+		p.nextToken()
+		p.nextToken()
+		aCond = p.parseExpression(LOWEST)
+	}
+
+	if !p.expectPeek(closure) {
+		return nil
+	}
+
+	var result ast.Expression
+	if !isRange {
+		result = &ast.HashComprehension{Token: curToken, Var: variable, Value: aValue1, Cond: aCond, KeyExpr:keyExpr, ValExpr:valueExpr}
+	} else {
+		result = &ast.HashRangeComprehension{Token: curToken, Var: variable, StartIdx: aValue1, EndIdx: aValue2, Cond: aCond, KeyExpr:keyExpr, ValExpr:valueExpr}
+	}
+	
+	return result
 }
 
 func (p *Parser) parseStructExpression() ast.Expression {
@@ -1159,14 +1279,14 @@ func (p *Parser) parseArrayExpression() ast.Expression {
 	temp, b := p.parseExpressionArrayEx([]ast.Expression{}, token.RBRACKET)
 	if b { //list comprehension or map comprehension
 		p.nextToken() //skip 'for'
-		if !p.expectPeek(token.IDENT) {
+		if !p.expectPeek(token.IDENT) {  //must be an identifier
 			return nil
 		}
 
 		variable := p.curToken.Literal
 
 		if p.peekTokenIs(token.COMMA) { //map comprehension
-			return p.parseMapComprehension(curToken, temp[0], variable, token.RBRACKET) //here 'variable' is the key of the map
+			return p.parseListMapComprehension(curToken, temp[0], variable, token.RBRACKET) //here 'variable' is the key of the map
 		}
 
 		//list comprehension
@@ -1217,7 +1337,7 @@ func (p *Parser) parseListComprehension(curToken token.Token, expr ast.Expressio
 	return result
 }
 
-func (p *Parser) parseMapComprehension(curToken token.Token, expr ast.Expression, variable string, closure token.TokenType) ast.Expression {
+func (p *Parser) parseListMapComprehension(curToken token.Token, expr ast.Expression, variable string, closure token.TokenType) ast.Expression {
 
 	if !p.expectPeek(token.COMMA) {
 		return nil
@@ -1246,7 +1366,7 @@ func (p *Parser) parseMapComprehension(curToken token.Token, expr ast.Expression
 		return nil
 	}
 
-	result := &ast.MapComprehension{Token: curToken, Key: variable, Value: Value, X:X, Cond: aCond, Expr: expr}
+	result := &ast.ListMapComprehension{Token: curToken, Key: variable, Value: Value, X:X, Cond: aCond, Expr: expr}
 	return result
 }
 

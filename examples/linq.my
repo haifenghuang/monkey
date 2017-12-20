@@ -763,9 +763,9 @@ if result == 0  {
 
 //test 'sequenceEqual'
 println()
-let se1=[1, 2, 2, 3, 1], se11=[4,6]
-let se2=[1, -1, 100], se22=[1, -1, 100]
-let se3=[], se33=[]
+let se1,se11=[1, 2, 2, 3, 1], [4,6]
+let se2,se22=[1, -1, 100], [1, -1, 100]
+let se3,se33=[], []
 result = linq.from(se1).sequenceEqual(linq.from(se11))
 if result {
 	println("[1, 2, 2, 3, 1] sequenceEqual([4,6]) returns true")
@@ -879,11 +879,11 @@ println('[1,2,3,4,5,6,7,8,9,10] sumInts()={result}')
 
 //test 'sumFloats'
 println()
-let farr1 = [1., 2., 2., 3., 1.]
+let farr1 = [1.0, 2.0, 2.0, 3.0, 1.0]
 result = linq.from(farr1).sumFloats()
-println("[1., 2., 2., 3., 1.] sumFloats() returns", result)
+println("[1.0, 2.0, 2.0, 3.0, 1.0] sumFloats() returns", result)
 
-let farr2 = [1.]
+let farr2 = [1.0]
 result = linq.from(farr2).sumFloats()
 println("[1.] sumFloats() returns", result)
 

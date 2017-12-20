@@ -149,8 +149,12 @@ t = true
 f = false
 
 // Function literals
-let f = add(x, y) { return a + b }
-println(f(1,2))
+let f1 = add(x, y) { return x + y }
+println(f1(1,2))
+
+//short-arrow function literals
+let f2 = (x, y) -> x + y 
+println(f2(1,2))
 ```
 
 ### 变量
@@ -930,28 +934,55 @@ println(hash)
 
 ## 列表推导(Comprehensions)
 
-Monkey也支持列表推导(列表可以为数组,字符串，Range，Tuple, 哈希)。请看下面的例子:
+Monkey支持列表推导(列表可以为数组,字符串，Range，Tuple, 哈希)。
+列表推导的返回值均为数组。请看下面的例子:
 
 ```swift
 //数组
 x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
-println(x)
+println(x) //结果：[["HELLO", "hello", "Hello"], ["WORLD", "world", "World"], ["GOOD", "good", "Good"], ["MORNING", "morning", "Morning"]]
+
 
 //字符串
 y = [ c.upper() for c in "huanghaifeng" where $_ % 2 != 0] //$_ is the index
-println(y)
+println(y) //结果：["U", "N", "H", "I", "E", "G"]
 
 //范围
 w = [i + 1 for i in 1..10]
-println(w)
+println(w) //结果：[2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 //tuple
 v = [x+1 for x in (12,34,56)]
-println(v)
+println(v) //结果：[13, 35, 57]
 
 //哈希
 z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
-println(z)
+println(z) //结果：[100, 200, 300]
+```
+
+Monkey同时也支持哈希推导。
+哈希推导的返回值均为哈希。请看下面的例子:
+
+```swift
+//哈希推导 (from hash)
+z1 = { v:k for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}} //reverse key-value pair
+println(z1) // 结果: {10 => "key1", 20 => "key2", 30 => "key3"}, 顺序可能不同
+
+//哈希推导 (from array)
+z2 = {x:x**2 for x in [1,2,3]}
+println(z2) // 结果: {1 => 1, 2 => 4, 3 => 9}, 顺序可能不同
+
+//哈希推导 (from .. range)
+z3 = {x:x**2 for x in 5..7}
+println(z3) // 结果: {5 => 25, 6 => 36, 7 => 49}, 顺序可能不同
+
+//哈希推导 (from string)
+z4 = {x:x.upper() for x in "hi"}
+println(z4) // 结果: {"h" => "H", "i" => "I"}, 顺序可能不同
+
+//哈希推导 (from tuple)
+z5 = {x+1:x+2 for x in (1,2,3)}
+println(z5) // 结果: {4 => 5, 2 => 3, 3 => 4}, 顺序可能不同
 ```
 
 ## Grep和map

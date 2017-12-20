@@ -147,8 +147,14 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalListComprehension(node, scope)
 	case *ast.ListRangeComprehension:
 		return evalListRangeComprehension(node, scope)
-	case *ast.MapComprehension:
-		return evalMapComprehension(node, scope)
+	case *ast.ListMapComprehension:
+		return evalListMapComprehension(node, scope)
+	case *ast.HashComprehension:
+		return evalHashComprehension(node, scope)
+	case *ast.HashRangeComprehension:
+		return evalHashRangeComprehension(node, scope)
+	case *ast.HashMapComprehension:
+		return evalHashMapComprehension(node, scope)
 	case *ast.BreakExpression:
 		return BREAK
 	case *ast.ContinueExpression:
@@ -1630,9 +1636,9 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 	return result
 }
 
-//[x+1 for x in arr <where cond>]
-//[ str for str in strs <where cond>]
-//[ x for x in tuple <where cond>]
+//[ x+1 for x in arr <where cond> ]
+//[ str for str in strs <where cond> ]
+//[ x for x in tuple <where cond> ]
 func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 	innerScope := NewScope(scope)
 	aValue := Eval(lc.Value, innerScope)
@@ -1688,7 +1694,7 @@ func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 	return ret
 }
 
-//[x for x in a..b <where cond>]
+//[ x for x in a..b <where cond> ]
 //Almost same as evalForEachDotRangeExpression() function
 func evalListRangeComprehension(lc *ast.ListRangeComprehension, scope *Scope) Object {
 	innerScope := NewScope(scope)
@@ -1773,8 +1779,8 @@ func evalListRangeComprehension(lc *ast.ListRangeComprehension, scope *Scope) Ob
 	return ret
 }
 
-//[ expr for k,v in hash <where cond>]
-func evalMapComprehension(mc *ast.MapComprehension, scope *Scope) Object {
+//[ expr for k,v in hash <where cond> ]
+func evalListMapComprehension(mc *ast.ListMapComprehension, scope *Scope) Object {
 	innerScope := NewScope(scope)
 	aValue := Eval(mc.X, innerScope)
 	if aValue.Type() == ERROR_OBJ {
@@ -1813,6 +1819,223 @@ func evalMapComprehension(mc *ast.MapComprehension, scope *Scope) Object {
 		}
 
 		ret.Members = append(ret.Members, result)
+	}
+
+	return ret
+}
+
+//{ k:v for x in arr <where cond> }
+//{ k:v for str in strs <where cond> }
+//{ k:v for x in tuple <where cond> }
+//Almost same as evalListComprehension
+func evalHashComprehension(hc *ast.HashComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+	aValue := Eval(hc.Value, innerScope)
+	if aValue.Type() == ERROR_OBJ {
+		return aValue
+	}
+
+	_, ok := aValue.(Iterable) //must be listable
+	if !ok {
+		panic(NewError(hc.Pos().Sline(), NOTITERABLE))
+	}
+
+	var members []Object
+	if aValue.Type() == STRING_OBJ {
+		aStr, _ := aValue.(*String)
+		runes := []rune(aStr.String)
+		for _, rune := range runes {
+			members = append(members, NewString(string(rune)))
+		}
+	} else if aValue.Type() == ARRAY_OBJ {
+		arr, _ := aValue.(*Array)
+		members = arr.Members
+	} else if aValue.Type() == TUPLE_OBJ {
+		tuple, _ := aValue.(*Tuple)
+		members = tuple.Members
+	}
+
+	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
+
+	for idx, value := range members {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set("$_", NewInteger(int64(idx)))
+		newSubScope.Set(hc.Var, value)
+		if hc.Cond != nil {
+			cond := Eval(hc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		keyResult := Eval(hc.KeyExpr, newSubScope)
+		if keyResult.Type() == ERROR_OBJ {
+			return keyResult
+		}
+
+		valueResult := Eval(hc.ValExpr, newSubScope)
+		if valueResult.Type() == ERROR_OBJ {
+			return valueResult
+		}
+
+		if hashable, ok := keyResult.(Hashable); ok {
+			ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
+		} else {
+			panic(NewError("", KEYERROR, keyResult.Type()))
+		}
+	}
+
+	return ret
+}
+
+//{ k:v for x in a..b <where cond> }
+//Almost same as evalListRangeComprehension() function
+func evalHashRangeComprehension(hc *ast.HashRangeComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+
+	startIdx := Eval(hc.StartIdx, innerScope)
+	endIdx := Eval(hc.EndIdx, innerScope)
+
+	var j int64
+	arr := &Array{}
+
+	switch startIdx.(type) {
+	case *Integer:
+		startVal := startIdx.(*Integer).Int64
+		if endIdx.Type() != INTEGER_OBJ {
+			panic(NewError(hc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ, endIdx.Type()))
+		}
+		endVal := endIdx.(*Integer).Int64
+
+		if startVal >= endVal {
+			for j = startVal; j >= endVal; j = j - 1 {
+				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		} else {
+			for j = startVal; j <= endVal; j = j + 1 {
+				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		}
+	case *String:
+		startVal := startIdx.(*String).String
+		if endIdx.Type() != STRING_OBJ {
+			panic(NewError(hc.Pos().Sline(), RANGETYPEERROR, STRING_OBJ, endIdx.Type()))
+		}
+		endVal := endIdx.(*String).String
+
+		//only support single character with lowercase
+		alphabet := "0123456789abcdefghijklmnopqrstuvwxyz"
+
+		//convert to int for easy comparation
+		leftByte := []int32(strings.ToLower(startVal))[0]
+		rightByte := []int32(strings.ToLower(endVal))[0]
+		if leftByte >= rightByte { // z -> a
+			for i := len(alphabet) - 1; i >= 0; i-- {
+				v := int32(alphabet[i])
+				if v <= leftByte && v >= rightByte {
+					arr.Members = append(arr.Members, NewString(string(v)))
+				}
+			}
+		} else { // a -> z
+			for _, v := range alphabet {
+				if v >= leftByte && v <= rightByte {
+					arr.Members = append(arr.Members, NewString(string(v)))
+				}
+			}
+		}
+	}
+
+	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
+
+	for idx, value := range arr.Members {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set("$_", NewInteger(int64(idx)))
+		newSubScope.Set(hc.Var, value)
+		if hc.Cond != nil {
+			cond := Eval(hc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		keyResult := Eval(hc.KeyExpr, newSubScope)
+		if keyResult.Type() == ERROR_OBJ {
+			return keyResult
+		}
+
+		valueResult := Eval(hc.ValExpr, newSubScope)
+		if valueResult.Type() == ERROR_OBJ {
+			return valueResult
+		}
+
+		if hashable, ok := keyResult.(Hashable); ok {
+			ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
+		} else {
+			panic(NewError("", KEYERROR, keyResult.Type()))
+		}
+	}
+
+	return ret
+}
+
+//{ k:v for k,v in hash <where cond> }
+//Almost same as evalListMapComprehension
+func evalHashMapComprehension(mc *ast.HashMapComprehension, scope *Scope) Object {
+	innerScope := NewScope(scope)
+	aValue := Eval(mc.X, innerScope)
+	if aValue.Type() == ERROR_OBJ {
+		return aValue
+	}
+
+	_, ok := aValue.(Iterable) //must be listable
+	if !ok {
+		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
+	}
+
+	//must be a *Hash, if not, panic
+	hash, _ := aValue.(*Hash)
+
+	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
+
+	for _, pair := range hash.Pairs {
+		newSubScope := NewScope(innerScope)
+		newSubScope.Set(mc.Key, pair.Key)
+		newSubScope.Set(mc.Value, pair.Value)
+
+		if mc.Cond != nil {
+			cond := Eval(mc.Cond, newSubScope)
+			if cond.Type() == ERROR_OBJ {
+				return cond
+			}
+
+			if !IsTrue(cond) {
+				continue
+			}
+		}
+
+		keyResult := Eval(mc.KeyExpr, newSubScope)
+		if keyResult.Type() == ERROR_OBJ {
+			return keyResult
+		}
+
+		valueResult := Eval(mc.ValExpr, newSubScope)
+		if valueResult.Type() == ERROR_OBJ {
+			return valueResult
+		}
+
+		if hashable, ok := keyResult.(Hashable); ok {
+			ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
+		} else {
+			panic(NewError("", KEYERROR, keyResult.Type()))
+		}
 	}
 
 	return ret

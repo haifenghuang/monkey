@@ -238,7 +238,7 @@ aChan1.send("Hello Channel!")
 
 # spawn and 'chan' example 2
 let aa = [7, 2, 8, -9, 4, 0]
-let nn = len(aa) / 2
+let nn = int(len(aa) / 2) //because '/' will always return float, so here we need to convert the result to int
 let aChan2 = chan()
 
 let cc = fn(aArr, c) {
