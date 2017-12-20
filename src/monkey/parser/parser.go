@@ -1692,10 +1692,14 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 	}
 
 	p.nextToken()
-	fn.Body = &ast.BlockStatement{
-		Statements: []ast.Statement{
-			p.parseExpressionStatement(),
-		},
+	if p.curTokenIs(token.LBRACE) { //if it's block, we use parseBlockStatement
+		fn.Body = p.parseBlockStatement().(*ast.BlockStatement)
+	} else { //not block, we use parseExpressionStatement
+		fn.Body = &ast.BlockStatement{
+			Statements: []ast.Statement{
+				p.parseExpressionStatement(),
+			},
+		}
 	}
 
 	return fn
