@@ -515,6 +515,10 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 	return &ast.ContinueExpression{Token: p.curToken}
 }
 
+//let a, b, c = (1, 2, 3)   ---> a=1, b=2, c=3
+//let a, b, c = 1, 2, 3     ---> a=1, b=2, c=3
+//let a, b, c = (1,2,3),4,5 ---> a=(1,2,3), b=4, c=5
+//let a, b, c = 4,(1,2,3)   ---> a=4, b=1, c=2
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
@@ -533,6 +537,18 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	p.nextToken()
 	for {
 		v := p.parseExpressionStatement().Expression
+		if !p.peekTokenIs(token.COMMA) { //let a, b, c = (1, 2, 3) ---> a=1, b=2, c=3
+			switch v.(type) {
+			case *ast.TupleLiteral: //it's a tuple
+				for _, item := range v.(*ast.TupleLiteral).Members {
+					stmt.Values = append(stmt.Values, item)
+				}
+
+				return stmt
+			}
+		}
+
+		//v is not a tuple
 		stmt.Values = append(stmt.Values, v)
 
 		if !p.peekTokenIs(token.COMMA) {

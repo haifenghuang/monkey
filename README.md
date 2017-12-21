@@ -171,6 +171,23 @@ Below code is not correct：
 //Error, multiple variable assignments must be use `let` keyword
 a, b, c = 1, "hello world", [1,2,3]
 ```
+About `let`, it has some points to note:
+
+```swift
+//there is one value which is a tuple, there is no comma after the tuple
+let a, b, c = (1, 2, 3)   ---> a=1, b=2, c=3
+
+//there are three values
+let a, b, c = 1, 2, 3     ---> a=1, b=2, c=3
+
+//there are three values, first is a tuple, after the tuple, there is a comma
+let a, b, c = (1,2,3),4,5 ---> a=(1,2,3), b=4, c=5
+
+//there are two values, the last is a tuple. after the tuple, there is no comma
+let a, b, c = 4,(1,2,3)   ---> a=4, b=1, c=2
+```
+In General, if there is a comma after the tuple, then each tuple's member will be 
+assigned to variables. Else, the tuple as a whole will assign to a single variable.
 
 
 ### Reserved keywords
