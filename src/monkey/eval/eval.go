@@ -115,6 +115,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalPostfixExpression(left, node)
 	case *ast.IfExpression:
 		return evalIfExpression(node, scope)
+	case *ast.UnlessExpression:
+		return evalUnlessExpression(node, scope)
 	case *ast.BlockStatement:
 		return evalBlockStatements(node.Statements, scope)
 	case *ast.CallExpression:
@@ -1224,6 +1226,32 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		}
 		return FALSE
 
+	case "=~": //match
+		var str string
+		if left.Type() == INTEGER_OBJ {
+			str = fmt.Sprintf("%d", left.(*Integer).Int64)
+		} else if left.Type() == FLOAT_OBJ {
+			str = fmt.Sprintf("%g", left.(*Float).Float64)
+		}
+		matched, _ := regexp.MatchString(right.(*String).String, str)
+		if matched {
+			return TRUE
+		}
+		return FALSE
+
+	case "!~": //not match
+		var str string
+		if left.Type() == INTEGER_OBJ {
+			str = fmt.Sprintf("%d", left.(*Integer).Int64)
+		} else if left.Type() == FLOAT_OBJ {
+			str = fmt.Sprintf("%g", left.(*Float).Float64)
+		}
+		matched, _ := regexp.MatchString(right.(*String).String, str)
+		if matched {
+			return FALSE
+		}
+		return TRUE
+
 	default:
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	}
@@ -1462,6 +1490,22 @@ func evalIfExpression(ie *ast.IfExpression, scope *Scope) Object {
 
 	//eval "else" part
 	if ie.Alternative != nil {
+		return evalBlockStatements(ie.Alternative.Statements, scope)
+	}
+
+	return NIL
+}
+
+
+func evalUnlessExpression(ie *ast.UnlessExpression, scope *Scope) Object {
+	condition := Eval(ie.Condition, scope)
+	if condition.Type() == ERROR_OBJ {
+		return condition
+	}
+
+	if !IsTrue(condition) {
+		return evalBlockStatements(ie.Consequence.Statements, scope)
+	} else if ie.Alternative != nil {
 		return evalBlockStatements(ie.Alternative.Statements, scope)
 	}
 

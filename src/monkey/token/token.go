@@ -106,6 +106,7 @@ const (
 	NIL
 	ENUM
 	QW
+	UNLESS
 )
 
 var keywords = map[string]TokenType{
@@ -144,6 +145,7 @@ var keywords = map[string]TokenType{
 	"nil":      NIL,
 	"enum":     ENUM,
 	"qw":       QW, //“quoted words”
+	"unless":   UNLESS,
 }
 
 //for debug & testing
@@ -331,6 +333,8 @@ func (tt TokenType) String() string {
 		return "enum"
 	case QW:
 		return "qw"
+	case UNLESS:
+		return "unless"
 	default:
 		return "unknown"
 	}

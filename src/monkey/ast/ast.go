@@ -476,6 +476,50 @@ func (ic *IfConditionExpr) String() string {
 }
 
 ///////////////////////////////////////////////////////////
+//                    UNLESS-ELSE                        //
+///////////////////////////////////////////////////////////
+type UnlessExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ul *UnlessExpression) Pos() token.Position {
+	return ul.Token.Pos
+}
+
+func (ul *UnlessExpression) End() token.Position {
+	if ul.Alternative != nil {
+		return ul.Alternative.End()
+	}
+	return ul.Consequence.End()
+}
+
+func (ul *UnlessExpression) expressionNode()      {}
+func (ul *UnlessExpression) TokenLiteral() string { return ul.Token.Literal }
+
+func (ul *UnlessExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("unless ")
+	out.WriteString("(")
+	out.WriteString(ul.Condition.String())
+	out.WriteString(")")
+	out.WriteString(" { ")
+	out.WriteString(ul.Consequence.String())
+	out.WriteString(" }")
+	if ul.Alternative != nil {
+		out.WriteString(" else ")
+		out.WriteString(" { ")
+		out.WriteString(ul.Alternative.String())
+		out.WriteString(" }")
+	}
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
 //                         HASH LITERAL                  //
 ///////////////////////////////////////////////////////////
 type HashLiteral struct {

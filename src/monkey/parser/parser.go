@@ -125,6 +125,7 @@ func New(l *lexer.Lexer, wd string) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.UNLESS, p.parseUnlessExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.DO, p.parseDoLoopExpression)
 	p.registerPrefix(token.WHILE, p.parseWhileLoopExpression)
@@ -1094,6 +1095,34 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
 
 	return ic
+}
+
+func (p *Parser) parseUnlessExpression() ast.Expression {
+	expression := &ast.UnlessExpression{Token: p.curToken}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken()
+	}
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	expression.Consequence = p.parseBlockStatement().(*ast.BlockStatement)
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+		if p.expectPeek(token.LBRACE) {
+			expression.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+		}
+	}
+
+	return expression
 }
 
 func (p *Parser) parseSliceExpression(start ast.Expression) ast.Expression {
