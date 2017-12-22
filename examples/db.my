@@ -28,7 +28,7 @@ let dbOp = fn() {
 	defer stmt.close()
 	let i = 0
 	for (i = 0; i < 105; i++) {
-		let name = "您好" + i
+		let name = "hello" + i
 		if (i>100) {
 			//insert `null` value. There are five predefined values:
 			let rs = stmt.exec(i, sql.STRING_NULL)

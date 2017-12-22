@@ -44,6 +44,7 @@ Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl
 * 支持列表推导(list comprehension)和哈希推导(hash comprehension)
 
 这个项目的目的主要有以下几点：
+
 * 自学go语言
 * 了解解析器的工作原理
 
@@ -154,7 +155,7 @@ let f1 = add(x, y) { return x + y }
 println(f1(1,2))
 
 //short-arrow function literals
-let f2 = (x, y) -> x + y 
+let f2 = (x, y) -> x + y
 println(f2(1,2))
 ```
 
@@ -184,6 +185,7 @@ a, b, c = 1, "hello world", [1,2,3]
 * let
 * true false nil
 * if elsif elseif elif else
+* unless
 * return
 * include
 * and or
@@ -285,8 +287,9 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ### 控制流程
 
-* If-else
-* for-in
+* if/if-else/if-elif-else/if-elsif-else/if-elseif-else
+* unless/unless-else
+* for/for-in
 * while
 * do
 * try-catch-finally
@@ -298,11 +301,18 @@ let a, b = 10, 5
 if (a > b) { // '()'可选, 但是'{}'必须要有
     println("a > b")
 }
-elseif a == b { // 也可以使用'elsif'和'elif'
+elseif a == b { // 也可以使用'elsif', 'elseif'和'elif'
     println("a = b")
 }
 else {
     println("a < b")
+}
+
+//unless-else
+unless b > a {
+    println("a >= b")
+} else {
+    println("b > a")
 }
 
 // for
@@ -415,10 +425,10 @@ case testStr in { // in(完全或部分匹配), is(完全匹配)
 let i = [{"a"=>1, "b"=>2}, 10]
 let x = [{"a"=>1, "b"=>2},10]
 case i in {
-	1, 2 { println("i matched 1, 2") }
-	3    { println("i matched 3") }
-	x    { println("i matched x") }
-	else { println("i not matched anything")}
+    1, 2 { println("i matched 1, 2") }
+    3    { println("i matched 3") }
+    x    { println("i matched x") }
+    else { println("i not matched anything")}
 }
 
 ```
@@ -614,7 +624,6 @@ revStr = reverse(str)
 println("Reverse str =", revStr)
 ```
 
-
 ### 哈希(Hash)
 
 在monkey中, 使用{}来创建一个空的哈希:
@@ -683,9 +692,9 @@ let t1 = tuple()
 //效果同上
 let t2 = ()
 
-// 创建仅有一个元素的元祖. 
+// 创建仅有一个元素的元祖.
 // 注意: 结尾的","是必须的，否则将会被解析为(1), 而不是元祖
-let t3 = (1,) 
+let t3 = (1,)
 
 //创建有两个元素的元祖
 let t4 = (2,3)
@@ -1063,17 +1072,17 @@ Monkey不支持多个返回值, 但有很多方法可以达到目的.
 
 ```swift
 fn div(x, y) {
-	if y == 0 {
-		return [nil, "y could not be zero"]
-	}
-	return [x/y, ""]
+    if y == 0 {
+        return [nil, "y could not be zero"]
+    }
+    return [x/y, ""]
 }
 
 ret = div(10,5)
 if ret[1] != "" {
-	println(ret[1])
+    println(ret[1])
 } else {
-	println(ret[0])
+    println(ret[0])
 }
 ```
 
@@ -1117,7 +1126,7 @@ Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, lo
 
 下面是对monkey的标准模块的一个简短的描述。
 
-#### fmt 模块
+### fmt 模块
 
 ```swift
 let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
@@ -1134,7 +1143,7 @@ fmt.printf("sp=%s", sp)
 fmt.fprintf(stdout, "Hello %s\n", "world")
 ```
 
-#### time 模块
+### time 模块
 
 ```swift
 t1 = newTime()
@@ -1147,7 +1156,7 @@ t2 = t1.fromEpoch(Epoch)
 println(t2.toStr(format))
 ```
 
-#### logger 模块
+### logger 模块
 
 ```swift
 #输出到标准输出(stdout)
@@ -1156,7 +1165,7 @@ log = newLogger(stdout, "LOGGER-", logger.LSTDFLAGS | logger.LMICROSECONDS)
 log.printf("Hello, %s\n", "logger")
 fmt.printf("Logger: flags =<%d>, prefix=<%s>\n", log.flags(), log.prefix())
 
-#输出到文件
+//输出到文件
 file = newFile("./logger.log", "a+")
 log.setOutput(file)
 for i in 1..5 {
@@ -1165,7 +1174,7 @@ for i in 1..5 {
 file.close() //别忘记关闭文件
 ```
 
-#### flag 模块(处理命令行选项)
+### flag 模块(处理命令行选项)
 
 ```swift
 let verV = flag.bool("version", false, "0.1")
@@ -1188,7 +1197,7 @@ if (flag.isSet("age")) {
 }
 ```
 
-#### json 模块( json序列化(marshal)和反序列化(unmarshal) )
+### json 模块( json序列化(marshal)和反序列化(unmarshal) )
 
 ```swift
 let hsJson = {"key1" => 10,
@@ -1213,7 +1222,7 @@ let arr1Json = json.unmarshal(arrStr)  //也可以使用 `json.fromJson(arrStr)`
 println(arr1Json)
 ```
 
-#### net 模块
+### net 模块
 
 ```swift
 //简单的TCP客户端
@@ -1255,7 +1264,7 @@ if (ret == false) {
 }
 ```
 
-#### linq 模块
+### linq 模块
 
 在Monkey中, `linq`模块支持下面的其中类型的对象:
 
@@ -1348,7 +1357,7 @@ fn(idx,x){
 println('["st", "ng"] selectManyByIndexed() = {result}')
 ```
 
-#### Linq for file支持
+### Linq for file支持
 
 现在，monkey有了一个支持`linq for file`的功能。这个功能类似awk。
 请看下面的代码:
@@ -1357,23 +1366,23 @@ println('["st", "ng"] selectManyByIndexed() = {result}')
 //test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //以读取方式打开linqSample.csv
 result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第三个参数为注释函数(comment function)
-	if line.trim().hasPrefix("#") { //如果行以'#'开头
-		return true //返回'true'表示忽略这一行
-	} else {
-		return false
-	}
+    if line.trim().hasPrefix("#") { //如果行以'#'开头
+        return true //返回'true'表示忽略这一行
+    } else {
+        return false
+    }
 }).where(fn(fields) {
-	//'fields'是一个哈希数组:
-	//  fields = [
-	//      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
-	//      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
-	//  ]
+    //'fields'是一个哈希数组:
+    //  fields = [
+    //      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
+    //      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
+    //  ]
 
-	int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
+    int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
 }).sort(fn(field1,field2){
-	return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
+    return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
 }).select(fn(fields) {
-	fields[5]  //仅输出第五个字段
+    fields[5]  //仅输出第五个字段
 })
 println(result)
 file.close() //别忘记关闭文件
@@ -1382,18 +1391,18 @@ file.close() //别忘记关闭文件
 //another test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //以读取方式打开linqSample.csv
 result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第三个参数为注释函数(comment function)
-	if line.trim().hasPrefix("#") { //如果行以'#'开头
-		return true //返回'true'表示忽略这一行
-	} else {
-		return false
-	}
+    if line.trim().hasPrefix("#") { //如果行以'#'开头
+        return true //返回'true'表示忽略这一行
+    } else {
+        return false
+    }
 }).where(fn(fields) {
-	int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
+    int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
 }).sort(fn(field1,field2){
-	return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
+    return int(field1[1]) > int(field2[1]) //第一个字段按照降序排列
 }).selectMany(fn(fields) {
-	row = [[fields[0]]] //fields[0]为整行数据。 注意：我们需要使用两个[], 否则selectMany()将会flatten输出结果
-	linq.from(row)  //输出整行数据
+    row = [[fields[0]]] //fields[0]为整行数据。 注意：我们需要使用两个[], 否则selectMany()将会flatten输出结果
+    linq.from(row)  //输出整行数据
 })
 println(result)
 file.close() //别忘记关闭文件
@@ -1403,20 +1412,20 @@ file.close() //别忘记关闭文件
 r = newCsvReader("./examples/test.csv") //以读取方式打开test.csv
 r.setOptions({"Comma"=>";", "Comment"=>"#"})
 result = linq.from(r).where(fn(x) {
-	//The 'x' is an array of hashes, like below:
-	//  x = [
-	//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
-	//      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
-	//  ]
-	x[2] == "Pike"//仅选取第二个字段 = "Pike"
+    //The 'x' is an array of hashes, like below:
+    //  x = [
+    //      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
+    //      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
+    //  ]
+    x[2] == "Pike"//仅选取第二个字段 = "Pike"
 }).sort(fn(x,y){
-	return len(x[1]) > len(y[1]) //以第一个字段的长度排序
+    return len(x[1]) > len(y[1]) //以第一个字段的长度排序
 })
 println(result)
 r.close() //别忘记关闭Reader
 ```
 
-#### csv 模块
+### csv 模块
 
 ```swift
 //测试 csv reader
@@ -1484,7 +1493,7 @@ template.newText("array").parse(`Looping
 println('{resultValue}')
 ```
 
-#### sql 模块
+### sql 模块
 
 `sql` 模块提供了一个底层封装来操作数据库。
 
@@ -1519,19 +1528,19 @@ let dbOp = fn() {
         println("DB exec failed! error:", exec_ret.message())
         return false
     }
-    
+
     let tx = db.begin()
-    if (tx == nil) { 
+    if (tx == nil) {
         println("db.Begin failed!, error:", tx.message())
         return false
     }
-    
+
     let stmt = tx.prepare(`insert into foo(id, name) values(?, ?)`)
     if (stmt == nil) {
         println("tx.Prepare failed!, error:", stmt.message())
         return false
     }
-    
+
     defer stmt.close()
     let i = 0
     for (i = 0; i < 105; i++) {
@@ -1542,15 +1551,15 @@ let dbOp = fn() {
         } else {
             let rs = stmt.exec(i, name)
         }
-        
+
         if (rs == nil) {
             println("statement exec failed, error:", rs.message())
             return false
         }
     } //end for
-    
+
     tx.commit()
-    
+
     let id, name = 0, ""
     let rows = db.query("select id, name from foo")
     if (rows == nil) {
@@ -1597,7 +1606,6 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 1. vim
 
     [vim](misc/vim)
-
 
 2. emeditor
 

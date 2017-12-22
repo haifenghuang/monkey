@@ -20,15 +20,15 @@ println(z5)
 	
 	
 println("==================================")
-//Êı×é
+//array
 x = [[word.upper(), word.lower(), word.title()] for word in ["hello", "world", "good", "morning"]]
 println(x)
 
-//×Ö·û´®
+//string
 y = [ c.upper() for c in "huanghaifeng" where $_ % 2 != 0] //$_ is the index
 println(y)
 
-//·¶Î§
+//range
 w = [i + 1 for i in 1..10]
 println(w)
 
@@ -36,6 +36,6 @@ println(w)
 v = [x+1 for x in (12,34,56)]
 println(v)
 
-//¹şÏ£
+//hash
 z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
 println(z)

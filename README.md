@@ -149,7 +149,7 @@ let f1 = add(x, y) { return x + y }
 println(f1(1,2))
 
 //short-arrow function literals
-let f2 = (x, y) -> x + y 
+let f2 = (x, y) -> x + y
 println(f2(1,2))
 ```
 
@@ -181,6 +181,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * let
 * true false nil
 * if elsif elseif elif else
+* unless
 * return
 * include
 * and or
@@ -207,6 +208,7 @@ let a = array(i)                // result: [10]
 let t = tuple(i)                // result:(10)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
 ```
+
 You could create a tuple from an array:
 
 ```swift
@@ -236,7 +238,7 @@ let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
 
 ### `qw`(Quote word) keyword
 
-The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings, 
+The `qw` keyword is like perl's `qw` keyword. When you want to use a lot of quoted strings,
 the `qw` keyword can make it a lot easier for those strings.
 
 ```swift
@@ -282,8 +284,9 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ### Control flow
 
-* If-else
-* For/for-in
+* if/if-else/if-elif-else/if-elsif-else/if-elseif-else
+* unless/unless-else
+* for/for-in
 * while
 * do
 * try-catch-finally
@@ -295,11 +298,18 @@ let a, b = 10, 5
 if (a > b) { // '()' is optional, but '{}' is a must
     println("a > b")
 }
-elseif a == b { // could also use 'elsif' or 'elif'
+elseif a == b { // could also use 'elsif', 'elseif' or 'elif'
     println("a = b")
 }
 else {
     println("a < b")
+}
+
+//unless-else
+unless b > a {
+    println("a >= b")
+} else {
+    println("b > a")
 }
 
 // for
@@ -681,11 +691,11 @@ let t1 = tuple()
 //Same as above.
 let t2 = ()
 
-// Create a one element tuple. 
-// Note: the trailing comma is necessary to distinguish it from the 
-//       parenthesized expression (1). 
+// Create a one element tuple.
+// Note: the trailing comma is necessary to distinguish it from the
+//       parenthesized expression (1).
 // 1-tuples are seldom used.
-let t3 = (1,) 
+let t3 = (1,)
 
 //Create a two elements tuple
 let t4 = (2,3)
@@ -698,8 +708,8 @@ let t = tuple("hello")
 println(t)  // result: ("hello")
 ```
 
-Like arrays, tuples are indexed sequences, so they may be indexed and sliced. 
-The index expression tuple[i] returns the tuple element at index i, and the slice 
+Like arrays, tuples are indexed sequences, so they may be indexed and sliced.
+The index expression tuple[i] returns the tuple element at index i, and the slice
 expression tuple[i:j] returns a subsequence of a tuple.
 
 ```swift
@@ -707,7 +717,7 @@ let t = (1,2,3)[2]
 print(t) // result:3
 ```
 
-Tuples are iterable sequences, so they may be used as the operand of a for-loop, 
+Tuples are iterable sequences, so they may be used as the operand of a for-loop,
 a list comprehension, or various built-in functions.
 
 ```swift
@@ -1056,6 +1066,7 @@ add = fn (x, y=5, z=7, args...) {
 w = add(2,3,4,5,6,7)
 println(w)
 ```
+
 You could also declare named function like below:
 
 ```swift
@@ -1091,17 +1102,17 @@ Below suggest a way of doing it:
 
 ```swift
 fn div(x, y) {
-	if y == 0 {
-		return [nil, "y could not be zero"]
-	}
-	return [x/y, ""]
+    if y == 0 {
+        return [nil, "y could not be zero"]
+    }
+    return [x/y, ""]
 }
 
 ret = div(10,5)
 if ret[1] != "" {
-	println(ret[1])
+    println(ret[1])
 } else {
-	println(ret[0])
+    println(ret[0])
 }
 ```
 
@@ -1378,6 +1389,7 @@ fn(idx,x){
 })
 println('["st", "ng"] selectManyByIndexed() = {result}')
 ```
+
 #### Linq for file
 
 Now, monkey has a powerful `linq for file` support. it can be used to operate
@@ -1387,23 +1399,23 @@ files a little bit like awk. See below for example:
 //test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
 result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a selector function
-	if line.trim().hasPrefix("#") { //if line start '#'
-		return true // return 'true' means we ignore this line
-	} else {
-		return false
-	}
+    if line.trim().hasPrefix("#") { //if line start '#'
+        return true // return 'true' means we ignore this line
+    } else {
+        return false
+    }
 }).where(fn(fields) {
-	//The 'fields' is an array of hashes, like below:
-	//  fields = [
-	//      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
-	//      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
-	//  ]
+    //The 'fields' is an array of hashes, like below:
+    //  fields = [
+    //      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
+    //      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
+    //  ]
 
-	int(fields[1]) > 300000 //only 1st Field's Value > 300000
+    int(fields[1]) > 300000 //only 1st Field's Value > 300000
 }).sort(fn(field1,field2){
-	return int(field1[1]) > int(field2[1]) //sort with first field(descending)
+    return int(field1[1]) > int(field2[1]) //sort with first field(descending)
 }).select(fn(fields) {
-	fields[5]  //only output the fifth field
+    fields[5]  //only output the fifth field
 })
 println(result)
 file.close() //do not forget to close the file
@@ -1411,18 +1423,18 @@ file.close() //do not forget to close the file
 //another test: linq for "file"
 file = newFile("./examples/linqSample.csv", "r") //open linqSample.csv file for reading
 result = linq.from(file,",",fn(line){ //the second parameter is field separator, the third is a selector function
-	if line.trim().hasPrefix("#") { //if line start '#'
-		return true //return 'true' means we ignore this line
-	} else {
-		return false
-	}
+    if line.trim().hasPrefix("#") { //if line start '#'
+        return true //return 'true' means we ignore this line
+    } else {
+        return false
+    }
 }).where(fn(fields) {
-	int(fields[1]) > 300000 //only 1st Field's Value > 300000
+    int(fields[1]) > 300000 //only 1st Field's Value > 300000
 }).sort(fn(field1,field2){
-	return int(field1[1]) > int(field2[1]) //sort with first field(descending)
+    return int(field1[1]) > int(field2[1]) //sort with first field(descending)
 }).selectMany(fn(fields) {
-	row = [[fields[0]]] //fields[0] is the whole line, we need two "[]"s, otherwise selectMany() will flatten the output.
-	linq.from(row)  //output the whole records
+    row = [[fields[0]]] //fields[0] is the whole line, we need two "[]"s, otherwise selectMany() will flatten the output.
+    linq.from(row)  //output the whole records
 })
 println(result)
 file.close() //do not forget to close the file
@@ -1432,14 +1444,14 @@ file.close() //do not forget to close the file
 r = newCsvReader("./examples/test.csv") //open test.csv file for reading
 r.setOptions({"Comma"=>";", "Comment"=>"#"})
 result = linq.from(r).where(fn(x) {
-	//The 'x' is an array of hashes, like below:
-	//  x = [
-	//      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
-	//      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
-	//  ]
-	x[2] == "Pike"//only 2nd Field = "Pike"
+    //The 'x' is an array of hashes, like below:
+    //  x = [
+    //      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
+    //      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
+    //  ]
+    x[2] == "Pike"//only 2nd Field = "Pike"
 }).sort(fn(x,y){
-	return len(x[1]) > len(y[1]) //sort with length of first field
+    return len(x[1]) > len(y[1]) //sort with length of first field
 })
 println(result)
 r.close() //do not forget to close the reader

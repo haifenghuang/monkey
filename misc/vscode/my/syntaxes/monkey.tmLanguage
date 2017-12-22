@@ -343,7 +343,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(if|else|elseif|elsif|case)\b</string>
+			<string>\b(if|else|elseif|elsif|elif|unless|case)\b</string>
 			<key>name</key>
 			<string>keyword.control.conditional.my</string>
 		</dict>
