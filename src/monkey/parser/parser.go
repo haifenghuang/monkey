@@ -306,23 +306,56 @@ func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
 	return &ast.PostfixExpression{Token: p.curToken, Left: left, Operator: p.curToken.Literal}
 }
 
+//func (p *Parser) parseGroupedExpression() ast.Expression {
+//	curToken := p.curToken
+//	p.nextToken()
+//
+//	if p.curTokenIs(token.COMMA) {
+//		if !p.expectPeek(token.RPAREN) { //empty tuple
+//			return nil
+//		}
+//		ret := &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
+//		return ret
+//	}
+//
+//	// NOTE: if previous token is toke.LPAREN, and the current
+//	//       token is token.RPAREN, that is an empty parentheses(e.g. '() -> 5'), 
+//	//       we need to return earlier.
+//	if curToken.Type == token.LPAREN && p.curTokenIs(token.RPAREN) {
+//		return nil
+//	}
+//
+//	exp := p.parseExpression(LOWEST)
+//
+//	if p.peekTokenIs(token.COMMA) {
+//		p.nextToken()
+//		ret := p.parseTupleExpression(curToken, exp)
+//		return ret
+//	}
+//
+//	if !p.expectPeek(token.RPAREN) {
+//		return nil
+//	}
+//
+//	return exp
+//}
+
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	curToken := p.curToken
 	p.nextToken()
 
-	if p.curTokenIs(token.COMMA) {
-		if !p.expectPeek(token.RPAREN) { //empty tuple
-			return nil
-		}
-		ret := &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
-		return ret
-	}
-
 	// NOTE: if previous token is toke.LPAREN, and the current
-	//       token is token.RPAREN, that is an empty parentheses(e.g. '() -> 5'), 
+	//       token is token.RPAREN, that is an empty parentheses, 
 	//       we need to return earlier.
 	if curToken.Type == token.LPAREN && p.curTokenIs(token.RPAREN) {
-		return nil
+		if p.peekTokenIs(token.THINARROW) { //e.g. '() -> 5': this is a short function
+			p.nextToken() //skip current token
+			ret := p.parseThinArrowFunction(nil)
+			return ret
+		}
+
+		//empty tuple, e.g. 'x = ()'
+		return &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
 	}
 
 	exp := p.parseExpression(LOWEST)
@@ -515,10 +548,7 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 	return &ast.ContinueExpression{Token: p.curToken}
 }
 
-//let a, b, c = (1, 2, 3)   ---> a=1, b=2, c=3
-//let a, b, c = 1, 2, 3     ---> a=1, b=2, c=3
-//let a, b, c = (1,2,3),4,5 ---> a=(1,2,3), b=4, c=5
-//let a, b, c = 4,(1,2,3)   ---> a=4, b=1, c=2
+//let a,b,c = 1,2,3
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
@@ -537,18 +567,6 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	p.nextToken()
 	for {
 		v := p.parseExpressionStatement().Expression
-		if !p.peekTokenIs(token.COMMA) { //let a, b, c = (1, 2, 3) ---> a=1, b=2, c=3
-			switch v.(type) {
-			case *ast.TupleLiteral: //it's a tuple
-				for _, item := range v.(*ast.TupleLiteral).Members {
-					stmt.Values = append(stmt.Values, item)
-				}
-
-				return stmt
-			}
-		}
-
-		//v is not a tuple
 		stmt.Values = append(stmt.Values, v)
 
 		if !p.peekTokenIs(token.COMMA) {
@@ -693,12 +711,8 @@ func (p *Parser) parseWhileLoopExpression() ast.Expression {
 
 	loop := &ast.WhileLoop{Token: p.curToken}
 
-	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken()
-	}
-
 	p.nextToken()
-	loop.Condition = p.parseExpression(LOWEST)
+	loop.Condition = p.parseExpressionStatement().Expression
 
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken()
@@ -1068,18 +1082,14 @@ func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
 
 func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	ic := &ast.IfConditionExpr{Token: p.curToken}
+	p.nextToken() //skip "("
 
-	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken() //skip current token
-	}
-	p.nextToken() //skip "{"
-
-	ic.Cond = p.parseExpression(LOWEST)
+	ic.Cond = p.parseExpressionStatement().Expression
 
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken() //skip current token
 	}
-	p.nextToken() //skip "}"
+	p.nextToken() //skip ")"
 
 	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
 
@@ -1802,7 +1812,8 @@ func (p *Parser) parsePipeExpression(left ast.Expression) ast.Expression {
 //(x) -> x + 5             left expression is *Identifier
 //()  -> 5 + 5             left expression is nil
 func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
-	fn := &ast.FunctionLiteral{Token: p.curToken, Variadic: false}
+	tok := token.Token{Type:token.FUNCTION, Literal:"fn"}
+	fn := &ast.FunctionLiteral{Token: tok, Variadic: false}
 	switch exprType := left.(type) {
 	case nil:
 		//no argument.
@@ -1837,7 +1848,6 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 			},
 		}
 	}
-
 	return fn
 }
 

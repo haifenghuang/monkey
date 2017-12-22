@@ -502,12 +502,11 @@ func printBuiltin() *Builtin {
 				return NewInteger(int64(n))
 			}
 
-			wrapped := make([]interface{}, len(args))
-			for i, v := range args {
-				wrapped[i] = &Formatter{Obj: v}
-			}
+			s, wrapped := correctPrintResult(false, args...)
+			n, err := fmt.Printf(s, wrapped...)
 
-			n, err := fmt.Print(wrapped...)
+			//Note, here we do not use 'fmt.Print', why? please see correctPrintResult() comments.
+			//n, err := fmt.Print(s, wrapped...)
 			if err != nil {
 				return NewNil(err.Error())
 			}
@@ -528,12 +527,11 @@ func printlnBuiltin() *Builtin {
 				return NewInteger(int64(n))
 			}
 
-			wrapped := make([]interface{}, len(args))
-			for i, v := range args {
-				wrapped[i] = &Formatter{Obj: v}
-			}
+			//Note, here we do not use 'fmt.Println', why? please see correctPrintResult() comments.
+			//n, err := fmt.Println(s, wrapped...)
 
-			n, err := fmt.Println(wrapped...)
+			s, wrapped := correctPrintResult(true, args...)
+			n, err := fmt.Printf(s, wrapped...)
 			if err != nil {
 				return NewNil(err.Error())
 			}

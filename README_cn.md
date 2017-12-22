@@ -41,6 +41,7 @@ Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl
 * enum支持和
 * pipe操作符支持
 * 支持可变参数和缺省参数的函数
+* 支持列表推导(list comprehension)和哈希推导(hash comprehension)
 
 这个项目的目的主要有以下几点：
 * 自学go语言
@@ -174,25 +175,6 @@ e = 5
 //错误,多变量赋值必须使用let关键字
 a, b, c = 1, "hello world", [1,2,3]
 ```
-
-对于使用let来给变量赋值，需要注意下面几点：
-
-```swift
-//最右边是个tuple，而且tuple后没有逗号
-let a, b, c = (1, 2, 3)   ---> a=1, b=2, c=3
-
-//每个变量单独赋值
-let a, b, c = 1, 2, 3     ---> a=1, b=2, c=3
-
-//最右边有tuple，但是tuple后有逗号
-let a, b, c = (1,2,3),4,5 ---> a=(1,2,3), b=4, c=5
-
-//最右边是个tuple，而且tuple后没有逗号
-let a, b, c = 4,(1,2,3)   ---> a=4, b=1, c=2
-```
-总体来说，如果tuple后面没有逗号，那么tuple内部的单个值会一个一个单独赋给前面的多个变量。
-否则，tuple这个值将作为一个整体赋给一个变量。
-
 
 ## 保留字
 
@@ -698,8 +680,8 @@ Tuples使用括号来创建:
 //创建一个空元祖
 let t1 = tuple()
 
-//效果同上。注意：我们必须放一个",", 否则编译器将报错
-let t2 = (,)
+//效果同上
+let t2 = ()
 
 // 创建仅有一个元素的元祖. 
 // 注意: 结尾的","是必须的，否则将会被解析为(1), 而不是元祖
@@ -777,38 +759,6 @@ if t {
 }
 
 //结果 : "t is not empty!"
-```
-
-在当前的`tuple`实现中，对`tuple`的操作还有一些不完善的地方，下面一并列举:
-
-```swift
-
-t1 = () //错误。
-t2 =(,) //正确。创建一个空的tuple
-
-if (1,).empty() {  //错误
-    println("tuple is empty!")
-} else {
-    println("tuple is not empty!")
-}
-
-t = (1,)
-if t.empty() {  //正确
-    println("tuple is empty!")
-} else {
-    println("tuple is not empty!")
-}
-
-let ht = {(1,2,3) => 10, (2,3,4) =>20} //错误!
-println(ht[(1,2,3)])  //错误!
-println(ht[(2,3,4)])  //错误!
-
-key1=(1,2,3)
-key2=(2,3,4)
-let ht = {key1 => 10, key2 =>20} //正确
-println(ht[key1]) // result: 10  //正确
-println(ht[key2]) // result: 20  //正确
-
 ```
 
 元祖的json序列化(反序列化)的结果都为数组，而不是元祖

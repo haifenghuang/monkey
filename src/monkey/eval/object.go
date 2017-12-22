@@ -17,6 +17,11 @@ import (
 	"unicode/utf8"
 )
 
+var formatMap = map[int]string{
+    0: "",
+    1: "%v",
+}
+
 type ObjectType string
 
 // INTEGER_OBJ/*_OBJ = object types
@@ -993,4 +998,33 @@ func (ft *Formatter) Format(s fmt.State, verb rune) {
 	default:
 		fmt.Fprintf(s, string(format), obj.Inspect())
 	}
+}
+
+/*  when you call println/print like below:
+		println("a=", 10)
+		print("a=", 10)
+	the golang will return "a= 10", not "a=10", this is not what we expected.
+	the solution is take from:
+		https://stackoverflow.com/questions/25928991/go-print-without-space-between-items
+*/
+func correctPrintResult(needNewLine bool, args ...Object) (string, []interface{}) {
+	l := len(args)
+	if s, isOk := formatMap[l]; !isOk {
+		for i := 0; i < l; i++ {
+			s += "%v"
+		}
+		formatMap[l] = s
+	}
+
+	s := formatMap[l]
+	if needNewLine {
+		s = s + "\n"
+	}
+
+	wrapped := make([]interface{}, len(args))
+	for i, v := range args {
+		wrapped[i] = &Formatter{Obj: v}
+	}
+
+	return s, wrapped
 }

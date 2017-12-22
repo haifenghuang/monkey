@@ -40,6 +40,7 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * enum support
 * pipe operator support(see demo for help)
 * function with default value and variadic parameters
+* list comprehension and hash comprehension support
 
 There are a number of tasks to complete, as well as a number of bugs. The purpose of this project was to dive deeper into Go, as well as get a better understanding of how programming languages work. It has been successful in those goals. There may or may not be continued work - I do plan on untangling a few messy spots, and there are a few features I'd like to see implemented. This will happen as time and interest allows.
 
@@ -171,24 +172,6 @@ Below code is not correct：
 //Error, multiple variable assignments must be use `let` keyword
 a, b, c = 1, "hello world", [1,2,3]
 ```
-About `let`, it has some points to note:
-
-```swift
-//there is one value which is a tuple, there is no comma after the tuple
-let a, b, c = (1, 2, 3)   ---> a=1, b=2, c=3
-
-//there are three values
-let a, b, c = 1, 2, 3     ---> a=1, b=2, c=3
-
-//there are three values, first is a tuple, after the tuple, there is a comma
-let a, b, c = (1,2,3),4,5 ---> a=(1,2,3), b=4, c=5
-
-//there are two values, the last is a tuple. after the tuple, there is no comma
-let a, b, c = 4,(1,2,3)   ---> a=4, b=1, c=2
-```
-In General, if there is a comma after the tuple, then each tuple's member will be 
-assigned to variables. Else, the tuple as a whole will assign to a single variable.
-
 
 ### Reserved keywords
 
@@ -695,8 +678,8 @@ Tuples are constructed using parenthesized list notation:
 //Create an empty tuple
 let t1 = tuple()
 
-//Same as above. Note: we must put a ",", or else it will not compile
-let t2 = (,)
+//Same as above.
+let t2 = ()
 
 // Create a one element tuple. 
 // Note: the trailing comma is necessary to distinguish it from the 
@@ -781,39 +764,6 @@ if t {
 }
 
 //result : "t is not empty!"
-```
-
-There are some limitations of the current implementation of tuple:
-
-```swift
-
-t1 = () //Error
-t2 =(,) //OK, create a new empty tuple
-
-if (1,).empty() {  //Error
-    println("tuple is empty!")
-} else {
-    println("tuple is not empty!")
-}
-
-t = (1,)
-if t.empty() {  //OK
-    println("tuple is empty!")
-} else {
-    println("tuple is not empty!")
-}
-
-let ht = {(1,2,3) => 10, (2,3,4) =>20} //Error!
-println(ht[(1,2,3)])  //Error!
-println(ht[(2,3,4)])  //Error!
-
-key1=(1,2,3)
-key2=(2,3,4)
-let ht = {key1 => 10, key2 =>20} //ok
-println(ht[key1]) // result: 10  //ok
-println(ht[key2]) // result: 20  //ok
-
-
 ```
 
 Tuple's json marshaling and unmarshaling will be treated as array:

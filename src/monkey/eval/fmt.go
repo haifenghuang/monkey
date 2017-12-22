@@ -79,12 +79,9 @@ func (f *FmtObj) Print(line string, args ...Object) Object {
 		return NewInteger(int64(n))
 	}
 
-	wrapped := make([]interface{}, len(args))
-	for i, v := range args {
-		wrapped[i] = &Formatter{Obj: v}
-	}
+	s, wrapped := correctPrintResult(false, args...)
 
-	n, err := gofmt.Print(wrapped...)
+	n, err := gofmt.Printf(s, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
 	}
@@ -125,12 +122,8 @@ func (f *FmtObj) Println(line string, args ...Object) Object {
 		return NewInteger(int64(n))
 	}
 
-	wrapped := make([]interface{}, len(args))
-	for i, v := range args {
-		wrapped[i] = &Formatter{Obj: v}
-	}
-
-	n, err := gofmt.Println(wrapped...)
+	s, wrapped := correctPrintResult(true, args...)
+	n, err := gofmt.Printf(s, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
 	}
