@@ -1870,10 +1870,14 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 	p.nextToken()
 	if p.curTokenIs(token.LBRACE) { //if it's block, we use parseBlockStatement
 		fn.Body = p.parseBlockStatement().(*ast.BlockStatement)
-	} else { //not block, we use parseExpressionStatement
+	} else { //not block, we use parseStatement
+		/* Note here, if we use parseExpressionStatement, then below is not correct:
+		      (x) -> return x  //error: no prefix parse functions for 'RETURN' found
+		  so we need to use parseStatement() here
+		*/
 		fn.Body = &ast.BlockStatement{
 			Statements: []ast.Statement{
-				p.parseExpressionStatement(),
+				p.parseStatement(),
 			},
 		}
 	}
