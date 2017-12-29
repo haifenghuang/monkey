@@ -1083,14 +1083,21 @@ func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
 
 func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	ic := &ast.IfConditionExpr{Token: p.curToken}
-	p.nextToken() //skip "("
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken() //skip current token
+	}
+	p.nextToken()
 
 	ic.Cond = p.parseExpressionStatement().Expression
 
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken() //skip current token
 	}
-	p.nextToken() //skip ")"
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
 
 	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
 
