@@ -1530,7 +1530,8 @@ func evalDoLoopExpression(dl *ast.DoLoop, scope *Scope) Object {
 		}
 		if v, ok := e.(*ReturnValue); ok {
 			if v.Value != nil {
-				return v.Value
+				//return v.Value
+				return v
 			}
 			break
 		}
@@ -1565,7 +1566,22 @@ func evalWhileLoopExpression(wl *ast.WhileLoop, scope *Scope) Object {
 		}
 		if v, ok := result.(*ReturnValue); ok {
 			if v.Value != nil {
-				return v.Value
+				/*
+					BUG: DO NOT RETURN 'v.Value', instead we should return 'v'.
+
+					If we return 'v.Value' then below code will print '5', not '6'(which is expected)
+					let add = fn(x,y){
+					    let i = 0
+					    while (i++ < 10) {
+					        return x * y
+					    }
+					    return x + y 
+					}
+					println(add(2,3))
+				*/
+
+				//return v.Value
+				return v
 			}
 			break
 		}
@@ -2169,7 +2185,8 @@ func evalForLoopExpression(fl *ast.ForLoop, scope *Scope) Object { //fl:For Loop
 		}
 		if v, ok := result.(*ReturnValue); ok {
 			if v.Value != nil {
-				return v.Value
+				//return v.Value
+				return v
 			}
 			break
 		}
@@ -2206,7 +2223,8 @@ func evalForEverLoopExpression(fel *ast.ForEverLoop, scope *Scope) Object {
 		}
 		if v, ok := e.(*ReturnValue); ok {
 			if v.Value != nil {
-				return v.Value
+				//return v.Value
+				return v
 			}
 			break
 		}
@@ -2527,11 +2545,11 @@ func evalForEachDotRangeExpression(fdr *ast.ForEachDotRange, scope *Scope) Objec
 		}
 		if v, ok := result.(*ReturnValue); ok {
 			if v.Value != nil {
-				arr.Members = append(arr.Members, v.Value)
+				ret.Members = append(ret.Members, v.Value)
 			}
 			break
 		} else {
-			arr.Members = append(arr.Members, result)
+			ret.Members = append(ret.Members, result)
 		}
 	}
 
