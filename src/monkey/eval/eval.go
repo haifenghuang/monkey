@@ -2298,7 +2298,8 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 		if v, ok := result.(*ReturnValue); ok {
 
 			if v.Value != nil {
-				ret.Members = append(ret.Members, v.Value)
+				//ret.Members = append(ret.Members, v.Value)
+				return v
 				//return v.Value
 			}
 			break
@@ -2309,7 +2310,7 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 
 	//Here we need to check `nil`, because if the initial condition is not true, then `for`'s Body will have no
 	//chance to execute, the result will be nil
-	//Because is the reason why we need to check for `BREAK_OBJ` or `CONTINUE_OBJ`:
+	//this is the reason why we need to check for `BREAK_OBJ` or `CONTINUE_OBJ`:
 	//    for i in 5..1 where i > 2 {
 	//      if (i == 3) { continue }
 	//      putln('i={i}')
@@ -2372,7 +2373,7 @@ func evalForEachArrayWithIndex(fml *ast.ForEachMapLoop, val Object, scope *Scope
 		if v, ok := result.(*ReturnValue); ok {
 
 			if v.Value != nil {
-				ret.Members = append(ret.Members, v.Value)
+				return v
 				//return v.Value
 			}
 			break
@@ -2439,7 +2440,7 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 		}
 		if v, ok := result.(*ReturnValue); ok {
 			if v.Value != nil {
-				ret.Members = append(ret.Members, v.Value)
+				return v
 			}
 			break
 		} else {
@@ -2545,7 +2546,8 @@ func evalForEachDotRangeExpression(fdr *ast.ForEachDotRange, scope *Scope) Objec
 		}
 		if v, ok := result.(*ReturnValue); ok {
 			if v.Value != nil {
-				ret.Members = append(ret.Members, v.Value)
+				//ret.Members = append(ret.Members, v.Value)
+				return v
 			}
 			break
 		} else {
