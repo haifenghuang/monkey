@@ -664,6 +664,27 @@ func reverseBuiltin() *Builtin {
 	}
 }
 
+func iffBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) != 3 {
+				panic(NewError(line, ARGUMENTERROR, "3", len(args)))
+			}
+
+			v, ok := args[0].(*Boolean)
+			if !ok {
+				panic(NewError(line, PARAMTYPEERROR, "first", "iff", "*Boolean", args[0].Type()))
+			}
+
+			if v.Bool == true {
+				return args[1]
+			} else {
+				return args[2]
+			}
+		},
+	}
+}
+
 func dialTCPBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
@@ -1140,6 +1161,7 @@ func init() {
 		"chan":    chanBuiltin(),
 		"assert":  assertBuiltin(),
 		"reverse": reverseBuiltin(),
+		"iff":     iffBuiltin(),
 
 		//net
 		"dialTCP":    dialTCPBuiltin(),
