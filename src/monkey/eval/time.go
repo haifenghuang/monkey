@@ -363,7 +363,7 @@ func (t *TimeObj) Milliseconds(line string, args ...Object) Object {
 
 func (t *TimeObj) SetValid(line string, args ...Object) Object {
 	argLen := len(args)
-	if argLen != 0 || argLen != 1 {
+	if argLen != 0 && argLen != 1 {
 		panic(NewError(line, ARGUMENTERROR, "0|1", argLen))
 	}
 
