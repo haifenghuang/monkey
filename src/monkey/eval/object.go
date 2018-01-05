@@ -69,7 +69,7 @@ type Iterable interface {
 	iter()
 }
 
-//Whether the Object is Listable (ARRAY, RANGE, TUPLE)
+//Whether the Object is Listable (ARRAY, RANGE, TUPLE, STRING)
 type Listable interface {
 	list()
 }
@@ -518,6 +518,14 @@ func (f *Float) CallMethod(line string, scope *Scope, method string, args ...Obj
 		return f.Ceil(line, args...)
 	case "floor":
 		return f.Floor(line, args...)
+	case "trunc":
+		return f.Trunc(line, args...)
+	case "sqrt":
+		return f.Sqrt(line, args...)
+	case "pow":
+		return f.Pow(line, args...)
+	case "round":
+		return f.Round(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, f.Type()))
 }
@@ -574,6 +582,72 @@ func (f *Float) Floor(line string, args ...Object) Object {
 	}
 
 	return NewFalseObj("Float is not valid\n")
+}
+
+func (f *Float) Trunc(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if f.Valid {
+		return NewFloat(math.Trunc(f.Float64))
+	}
+
+	return NewFalseObj("Float is not valid\n")
+}
+
+func (f *Float) Sqrt(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if f.Valid {
+		return NewFloat(math.Sqrt(f.Float64))
+	}
+
+	return NewFalseObj("Float is not valid\n")
+}
+
+func (f *Float) Pow(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	var temp float64
+	switch input := args[0].(type) {
+	case *Integer:
+		temp = float64(input.Int64)
+	case *Float:
+		temp = input.Float64
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "pow", "*Integer|*Float", args[0].Type()))
+	}
+
+	if f.Valid {
+		return NewFloat(math.Pow(f.Float64, temp))
+	}
+
+	return NewFalseObj("Float is not valid\n")
+}
+
+func (f *Float) Round(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	iObj, ok := args[0].(*Integer)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "round", "*Integer", args[0].Type()))
+	}
+
+	precision := iObj.Int64
+	format := fmt.Sprintf("%%.%df", precision) //'%.xf', x is the precision, e.g. %.2f
+	resultStr := fmt.Sprintf(format, f.Float64)   //convert to string
+	ret, err := strconv.ParseFloat(resultStr, 64) //convert string back to float
+	if err != nil {
+		return NewFloat(math.NaN())
+	}
+	return NewFloat(ret)
 }
 
 func (f *Float) Scan(value interface{}) error {
