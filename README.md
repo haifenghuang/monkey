@@ -30,6 +30,7 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added csv module
 * Added regexp module
 * Added template module
+* Added decimal module(Code come from [decimal](https://github.com/shopspring/decimal) with some minor modifications)
 * Regular expression literal support(partially like perls)
 * channel support(like golang's channel)
 * more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
@@ -198,7 +199,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 
 ### Type conversion
 
-You can use the builtin `int()`, `float()`, `str()`, `array()`, `tuple()`, `hash` functions for type conversion.
+You can use the builtin `int()`, `float()`, `str()`, `array()`, `tuple()`, `hash`, `decimal` functions for type conversion.
 
 ```swift
 let i = 0xa
@@ -207,6 +208,7 @@ let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
 let t = tuple(i)                // result:(10)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
+let d = decimal("123.45634567") //result: 123.45634567
 ```
 
 You could create a tuple from an array:
@@ -480,6 +482,32 @@ println(f1)
 
 f2 = 15.20.floor()
 println(f2)
+```
+
+## Decimal
+
+In monkey, decimal is Arbitrary-precision fixed-point decimal numbers.
+And the code mainly based on [decimal](https://github.com/shopspring/decimal).
+
+Please see below examples:
+
+```swift
+d1 = decimal.fromString("123.45678901234567")  //create decimal from string
+d2 = decimal.fromFloat(3)  //create decimal from float
+
+//set decimal division precision.
+//Note: this will affect all other code that follows
+decimal.setDivisionPrecision(50)
+
+fmt.println("123.45678901234567/3 = ", d1.div(d2))  //print d1/d2
+fmt.println(d1.div(d2)) //same as above
+
+fmt.println(decimal.fromString("123.456").trunc(2)) //truncate decimal
+
+//convert string to decimal
+d3=decimal("123.45678901234567")
+fmt.println(d3)
+fmt.println("123.45678901234567/3 = ", d3.div(d2))
 ```
 
 ### Array
@@ -1578,7 +1606,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //insert `null` value. There are five predefined values:INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
+            //insert `null` value. There are six predefined values:INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)

@@ -206,6 +206,8 @@ func intBuiltin() *Builtin {
 				return input
 			case *Float:
 				return NewInteger(int64(input.Float64))
+			case *DecimalObj:
+				return NewInteger(input.Number.IntPart())
 			case *Boolean:
 				if input.Bool {
 					return NewInteger(1)
@@ -249,6 +251,9 @@ func floatBuiltin() *Builtin {
 				return NewFloat(float64(input.Int64))
 			case *Float:
 				return input
+			case *DecimalObj:
+				f, _ := input.Number.Float64()
+				return NewFloat(f)
 			case *Boolean:
 				if input.Bool {
 					return NewFloat(1)
@@ -426,6 +431,61 @@ func hashBuiltin() *Builtin {
 				return hash
 			}
 			panic(NewError(line, PARAMTYPEERROR, "first", "hash", "*Tuple|*Array|*Hash", args[0].Type()))
+		},
+	}
+}
+
+func decimalBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty decimal(defaults to 0)
+				return &DecimalObj{Number:NewDec(0,0), Valid:true}
+			}
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+			switch input := args[0].(type) {
+			case *DecimalObj:
+				return input
+			case *Integer:
+				return &DecimalObj{Number:NewFromFloat(float64(input.Int64)), Valid:true}
+			case *Float:
+				return &DecimalObj{Number:NewFromFloat(input.Float64), Valid:true}
+			case *Boolean:
+				if input.Bool {
+					return &DecimalObj{Number:NewFromFloat(1), Valid:true}
+				}
+				return &DecimalObj{Number:NewFromFloat(0), Valid:true}
+			case *String:
+				var n float64
+				var err error
+				var k int64
+
+				if strings.HasPrefix(input.String, "0b") {
+					k, err = strconv.ParseInt(input.String[2:], 2, 64)
+					if err == nil {
+						n = float64(k)
+					}
+				} else if strings.HasPrefix(input.String, "0x") {
+					k, err = strconv.ParseInt(input.String[2:], 16, 64)
+					if err == nil {
+						n = float64(k)
+					}
+				} else if strings.HasPrefix(input.String, "0c") {
+					k, err = strconv.ParseInt(input.String[2:], 8, 64)
+					if err == nil {
+						n = float64(k)
+					}
+				} else {
+					n, err = strconv.ParseFloat(input.String, 64)
+				}
+				if err != nil {
+					panic(NewError(line, INPUTERROR, "STRING: "+input.String, "decimal"))
+				}
+				return &DecimalObj{Number:NewFromFloat(n), Valid:true}
+			}
+			panic(NewError(line, PARAMTYPEERROR, "first", "decimal", "*String|*Integer|*Boolean|*Float|*Decimal", args[0].Type()))
 		},
 	}
 }
@@ -1151,6 +1211,7 @@ func init() {
 		"array":   arrayBuiltin(),
 		"tuple":   tupleBuiltin(),
 		"hash":    hashBuiltin(),
+		"decimal": decimalBuiltin(),
 		"len":     lenBuiltin(),
 		"methods": methodsBuiltin(),
 		"ord":     ordBuiltin(),

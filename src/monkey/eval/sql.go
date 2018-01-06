@@ -40,11 +40,12 @@ func NewSqlsObject() Object {
 	//Below five variables are mainly used in `sql` handling.
 	//when we want to insert null to a certain column, we could
 	//use these variables
-	SetGlobalObj(sql_name+".INT_NULL", &Integer{Int64: 0, Valid: false})     //NullInteger
-	SetGlobalObj(sql_name+".FLOAT_NULL", &Float{Float64: 0.0, Valid: false}) //NullFloat
-	SetGlobalObj(sql_name+".STRING_NULL", &String{String: "", Valid: false}) //NullString
-	SetGlobalObj(sql_name+".BOOL_NULL", &Boolean{Bool: true, Valid: false})  //NullBool
-	SetGlobalObj(sql_name+".TIME_NULL", &Boolean{Bool: true, Valid: false})  //NullTime
+	SetGlobalObj(sql_name+".INT_NULL",     &Integer{Int64: 0, Valid: false})    //NullInteger
+	SetGlobalObj(sql_name+".FLOAT_NULL",   &Float{Float64: 0.0, Valid: false})  //NullFloat
+	SetGlobalObj(sql_name+".STRING_NULL",  &String{String: "", Valid: false})   //NullString
+	SetGlobalObj(sql_name+".BOOL_NULL",    &Boolean{Bool: true, Valid: false})  //NullBool
+	SetGlobalObj(sql_name+".TIME_NULL",    &TimeObj{Valid: false})              //NullTime
+	SetGlobalObj(sql_name+".DECIMAL_NULL", &DecimalObj{Valid:false})            //NullDecimal
 
 	return ret
 }

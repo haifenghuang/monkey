@@ -31,6 +31,7 @@ Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl
 * 增加了`linq`模块(代码来自[linq](https://github.com/ahmetb/go-linq)并进行了相应的更改)
 * 增加了`csv`模块
 * 增加了`template`模块
+* 增加了`decimal`模块(代码来自[decimal](https://github.com/shopspring/decimal)并进行了相应的小幅度更改)
 * 正则表达式支持(部分类似于perl)
 * 管道(channel)(基于go语言的channel)
 * 更多的操作符支持(&&, ||, &, |, ^, +=, -=, ?: 等等)
@@ -202,7 +203,7 @@ a, b, c = 1, "hello world", [1,2,3]
 
 ### 类型转换
 
-你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`, `tuple`, `hash`来进行不同类型之间的转换.
+你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`, `tuple`, `hash`, `decimal`来进行不同类型之间的转换.
 
 ```swift
 let i = 0xa
@@ -211,6 +212,7 @@ let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
 let t = tuple(i)                // result: (10)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
+let d = decimal("123.45634567") //result: 123.45634567
 ```
 
 你可以从一个数组创建一个tuple:
@@ -481,6 +483,32 @@ println(f1)
 
 f2 = 15.20.floor()
 println(f2)
+```
+
+## Decimal类型
+
+在Monkey中，Decimal类型表示一个任意精度固定位数的十进数(Arbitrary-precision fixed-point decimal numbers).
+这个类型的代码主要是基于[decimal](https://github.com/shopspring/decimal).
+
+请看下面的例子：
+
+```swift
+d1 = decimal.fromString("123.45678901234567")  //从字符串创建Decimal类型
+d2 = decimal.fromFloat(3)  //从浮点型创建Decimal类型
+
+//设置除法精度(division precision).
+//注意: 这个操作将会影响所有后续对Decimal类型的运算
+decimal.setDivisionPrecision(50)
+
+fmt.println("123.45678901234567/3 = ", d1.div(d2))  //打印 d1/d2
+fmt.println(d1.div(d2)) //效果同上
+
+fmt.println(decimal.fromString("123.456").trunc(2))
+
+//将字符串转换为decimal
+d3=decimal("123.45678901234567")
+fmt.println(d3)
+fmt.println("123.45678901234567/3 = ", d3.div(d2))
 ```
 
 ### 数组(Array)
@@ -1546,7 +1574,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //插入`null`值. 有五个预定义的null常量：INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL.
+            //插入`null`值. 有六个预定义的null常量：INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)

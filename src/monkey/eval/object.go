@@ -856,6 +856,7 @@ func init() {
 	NewLinqObj()
 	NewRegExpObj()
 	NewTemplateObj()
+	NewDecimalObj()
 }
 
 func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
