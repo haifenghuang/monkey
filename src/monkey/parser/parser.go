@@ -599,6 +599,20 @@ func (p *Parser) parseBlockStatement() ast.Expression {
 		p.nextToken()
 	}
 
+	/*  LONG HIDDEN BUG!
+		NOTE: If we got 'EOF' and current token is not '}', then that means that the block is not ended with a '}', like below:
+
+			//if.my
+		   if (10 > 2) {
+		       println("10>2")
+
+		Above 'if' expression has no '}', if we do not check below condition, it will evaluate correctly and no problem occurred.
+	*/
+	if p.peekTokenIs(token.EOF) && !p.curTokenIs(token.RBRACE) {
+		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got EOF instead. Block should end with '}'.", p.peekToken.Pos)
+		p.errors = append(p.errors, msg)
+	}
+
 	return expression
 }
 
@@ -882,7 +896,6 @@ func (p *Parser) parseForEachMapExpression(curToken token.Token, variable string
 	}
 
 	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
-
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
 
