@@ -54,7 +54,7 @@ func (f *FmtObj) Errorf(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, ">0", len(args)))
 	}
 
-	format, ok := args[0].(*String)
+	formatObj, ok := args[0].(*String)
 	if !ok {
 		panic(NewError(line, PARAMTYPEERROR, "first", "errorf", "*String", args[0].Type()))
 	}
@@ -65,12 +65,7 @@ func (f *FmtObj) Errorf(line string, args ...Object) Object {
 		wrapped[i] = &Formatter{Obj: v}
 	}
 
-	s := format.String
-	if REPLColor {
-		s = ColorRender(wrapped[0].(*Formatter).Obj, s)
-	}
-
-	err := gofmt.Errorf(s, wrapped...)
+	err := gofmt.Errorf(formatObj.String, wrapped...)
 	panic(NewError(line, GENERICERROR, err.Error()))
 
 	return NIL
@@ -86,10 +81,6 @@ func (f *FmtObj) Print(line string, args ...Object) Object {
 	}
 
 	format, wrapped := correctPrintResult(false, args...)
-	if REPLColor {
-		format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-	}
-
 	n, err := gofmt.Printf(format, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
@@ -108,18 +99,25 @@ func (f *FmtObj) Printf(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "printf", "*String", args[0].Type()))
 	}
 
-	subArgs := args[1:]
+	var subArgs []Object
+	var n int
+	var err error
+	subArgs = args[1:]
 	wrapped := make([]interface{}, len(subArgs))
 	for i, v := range subArgs {
 		wrapped[i] = &Formatter{Obj: v}
 	}
 
-	s := formatObj.String
-	if REPLColor {
-		s = ColorRender(formatObj, s)
+	if len(args) == 1 { //no format, e.g.: fmt.printf("hello, world\n")
+		format := formatObj.String
+		if REPLColor {
+			format = "\033[1;" + colorMap["STRING"] + "m" + string(format) + "\033[0m"
+		}
+		n, err = gofmt.Printf(format, wrapped...)
+	} else {
+		n, err = gofmt.Printf(formatObj.String, wrapped...)
 	}
 
-	n, err := gofmt.Printf(s, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
 	}
@@ -137,10 +135,6 @@ func (f *FmtObj) Println(line string, args ...Object) Object {
 	}
 
 	format, wrapped := correctPrintResult(true, args...)
-	if REPLColor {
-		format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-	}
-
 	n, err := gofmt.Printf(format, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
@@ -216,9 +210,6 @@ func (f *FmtObj) Fprint(line string, args ...Object) Object {
 	writer := w.(Writable).IOWriter()
 	if writer == os.Stdout || writer == os.Stderr {  //output to stdout or stderr
 		format, wrapped := correctPrintResult(false, subArgs...)
-		if REPLColor {
-			format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-		}
 		n, err = gofmt.Printf(format, wrapped...)
 	} else {
 		wrapped := make([]interface{}, len(subArgs))
@@ -268,9 +259,7 @@ func (f *FmtObj) Fprintf(line string, args ...Object) Object {
 	} else { //only string with no format, e.g. fmt.fprintf(stdout, "Hello world\n")
 		formatStr := formatObj.String
 		if writer == os.Stdout || writer == os.Stderr { //output to stdout or stderr
-			if REPLColor {
-				formatStr = ColorRender(formatObj, formatStr)
-			}
+			return f.Printf(line, args[1:]...)
 		}
 		n, err = gofmt.Fprintf(writer, formatStr)
 	}
@@ -299,9 +288,6 @@ func (f *FmtObj) Fprintln(line string, args ...Object) Object {
 	writer := w.(Writable).IOWriter()
 	if writer == os.Stdout || writer == os.Stderr { //output to stdout or stderr
 		format, wrapped := correctPrintResult(true, subArgs...)
-		if REPLColor {
-			format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-		}
 		n, err = gofmt.Printf(format, wrapped...)
 	} else {
 		wrapped := make([]interface{}, len(subArgs))

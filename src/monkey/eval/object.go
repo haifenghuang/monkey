@@ -1070,17 +1070,51 @@ func (ft *Formatter) Format(s fmt.State, verb rune) {
 		return
 	}
 
+	formatStr := string(format)
+	var reset = "\033[0m"
 	switch obj := ft.Obj.(type) {
 	case *Boolean:
-		fmt.Fprintf(s, string(format), obj.Bool)
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["BOOL"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Bool)
+	case *Nil:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["BOOL"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Inspect())
 	case *Integer:
-		fmt.Fprintf(s, string(format), obj.Int64)
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Int64)
 	case *Float:
-		fmt.Fprintf(s, string(format), obj.Float64)
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Float64)
 	case *String:
-		fmt.Fprintf(s, string(format), obj.String)
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["STRING"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.String)
+	case *Array:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["ARRAY"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Inspect())
+	case *Hash:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["HASH"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Inspect())
+	case *Tuple:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["TUPLE"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Inspect())
 	default:
-		fmt.Fprintf(s, string(format), obj.Inspect())
+		fmt.Fprintf(s, formatStr, obj.Inspect())
 	}
 }
 
@@ -1113,26 +1147,3 @@ func correctPrintResult(needNewLine bool, args ...Object) (string, []interface{}
 	return s, wrapped
 }
 
-func ColorRender (obj Object, msg string) string {
-	if !REPLColor {
-		return msg
-	}
-
-	var reset = "\033[0m"
-	switch obj.(type) {
-	case *String:
-		return "\033[1;" + colorMap["STRING"] + "m" + msg + reset
-	case *Integer, *Float:
-		return "\033[1;" + colorMap["NUMBER"] + "m" + msg + reset
-	case *Array:
-		return "\033[1;" + colorMap["ARRAY"] + "m" + msg + reset
-	case *Hash:
-		return "\033[1;" + colorMap["HASH"] + "m" + msg + reset
-	case *Tuple:
-		return "\033[1;" + colorMap["TUPLE"] + "m" + msg + reset
-	case *Boolean, *Nil:
-		return "\033[1;" + colorMap["BOOL"] + "m" + msg + reset
-	default:
-		return msg
-	}
-}

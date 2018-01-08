@@ -563,9 +563,6 @@ func printBuiltin() *Builtin {
 			}
 
 			format, wrapped := correctPrintResult(false, args...)
-			if REPLColor {
-				format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-			}
 			n, err := fmt.Printf(format, wrapped...)
 
 			//Note, here we do not use 'fmt.Print', why? please see correctPrintResult() comments.
@@ -594,9 +591,6 @@ func printlnBuiltin() *Builtin {
 			//n, err := fmt.Println(s, wrapped...)
 
 			format, wrapped := correctPrintResult(true, args...)
-			if REPLColor {
-				format = ColorRender(wrapped[0].(*Formatter).Obj, format)
-			}
 			n, err := fmt.Printf(format, wrapped...)
 			if err != nil {
 				return NewNil(err.Error())
@@ -625,11 +619,18 @@ func printfBuiltin() *Builtin {
 				wrapped[i] = &Formatter{Obj: v}
 			}
 
-			s := formatObj.String
-			if REPLColor {
-				s = ColorRender(formatObj, s)
+			var n int
+			var err error
+			format := formatObj.String
+			if len(args) == 1 { //no format, e.g.: printf("hello, world\n")
+				if REPLColor {
+					format = "\033[1;" + colorMap["STRING"] + "m" + string(format) + "\033[0m"
+				}
+				n, err = fmt.Printf(format, wrapped...)
+			} else {
+				n, err = fmt.Printf(format, wrapped...)
 			}
-			n, err := fmt.Printf(s, wrapped...)
+
 			if err != nil {
 				return NewNil(err.Error())
 			}
