@@ -68,7 +68,7 @@ Monkey programming language REPL
 
 下面是REPL的一个屏幕快照：
 
-[REPL](REPL.png)
+![REPL](REPL.png)
 
 或者运行一个monkey文件:
 

@@ -62,7 +62,7 @@ Monkey programming language REPL
 
 Below is a snapshot of the console:
 
-[REPL](REPL.png)
+![REPL](REPL.png)
 
 or, to run a program:
 
