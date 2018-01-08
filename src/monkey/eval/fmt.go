@@ -99,25 +99,13 @@ func (f *FmtObj) Printf(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "printf", "*String", args[0].Type()))
 	}
 
-	var subArgs []Object
-	var n int
-	var err error
-	subArgs = args[1:]
+	subArgs := args[1:]
 	wrapped := make([]interface{}, len(subArgs))
 	for i, v := range subArgs {
 		wrapped[i] = &Formatter{Obj: v}
 	}
 
-	if len(args) == 1 { //no format, e.g.: fmt.printf("hello, world\n")
-		format := formatObj.String
-		if REPLColor {
-			format = "\033[1;" + colorMap["STRING"] + "m" + string(format) + "\033[0m"
-		}
-		n, err = gofmt.Printf(format, wrapped...)
-	} else {
-		n, err = gofmt.Printf(formatObj.String, wrapped...)
-	}
-
+	n, err := gofmt.Printf(formatObj.String, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
 	}

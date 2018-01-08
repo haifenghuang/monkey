@@ -60,6 +60,10 @@ Monkey programming language REPL
 >>
 ```
 
+Below is a snapshot of the console:
+
+[REPL](REPL.png)
+
 or, to run a program:
 
 ```sh
@@ -208,7 +212,7 @@ let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
 let t = tuple(i)                // result:(10)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
-let d = decimal("123.45634567") //result: 123.45634567
+let d = decimal("123.45634567") // result: 123.45634567
 ```
 
 You could create a tuple from an array:

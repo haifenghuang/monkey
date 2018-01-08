@@ -66,6 +66,10 @@ Monkey programming language REPL
 >>
 ```
 
+下面是REPL的一个屏幕快照：
+
+[REPL](REPL.png)
+
 或者运行一个monkey文件:
 
 ```sh
@@ -212,7 +216,7 @@ let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
 let t = tuple(i)                // result: (10)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
-let d = decimal("123.45634567") //result: 123.45634567
+let d = decimal("123.45634567") // result: 123.45634567
 ```
 
 你可以从一个数组创建一个tuple:
