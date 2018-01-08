@@ -22,6 +22,15 @@ var formatMap = map[int]string{
     1: "%v",
 }
 
+var colorMap = map[string]string{
+	"STRING": "31", //red
+	"NUMBER": "32", //green
+	"ARRAY":  "33", //yellow
+	"HASH":   "34", //blue
+	"TUPLE":  "35", //purple(magenta)
+	"BOOL":   "36", //cyan
+}
+
 type ObjectType string
 
 // INTEGER_OBJ/*_OBJ = object types
@@ -1102,4 +1111,28 @@ func correctPrintResult(needNewLine bool, args ...Object) (string, []interface{}
 	}
 
 	return s, wrapped
+}
+
+func ColorRender (obj Object, msg string) string {
+	if !REPLColor {
+		return msg
+	}
+
+	var reset = "\033[0m"
+	switch obj.(type) {
+	case *String:
+		return "\033[1;" + colorMap["STRING"] + "m" + msg + reset
+	case *Integer, *Float:
+		return "\033[1;" + colorMap["NUMBER"] + "m" + msg + reset
+	case *Array:
+		return "\033[1;" + colorMap["ARRAY"] + "m" + msg + reset
+	case *Hash:
+		return "\033[1;" + colorMap["HASH"] + "m" + msg + reset
+	case *Tuple:
+		return "\033[1;" + colorMap["TUPLE"] + "m" + msg + reset
+	case *Boolean, *Nil:
+		return "\033[1;" + colorMap["BOOL"] + "m" + msg + reset
+	default:
+		return msg
+	}
 }

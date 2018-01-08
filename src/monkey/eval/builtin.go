@@ -562,8 +562,11 @@ func printBuiltin() *Builtin {
 				return NewInteger(int64(n))
 			}
 
-			s, wrapped := correctPrintResult(false, args...)
-			n, err := fmt.Printf(s, wrapped...)
+			format, wrapped := correctPrintResult(false, args...)
+			if REPLColor {
+				format = ColorRender(wrapped[0].(*Formatter).Obj, format)
+			}
+			n, err := fmt.Printf(format, wrapped...)
 
 			//Note, here we do not use 'fmt.Print', why? please see correctPrintResult() comments.
 			//n, err := fmt.Print(s, wrapped...)
@@ -590,8 +593,11 @@ func printlnBuiltin() *Builtin {
 			//Note, here we do not use 'fmt.Println', why? please see correctPrintResult() comments.
 			//n, err := fmt.Println(s, wrapped...)
 
-			s, wrapped := correctPrintResult(true, args...)
-			n, err := fmt.Printf(s, wrapped...)
+			format, wrapped := correctPrintResult(true, args...)
+			if REPLColor {
+				format = ColorRender(wrapped[0].(*Formatter).Obj, format)
+			}
+			n, err := fmt.Printf(format, wrapped...)
 			if err != nil {
 				return NewNil(err.Error())
 			}
@@ -608,7 +614,7 @@ func printfBuiltin() *Builtin {
 				panic(NewError(line, ARGUMENTERROR, ">0", len(args)))
 			}
 
-			format, ok := args[0].(*String)
+			formatObj, ok := args[0].(*String)
 			if !ok {
 				panic(NewError(line, PARAMTYPEERROR, "first", "printf", "*String", args[0].Type()))
 			}
@@ -619,7 +625,11 @@ func printfBuiltin() *Builtin {
 				wrapped[i] = &Formatter{Obj: v}
 			}
 
-			n, err := fmt.Printf(format.String, wrapped...)
+			s := formatObj.String
+			if REPLColor {
+				s = ColorRender(formatObj, s)
+			}
+			n, err := fmt.Printf(s, wrapped...)
 			if err != nil {
 				return NewNil(err.Error())
 			}

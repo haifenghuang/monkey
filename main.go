@@ -29,6 +29,7 @@ func runProgram(filename string) {
 		os.Exit(1)
 	}
 	scope := eval.NewScope(nil)
+	eval.REPLColor = false
 	eval.Eval(program, scope)
 //	e := eval.Eval(program, scope)
 //	if e.Inspect() != "nil" {
@@ -42,7 +43,7 @@ func main() {
 	os.Args = os.Args[1:]
 	if len(args) == 0 {
 		fmt.Println("Monkey programming language REPL\n")
-		repl.Start(os.Stdout)
+		repl.Start(os.Stdout, true)
 	} else {
 		runProgram(args[0])
 	}

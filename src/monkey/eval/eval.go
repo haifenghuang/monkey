@@ -28,6 +28,9 @@ var includeScope *Scope
 var importedCache map[string]Object
 var mux sync.Mutex
 
+//REPL with color support
+var REPLColor bool
+
 func Eval(node ast.Node, scope *Scope) Object {
 	defer func() {
 		if r := recover(); r != nil {
