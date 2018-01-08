@@ -204,6 +204,11 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 	program.Includes = make(map[string]*ast.IncludeStatement)
 
+	//if the monkey file only have ';', then we should return earlier.
+	if p.curTokenIs(token.SEMICOLON) && p.peekTokenIs(token.EOF) {
+		return program
+	}
+
 	for p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
 		if stmt != nil {
