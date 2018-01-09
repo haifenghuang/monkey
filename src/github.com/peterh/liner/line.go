@@ -40,6 +40,7 @@ const (
 	f11
 	f12
 	altB
+	altD
 	altF
 	altY
 	shiftTab
@@ -114,9 +115,12 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	bLen := countGlyphs(buf)
 	pos = countGlyphs(buf[:pos])
 	if pLen+bLen < s.columns {
+		if s.useColor {
 		s.highlighter.Reset(buf)
 		s.highlighter.Highlight()
-		//_, err = fmt.Print(string(buf))
+		} else {
+			_, err = fmt.Print(string(buf))
+		}
 		s.eraseLine()
 		s.cursorPos(pLen + pos)
 	} else {
@@ -149,9 +153,13 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 		if start > 0 {
 			fmt.Print("{")
 		}
+
+		if s.useColor {
 		s.highlighter.Reset(line)
 		s.highlighter.Highlight()
-		//fmt.Print(string(line))
+		} else {
+			fmt.Print(string(line))
+		}
 		if end < bLen {
 			fmt.Print("}")
 		}
@@ -865,7 +873,9 @@ mainLoop:
 					line = append(line, v)
 					fmt.Printf("%c", v)
 					//because we show syntax highlight in realtime, we need to set 'needRefresh' t true
+					if s.useColor {
 					s.needRefresh = true
+					}
 					pos++
 				} else {
 					line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
@@ -975,6 +985,35 @@ mainLoop:
 				pos = 0
 			case end: // End of line
 				pos = len(line)
+			case altD: // Delete next word
+				if pos == len(line) {
+					fmt.Print(beep)
+					break
+				}
+				// Remove whitespace to the right
+				var buf []rune // Store the deleted chars in a buffer
+				for {
+					if pos == len(line) || !unicode.IsSpace(line[pos]) {
+						break
+					}
+					buf = append(buf, line[pos])
+					line = append(line[:pos], line[pos+1:]...)
+				}
+				// Remove non-whitespace to the right
+				for {
+					if pos == len(line) || unicode.IsSpace(line[pos]) {
+						break
+					}
+					buf = append(buf, line[pos])
+					line = append(line[:pos], line[pos+1:]...)
+				}
+				// Save the result on the killRing
+				if killAction > 0 {
+					s.addToKillRing(buf, 2) // Add in prepend mode
+				} else {
+					s.addToKillRing(buf, 0) // Add in normal mode
+				}
+				killAction = 2 // Mark that there was some killing
 			case winch: // Window change
 				if s.multiLineMode {
 					if s.maxRows-s.cursorRows > 0 {

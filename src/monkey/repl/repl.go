@@ -51,10 +51,13 @@ func Start(out io.Writer, color bool) {
 	defer l.Close()
 
 	l.SetCtrlCAborts(true)
-	l.SetSyntaxHighlight(true) //use syntax highlight
-	l.RegisterKeywords(monkeyKeywords)
-	l.RegisterOperators(monkeyOperators)
-	l.RegisterColors(colors)
+
+	if color {
+		l.SetSyntaxHighlight(color) //use syntax highlight or not
+		l.RegisterKeywords(monkeyKeywords)
+		l.RegisterOperators(monkeyOperators)
+		l.RegisterColors(colors)
+	}
 
 	if f, err := os.Open(history); err == nil {
 		l.ReadHistory(f)
