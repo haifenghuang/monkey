@@ -7,6 +7,7 @@
 ## 概述
 
 Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl.
+同时它还包括一个实时语法高亮的REPL。
 
 ## 总览
 
@@ -68,7 +69,7 @@ Monkey programming language REPL
 
 下面是REPL的一个屏幕快照：
 
-![REPL](REPL.png)
+![REPL](REPL.gif)
 
 或者运行一个monkey文件:
 

@@ -12,7 +12,38 @@ import (
 	"github.com/peterh/liner"
 )
 
-const PROMPT = ">> "
+var monkeyKeywords = []string{
+	"fn", "let", "true", "false", "if", "else", "elsif", "elseif",
+	"elif", "return", "include", "and", "or", "struct", "do", "while",
+	"break", "continue", "for", "in", "where", "grep", "map", "case",
+	"is", "try", "catch", "finally", "throw", "qw", "unless", "spawn",
+	"enum", "defer", "nil",
+}
+
+//Note: we should put the longest operators first.
+var monkeyOperators = []string{
+	"+=", "-=", "*=", "/=", "%=", "^=",
+	"++", "--",
+	"&&", "||",
+	"<<", ">>",
+	"->", "=>",
+	"==", "!=", "<=", ">=", "=~", "!~",
+	"+", "-", "*", "/", "%", "^",
+	"(", ")", "{", "}", "[", "]",
+	"=", "<", ">",
+	"!", "&", "|", ".",
+	",", "?", ":", ";",
+}
+
+var colors = map[liner.Category]string{
+	liner.NumberType:   liner.COLOR_YELLOW,
+	liner.KeywordType:  liner.COLOR_MAGENTA,
+	liner.StringType:   liner.COLOR_CYAN,
+	liner.CommentType:  liner.COLOR_GREEN,
+	liner.OperatorType: liner.COLOR_RED,
+}
+
+const PROMPT = "monkey>> "
 
 func Start(out io.Writer, color bool) {
 	history := filepath.Join(os.TempDir(), ".monkey_history")
@@ -20,6 +51,10 @@ func Start(out io.Writer, color bool) {
 	defer l.Close()
 
 	l.SetCtrlCAborts(true)
+	l.SetSyntaxHighlight(true) //use syntax highlight
+	l.RegisterKeywords(monkeyKeywords)
+	l.RegisterOperators(monkeyOperators)
+	l.RegisterColors(colors)
 
 	if f, err := os.Open(history); err == nil {
 		l.ReadHistory(f)

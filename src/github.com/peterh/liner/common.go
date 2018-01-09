@@ -33,6 +33,10 @@ type commonState struct {
 	maxRows           int
 	shouldRestart     ShouldRestart
 	needRefresh       bool
+
+	//for syntax highlight
+	useColor    bool
+	highlighter   *Highlighter
 }
 
 // TabStyle is used to select how tab completions are displayed.
@@ -252,4 +256,12 @@ func (s *State) promptUnsupported(p string) (string, error) {
 		return "", err
 	}
 	return string(linebuf), nil
+}
+
+// set syntax highlight or not */
+func (s *State) SetSyntaxHighlight(color bool) {
+	s.useColor = color
+	if color { //use syntax highlight
+		s.highlighter = NewHighlighter()
+	}
 }

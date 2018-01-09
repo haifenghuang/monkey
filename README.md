@@ -5,6 +5,7 @@ Chinese version: [中文](README_cn.md)
 ## Summary
 
 Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python and Perl.
+It also has a REPL with realtime syntax highlighter.
 
 ## Overview
 
@@ -62,7 +63,7 @@ Monkey programming language REPL
 
 Below is a snapshot of the console:
 
-![REPL](REPL.png)
+![REPL](REPL.gif)
 
 or, to run a program:
 

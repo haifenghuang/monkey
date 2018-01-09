@@ -619,7 +619,13 @@ func printfBuiltin() *Builtin {
 				wrapped[i] = &Formatter{Obj: v}
 			}
 
-			n, err := fmt.Printf(formatObj.String, wrapped...)
+			formatStr := formatObj.String
+			if len(subArgs) == 0 {
+				if REPLColor {
+					formatStr = "\033[1;" + colorMap["STRING"] + "m" + formatStr + "\033[0m"
+				}
+			}
+			n, err := fmt.Printf(formatStr, wrapped...)
 
 			if err != nil {
 				return NewNil(err.Error())

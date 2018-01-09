@@ -105,7 +105,13 @@ func (f *FmtObj) Printf(line string, args ...Object) Object {
 		wrapped[i] = &Formatter{Obj: v}
 	}
 
-	n, err := gofmt.Printf(formatObj.String, wrapped...)
+	formatStr := formatObj.String
+	if len(subArgs) == 0 {
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["STRING"] + "m" + formatStr + "\033[0m"
+		}
+	}
+	n, err := gofmt.Printf(formatStr, wrapped...)
 	if err != nil {
 		return NewNil(err.Error())
 	}

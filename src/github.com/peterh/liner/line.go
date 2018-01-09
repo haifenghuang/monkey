@@ -114,7 +114,9 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	bLen := countGlyphs(buf)
 	pos = countGlyphs(buf[:pos])
 	if pLen+bLen < s.columns {
-		_, err = fmt.Print(string(buf))
+		s.highlighter.Reset(buf)
+		s.highlighter.Highlight()
+		//_, err = fmt.Print(string(buf))
 		s.eraseLine()
 		s.cursorPos(pLen + pos)
 	} else {
@@ -147,7 +149,9 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 		if start > 0 {
 			fmt.Print("{")
 		}
-		fmt.Print(string(line))
+		s.highlighter.Reset(line)
+		s.highlighter.Highlight()
+		//fmt.Print(string(line))
 		if end < bLen {
 			fmt.Print("}")
 		}
@@ -860,6 +864,8 @@ mainLoop:
 					countGlyphs(p)+countGlyphs(line) < s.columns-1 {
 					line = append(line, v)
 					fmt.Printf("%c", v)
+					//because we show syntax highlight in realtime, we need to set 'needRefresh' t true
+					s.needRefresh = true
 					pos++
 				} else {
 					line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
@@ -1126,4 +1132,26 @@ func (s *State) tooNarrow(prompt string) (string, error) {
 		defer func() { s.r = nil }()
 	}
 	return s.promptUnsupported(prompt)
+}
+
+/*Below functions are for syntax highlight */
+func (s *State) RegisterKeywords(keywords []string) {
+	if ! s.useColor {
+		return
+	}
+	s.highlighter.RegisterKeywords(keywords)
+}
+
+func (s *State) RegisterOperators(operators []string) {
+	if ! s.useColor {
+		return
+	}
+	s.highlighter.RegisterOperators(operators)
+}
+
+func (s *State) RegisterColors(category map[Category]string) {
+	if ! s.useColor {
+		return
+	}
+	s.highlighter.RegisterColors(category)
 }
