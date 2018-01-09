@@ -51,6 +51,7 @@ func Start(out io.Writer, color bool) {
 	defer l.Close()
 
 	l.SetCtrlCAborts(true)
+	l.SetMultiLineMode(true)
 
 	if color {
 		l.SetSyntaxHighlight(color) //use syntax highlight or not

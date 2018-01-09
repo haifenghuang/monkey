@@ -116,8 +116,8 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	pos = countGlyphs(buf[:pos])
 	if pLen+bLen < s.columns {
 		if s.useColor {
-		s.highlighter.Reset(buf)
-		s.highlighter.Highlight()
+			s.highlighter.Reset(buf)
+			s.highlighter.Highlight()
 		} else {
 			_, err = fmt.Print(string(buf))
 		}
@@ -155,8 +155,8 @@ func (s *State) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 		}
 
 		if s.useColor {
-		s.highlighter.Reset(line)
-		s.highlighter.Highlight()
+			s.highlighter.Reset(line)
+			s.highlighter.Highlight()
 		} else {
 			fmt.Print(string(line))
 		}
@@ -205,8 +205,14 @@ func (s *State) refreshMultiLine(prompt []rune, buf []rune, pos int) error {
 	if _, err := fmt.Print(string(prompt)); err != nil {
 		return err
 	}
-	if _, err := fmt.Print(string(buf)); err != nil {
-		return err
+
+	if s.useColor {
+		s.highlighter.Reset(buf)
+		s.highlighter.Highlight()
+	} else {
+		if _, err := fmt.Print(string(buf)); err != nil {
+			return err
+		}
 	}
 
 	/* If we are at the very end of the screen with our prompt, we need to
@@ -874,7 +880,7 @@ mainLoop:
 					fmt.Printf("%c", v)
 					//because we show syntax highlight in realtime, we need to set 'needRefresh' t true
 					if s.useColor {
-					s.needRefresh = true
+						s.needRefresh = true
 					}
 					pos++
 				} else {

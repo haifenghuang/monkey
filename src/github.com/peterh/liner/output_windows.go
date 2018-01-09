@@ -1,6 +1,11 @@
 package liner
 
 import (
+	"bytes"
+	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -69,8 +74,44 @@ func (s *State) getColumns() {
 	var sbi consoleScreenBufferInfo
 	procGetConsoleScreenBufferInfo.Call(uintptr(s.hOut), uintptr(unsafe.Pointer(&sbi)))
 	s.columns = int(sbi.dwSize.x)
-	if s.columns > 1 {
-		// Windows 10 needs a spare column for the cursor
-		s.columns--
+
+	osVer := GetOSVer()
+	if ver, err := strconv.Atoi(osVer); err != nil {
+		if ver >= 10 {
+			if s.columns > 1 {
+				// Windows 10 needs a spare column for the cursor
+				s.columns--
+			}
+		}
 	}
 }
+
+/* Code stolen from 
+   https://github.com/matishsiao/goInfo/blob/master/goInfo.go
+  with minor modifications
+*/
+func GetOSVer() string {
+	cmd := exec.Command("cmd","ver")
+	cmd.Stdin = strings.NewReader("some input")
+	var out bytes.Buffer 
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return ""
+	}
+
+	osStr := strings.Replace(out.String(),"\n","",-1)
+	osStr = strings.Replace(osStr,"\r\n","",-1)
+
+	r, _ := regexp.Compile("\\[(.*?) (.*?)\\]")
+	matches := r.FindStringSubmatch(osStr)
+	if len(matches) < 3 {
+		return ""
+	}
+
+	//only return the first part of the version
+	ver := strings.Split(matches[2], ".")
+	return ver[0]
+} 
