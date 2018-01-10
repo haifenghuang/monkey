@@ -875,6 +875,8 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	switch p.Operator {
 	case "!":
 		return evalBangOperatorExpression(right)
+	case "+":
+		return right
 	case "-":
 		switch right.Type() {
 		case INTEGER_OBJ:
