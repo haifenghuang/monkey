@@ -99,7 +99,7 @@ func GetOSVer() string {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return ""
+		return "0"
 	}
 
 	osStr := strings.Replace(out.String(),"\n","",-1)
@@ -108,7 +108,7 @@ func GetOSVer() string {
 	r, _ := regexp.Compile("\\[(.*?) (.*?)\\]")
 	matches := r.FindStringSubmatch(osStr)
 	if len(matches) < 3 {
-		return ""
+		return "0"
 	}
 
 	//only return the first part of the version
