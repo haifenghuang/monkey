@@ -1135,6 +1135,15 @@ result = add(5, (x) -> x * 2)
 println(result)  //结果 : 15
 ```
 
+如果函数没有参数，你可以省略()。例如
+
+```swift
+println("hhf".upper)  //结果: "HHF"
+//和上面结果一样
+println("hhf".upper())
+```
+
+
 Monkey不支持多个返回值, 但有很多方法可以达到目的.
 
 下面是其中的一种实现方式:

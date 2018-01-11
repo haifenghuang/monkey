@@ -2812,15 +2812,17 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 	//First check if is a stanard library object
 	str := call.Object.String()
 	if obj, ok := GetGlobalObj(str); ok {
-		switch call.Call.(type) {
+		switch o := call.Call.(type) {
 		case *ast.Identifier: //e.g. os.O_APPEND
-			if i, ok := GetGlobalObj(str + "." + call.Call.String()); ok {
+			if i, ok := GetGlobalObj(str + "." + o.String()); ok {
 				return i
+			} else { //e.g. method call like 'os.environ'
+				return obj.CallMethod(call.Call.Pos().Sline(), scope, o.String())
 			}
-		case *ast.CallExpression: //e.g. os.getenv()
+		case *ast.CallExpression: //e.g. method call like 'os.environ()'
 			if method, ok := call.Call.(*ast.CallExpression); ok {
 				args := evalArgs(method.Arguments, scope)
-				return obj.CallMethod(call.Call.Pos().Sline(), scope, method.Function.String(), args...)
+				return obj.CallMethod(call.Call.Pos().Sline(), scope, o.Function.String(), args...)
 			}
 		}
 	}
@@ -2901,9 +2903,12 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			return evalFunctionCall(o, scope)
 		}
 	default:
-		if method, ok := call.Call.(*ast.CallExpression); ok {
-			args := evalArgs(method.Arguments, scope)
-			return obj.CallMethod(call.Call.Pos().Sline(), scope, method.Function.String(), args...)
+		switch o := call.Call.(type) {
+		case *ast.Identifier:      //e.g. method call like '[1,2,3].first'
+			return obj.CallMethod(call.Call.Pos().Sline(), scope, o.String())
+		case *ast.CallExpression:  //e.g. method call like '[1,2,3].first()'
+			args := evalArgs(o.Arguments, scope)
+			return obj.CallMethod(call.Call.Pos().Sline(), scope, o.Function.String(), args...)
 		}
 	}
 

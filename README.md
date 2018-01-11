@@ -1165,6 +1165,14 @@ result = add(5, (x) -> x * 2)
 println(result)  //result : 15
 ```
 
+If the function has no parameter, then you could omit the parentheses. e.g.
+
+```swift
+println("hhf".upper)  //result: "HHF"
+//Same as above
+println("hhf".upper())
+```
+
 Monkey do not support multiple return values, But there are many ways to do it.
 
 Below suggest a way of doing it:
