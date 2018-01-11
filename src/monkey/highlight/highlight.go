@@ -36,6 +36,9 @@ var keywords = map[string]int{
 	"false":    1,
 	"if":       1,
 	"else":     1,
+	"elsif":    1,
+	"elseif":   1,
+	"elif":     1,
 	"return":   1,
 	"include":  1,
 	"and":      1,
@@ -56,6 +59,12 @@ var keywords = map[string]int{
 	"catch":    1,
 	"finally":  1,
 	"throw":    1,
+	"qw":       1,
+	"unless":   1,
+	"spawn":    1,
+	"enum":     1,
+	"defer":    1,
+	"nil":      1,
 }
 
 const (
@@ -324,37 +333,93 @@ func (h *Highlighter) processNumber() error {
 	ret = append(ret, ch)
 	h.next()
 
-	if ch == '0' && ch == 'x' {
+	if ch == '0' && (h.input[h.pos] == 'x' || h.input[h.pos] == 'b' || h.input[h.pos] == 'c') { //support '0x'(hex) and '0b'(bin) and '0c'(octal)
+		savedCh := h.input[h.pos]
 		ret = append(ret, h.input[h.pos])
 		h.next()
-		for isHex(h.input[h.pos]) {
-			ret = append(ret, h.input[h.pos])
-			h.next()
+
+		if savedCh == 'x' {
+			for isHex(h.input[h.pos]) || h.input[h.pos] == '_' {
+				if h.input[h.pos] == '_' {
+					h.next()
+					continue
+				}
+				ret = append(ret, h.input[h.pos])
+				h.next()
+			}
+		} else if savedCh == 'b' {
+			for isBin(h.input[h.pos]) || h.input[h.pos] == '_' {
+				if h.input[h.pos] == '_' {
+					h.next()
+					continue
+				}
+				ret = append(ret, h.input[h.pos])
+				h.next()
+			}
+		} else if savedCh == 'c' {
+			for isOct(h.input[h.pos]) || h.input[h.pos] == '_' {
+				if h.input[h.pos] == '_' {
+					h.next()
+					continue
+				}
+				ret = append(ret, h.input[h.pos])
+				h.next()
+			}
 		}
 	} else {
-		for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' {
+		for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' || h.input[h.pos] == '_' {
+			if h.input[h.pos] == '_' {
+				h.next()
+				continue
+			}
+
+			if h.input[h.pos] == '.' {
+				if h.peek(1) == '.' { //range operator
+					for _, intf := range h.generator {
+						str := intf.WriteNumber(string(ret))
+						io.WriteString(intf.Writer(), str)
+					}
+					return nil
+				} else if !isDigit(h.peek(1)) && h.peek(1) != 'e' && h.peek(1) != 'E' { //should be a method calling, e.g. 10.next()
+					for _, intf := range h.generator {
+						str := intf.WriteNumber(string(ret))
+						io.WriteString(intf.Writer(), str)
+					}
+					return nil
+				}
+			} //end if
+
 			ret = append(ret, h.input[h.pos])
 			h.next()
 		}
+
 		if h.input[h.pos] == 'e' || h.input[h.pos] == 'E' {
 			ret = append(ret, h.input[h.pos])
 			h.next()
 			if isDigit(h.input[h.pos]) || h.input[h.pos] == '+' || h.input[h.pos] == '-' {
 				ret = append(ret, h.input[h.pos])
 				h.next()
-				for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' {
+				for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' || h.input[h.pos] == '_' {
+					if h.input[h.pos] == '_' {
+						h.next()
+						continue
+					}
 					ret = append(ret, h.input[h.pos])
 					h.next()
 				}
 			}
-			for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' {
+			for isDigit(h.input[h.pos]) || h.input[h.pos] == '.' || h.input[h.pos] == '_' {
+				if h.input[h.pos] == '_' {
+					h.next()
+					continue
+				}
 				ret = append(ret, h.input[h.pos])
 				h.next()
 			}
 		}
-		if isLetter(h.input[h.pos]) {
-			return errors.New("identifier starts immediately after numeric literal")
-		}
+//		if isLetter(h.input[h.pos]) {
+//			return errors.New("identifier starts immediately after numeric literal")
+//		}
 	}
 
 	for _, intf := range h.generator {
@@ -379,6 +444,16 @@ func isDigit(ch rune) bool {
 // isHex returns true if the rune is a hex digits.
 func isHex(ch rune) bool {
 	return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')
+}
+
+// isBin returns true if the rune is a binary digits.
+func isBin(ch rune) bool {
+	return ('0' == ch || '1' == ch)
+}
+
+// isOct returns true if the rune is a octal digits.
+func isOct(ch rune) bool {
+	return ('0' <= ch && ch <= '7')
 }
 
 func isLetter(ch rune) bool {
