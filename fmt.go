@@ -17,7 +17,7 @@ func main() {
 	} else {
 		f, err = ioutil.ReadFile(args[0])
 		if err != nil {
-			fmt.Println("Highlighter: cannot read file", err.Error())
+			fmt.Println("Formatter: cannot read file", err.Error())
 			os.Exit(1)
 		}
 	}
