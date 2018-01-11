@@ -7,6 +7,42 @@ Chinese version: [中文](README_cn.md)
 Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python and Perl.
 It also has a REPL with realtime syntax highlighter.
 
+This is a sample program using monkey language:
+
+```swift
+// A pseudo-class using function with closure
+fn Person(name, age) {
+    self = {}  //create an empty hash, or you could use 'self = hash()'
+    self.name = name
+    self.age = age
+
+    //You could also use 'self.getName = fn() { return self.name }'
+    self.getName = () -> return self.name
+    self.getAge  = () -> return self.age
+    self.message = () -> return self.name + ", aged " + str(self.age)
+
+    self.set = fn(newName, newAge) {
+        self.name = newName
+        self.age = newAge
+    }
+
+    return self
+}
+
+p = Person("Mike", 40)
+printf("1 - info = %v\n", p.message())
+printf("1 - name = %v\n", p.getName())
+printf("1 - age  = %v\n", p.getAge())
+
+
+printf("\n=========================\n\n")
+
+p.set("HHF", 42)
+printf("2 - info = %v\n", p.message())
+printf("2 - name = %v\n", p.getName())
+printf("2 - age  = %v\n", p.getAge())
+```
+
 ## Overview
 
 This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:

@@ -9,6 +9,42 @@
 Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl.
 同时它还包括一个实时语法高亮的REPL。
 
+下面是一个使用monkey语言的示例程序:
+
+```swift
+// A pseudo-class using function with closure
+fn Person(name, age) {
+    self = {} //创建一个空哈希，你也可以使用'self = hash()'
+    self.name = name
+    self.age = age
+
+    //你也可以使用 'self.getName = fn() { return self.name }'
+    self.getName = () -> return self.name
+    self.getAge  = () -> return self.age
+    self.message = () -> return self.name + ", aged " + str(self.age)
+
+    self.set = fn(newName, newAge) {
+        self.name = newName
+        self.age = newAge
+    }
+
+    return self
+}
+
+p = Person("Mike", 40)
+printf("1 - info = %v\n", p.message())
+printf("1 - name = %v\n", p.getName())
+printf("1 - age  = %v\n", p.getAge())
+
+
+printf("\n=========================\n\n")
+
+p.set("HHF", 42)
+printf("2 - info = %v\n", p.message())
+printf("2 - name = %v\n", p.getName())
+printf("2 - age  = %v\n", p.getAge())
+```
+
 ## 总览
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
