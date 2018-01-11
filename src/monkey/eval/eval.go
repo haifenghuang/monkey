@@ -541,13 +541,18 @@ func evalHashAssignExpression(a *ast.AssignExpression, name string, left Object,
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	case "=":
 		switch nodeType := a.Name.(type) {
-		case *ast.IndexExpression: //hash[key] = xxx
+		case *ast.IndexExpression: //hashObj[key] = val
 			key := Eval(nodeType.Index, scope)
 			hashable, ok := key.(Hashable)
 			if !ok {
 				panic(NewError(a.Pos().Sline(), KEYERROR, val.Type()))
 			}
 			leftVals[hashable.HashKey()] = HashPair{Key: key, Value: val}
+			return left
+		case *ast.Identifier: //hashObj.key = val
+			key := strings.Split(a.Name.String(), ".")[1]
+			keyObj := NewString(key)
+			leftVals[keyObj.HashKey()] = HashPair{Key: keyObj, Value: val}
 			return left
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
@@ -622,6 +627,8 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		}
 		if aObj.Type() == ENUM_OBJ { //it's enum type
 			panic(NewError(a.Pos().Sline(), GENERICERROR, "Enum value cannot be reassigned!"))
+		} else if aObj.Type() == HASH_OBJ { //e.g. hash.key = value
+			return evalHashAssignExpression(a, strArr[0], aObj, scope, val)
 		}
 
 		return evalStructAssignExpression(a, scope, val)
@@ -2659,8 +2666,8 @@ func evalTryBlockStatements(block []ast.Statement, scope *Scope) (results Object
 func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 	fn, ok := scope.Get(call.Function.String())
 	if !ok {
-
 		if f, ok := call.Function.(*ast.FunctionLiteral); ok {
+
 			//let add =fn(x,y) { x+y }
 			//add(2,3)
 			fn = &Function{Literal: f, Scope: scope, Variadic: f.Variadic}
@@ -2758,11 +2765,11 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 	str := call.Object.String()
 	if obj, ok := GetGlobalObj(str); ok {
 		switch call.Call.(type) {
-		case *ast.Identifier:
+		case *ast.Identifier: //e.g. os.O_APPEND
 			if i, ok := GetGlobalObj(str + "." + call.Call.String()); ok {
 				return i
 			}
-		case *ast.CallExpression:
+		case *ast.CallExpression: //e.g. os.getenv()
 			if method, ok := call.Call.(*ast.CallExpression); ok {
 				args := evalArgs(method.Arguments, scope)
 				return obj.CallMethod(call.Call.Pos().Sline(), scope, method.Function.String(), args...)
@@ -2774,6 +2781,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 	if obj.Type() == ERROR_OBJ {
 		return obj
 	}
+
 	switch m := obj.(type) {
 	case *IncludedObject:
 		switch o := call.Call.(type) {
@@ -2806,6 +2814,43 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 		case *ast.CallExpression:
 			args := evalArgs(o.Arguments, scope)
 			return obj.CallMethod(call.Call.Pos().Sline(), m.Scope, o.Function.String(), args...)
+		}
+	case *Hash:
+		switch o := call.Call.(type) {
+		//e.g.:
+		//hashObj.key1=10
+		//println(hashObj.key1)
+		case *ast.Identifier:
+			keyObj := NewString(call.Call.String())
+			hashPair, ok := m.Pairs[keyObj.HashKey()]
+			// TODO: should we return an error here?
+			if !ok {
+				return NIL
+			}
+			return hashPair.Value
+
+		case *ast.CallExpression:
+			//we need to get the hash key
+			keyStr := strings.Split(call.Call.String(), "(")[0]
+			keyObj := NewString(keyStr)
+			hashPair, ok := m.Pairs[keyObj.HashKey()]
+			if !ok {
+				//Check if it's a hash object's builtin method(e.g. hashObj.keys(), hashObj.values())
+				if method, ok := call.Call.(*ast.CallExpression); ok {
+					args := evalArgs(method.Arguments, scope)
+					return obj.CallMethod(call.Call.Pos().Sline(), scope, method.Function.String(), args...)
+				}
+			}
+
+			//e.g.:
+			//hashObj = {}
+			//hashObj.str = fn() { return 10 }
+			//hashObj.str()
+
+			// we need 'FunctionLiteral' here, so we need to change 'o.Function',
+			// because the o.Function's Type is '*ast.Identifier' which is the Hash's key
+			o.Function = hashPair.Value.(*Function).Literal
+			return evalFunctionCall(o, scope)
 		}
 	default:
 		if method, ok := call.Call.(*ast.CallExpression); ok {

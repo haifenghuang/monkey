@@ -622,7 +622,7 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 
 	if n, ok := name.(*ast.Identifier); ok {
 		e.Name = n
-	} else if call, ok := name.(*ast.MethodCallExpression); ok {
+	} else if call, ok := name.(*ast.MethodCallExpression); ok { //might be 'includeModule.a = xxx' or 'aHashObj.key = value'
 		e.Name = &ast.Identifier{Token: p.curToken, Value: call.String()}
 		p.nextToken()
 		e.Value = p.parseExpression(LOWEST)
