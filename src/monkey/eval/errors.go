@@ -24,7 +24,7 @@ const (
 	DIVIDEBYZERO
 	THROWERROR
 	THROWNOTHANDLED
-	NOTLISTABLE
+	GREPMAPNOTITERABLE
 	NOTITERABLE
 	RANGETYPEERROR
 	DEFERERROR
@@ -60,7 +60,7 @@ var errorType = map[int]string{
 	DIVIDEBYZERO:    "divide by zero",
 	THROWERROR:      "throw object must be a string",
 	THROWNOTHANDLED: "throw object '%s' not handled",
-	NOTLISTABLE:     "grep/map's operating type must be listable",
+	GREPMAPNOTITERABLE:  "grep/map's operating type must be iterable",
 	NOTITERABLE:     "foreach's operating type must be iterable",
 	RANGETYPEERROR:  "range(..) type should be %s type, got='%s'",
 	DEFERERROR:      "defer outside function or defer statement not a function",

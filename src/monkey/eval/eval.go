@@ -1615,9 +1615,15 @@ func evalGrepExpression(ge *ast.GrepExpr, scope *Scope) Object {
 		return aValue
 	}
 
-	_, ok := aValue.(Listable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
-		panic(NewError(ge.Pos().Sline(), NOTLISTABLE))
+		panic(NewError(ge.Pos().Sline(), GREPMAPNOTITERABLE))
 	}
 
 	var members []Object
@@ -1666,9 +1672,15 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 		return aValue
 	}
 
-	_, ok := aValue.(Listable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
-		panic(NewError(me.Pos().Sline(), NOTLISTABLE))
+		panic(NewError(me.Pos().Sline(), GREPMAPNOTITERABLE))
 	}
 
 	var members []Object
@@ -1718,7 +1730,13 @@ func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 		return aValue
 	}
 
-	_, ok := aValue.(Iterable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
 		panic(NewError(lc.Pos().Sline(), NOTITERABLE))
 	}
@@ -1859,7 +1877,13 @@ func evalListMapComprehension(mc *ast.ListMapComprehension, scope *Scope) Object
 		return aValue
 	}
 
-	_, ok := aValue.(Iterable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
 		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
 	}
@@ -1907,7 +1931,13 @@ func evalHashComprehension(hc *ast.HashComprehension, scope *Scope) Object {
 		return aValue
 	}
 
-	_, ok := aValue.(Iterable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
 		panic(NewError(hc.Pos().Sline(), NOTITERABLE))
 	}
@@ -2067,7 +2097,13 @@ func evalHashMapComprehension(mc *ast.HashMapComprehension, scope *Scope) Object
 		return aValue
 	}
 
-	_, ok := aValue.(Iterable) //must be listable
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
+	_, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
 		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
 	}
@@ -2259,6 +2295,12 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 		return aValue
 	}
 
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
+	}
+
 	_, ok := aValue.(Iterable)
 	if !ok {
 		panic(NewError(fal.Pos().Sline(), NOTITERABLE))
@@ -2406,6 +2448,12 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 	aValue := Eval(fml.X, innerScope)
 	if aValue.Type() == ERROR_OBJ {
 		return aValue
+	}
+
+	//first check if it's a Nil object
+	if aValue.Type() == NIL_OBJ {
+		//return an empty array object
+		return &Array{Members:[]Object{}}
 	}
 
 	_, ok := aValue.(Iterable)

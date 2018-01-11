@@ -78,11 +78,6 @@ type Iterable interface {
 	iter()
 }
 
-//Whether the Object is Listable (ARRAY, RANGE, TUPLE, STRING)
-type Listable interface {
-	list()
-}
-
 //Whether the Object is throwable (STRING for now)
 type Throwable interface {
 	throw()
