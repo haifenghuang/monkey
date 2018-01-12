@@ -1241,6 +1241,10 @@ func (p *Parser) parseHashExpression() ast.Expression {
 			p.nextToken() //skip the '=>'
 			hash.Pairs[key] = p.parseExpression(LOWEST)
 			p.nextToken()
+			if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) {
+				p.nextToken()
+				break
+			}
 		}
 		return hash
 	} else {
@@ -1467,12 +1471,17 @@ func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenT
 
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken()
+		if p.peekTokenIs(closure) {
+			break
+		}
 		p.nextToken()
 		a = append(a, p.parseExpression(LOWEST))
 	}
+
 	if !p.expectPeek(closure) {
 		return nil, false
 	}
+
 	return a, false
 }
 // case expr in {
