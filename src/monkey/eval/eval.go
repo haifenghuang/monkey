@@ -2900,7 +2900,8 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			// we need 'FunctionLiteral' here, so we need to change 'o.Function',
 			// because the o.Function's Type is '*ast.Identifier' which is the Hash's key
 			o.Function = hashPair.Value.(*Function).Literal
-			return evalFunctionCall(o, scope)
+			//return evalFunctionCall(o, scope)   This is a bug: not 'scope'
+			return evalFunctionCall(o, hashPair.Value.(*Function).Scope) //should be Function's scope
 		}
 	default:
 		switch o := call.Call.(type) {
