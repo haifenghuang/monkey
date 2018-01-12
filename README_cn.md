@@ -45,6 +45,10 @@ printf("2 - name = %v\n", p.getName())
 printf("2 - age  = %v\n", p.getAge())
 ```
 
+下面是一个实时语法高亮REPL:
+
+![REPL](REPL.gif)
+
 ## 总览
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
@@ -102,10 +106,6 @@ Monkey programming language REPL
 
 >>
 ```
-
-下面是REPL的一个屏幕快照：
-
-![REPL](REPL.gif)
 
 或者运行一个monkey文件:
 
@@ -567,6 +567,7 @@ println(emptyArr)
 ```swift
 mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
 ```
+注: 最后关闭方括弧(']')前的逗号(',’)是可以省略的。
 
 你可以使用索引来访问数组元素。
 
@@ -713,6 +714,8 @@ hashObj = {
 }
 println(hashObj)
 ```
+
+注: 最后关闭花括弧('}')前的逗号(',’)是可以省略的。
 
 你还可以使用'+'或'-'来从一个哈希中增加或者删除一个元素:
 

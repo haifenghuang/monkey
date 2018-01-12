@@ -43,6 +43,10 @@ printf("2 - name = %v\n", p.getName())
 printf("2 - age  = %v\n", p.getAge())
 ```
 
+Below is the REPL with real time syntax highlight:
+
+![REPL](REPL.gif)
+
 ## Overview
 
 This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:
@@ -562,6 +566,7 @@ println(emptyArr)
 ```
 
 Array could contain any number of different data types.
+Note: the last comma before the closing ']' is optional.
 
 ```swift
 mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
@@ -712,6 +717,8 @@ hashObj = {
 }
 println(hashObj)
 ```
+
+Note: the last comma before the closing '}' is optional.
 
 You could use '+' or '-' to add or remove an item from a hash:
 
