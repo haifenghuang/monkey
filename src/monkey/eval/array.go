@@ -51,6 +51,10 @@ func (a *Array) CallMethod(line string, scope *Scope, method string, args ...Obj
 		return a.Push(line, args...)
 	case "pop":
 		return a.Pop(line, args...)
+	case "shift":
+		return a.Shift(line, args...)
+	case "unshift":
+		return a.UnShift(line, args...)
 	case "reduce":
 		return a.Reduce(line, scope, args...)
 	case "empty":
@@ -219,6 +223,35 @@ func (a *Array) Push(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", l))
 	}
 	a.Members = append(a.Members, args[0])
+	return a
+}
+
+func (a *Array) Shift(line string, args ...Object) Object {
+	last := len(a.Members) - 1
+	if len(args) == 0 { //arrObj.shift()
+		if last < 0 { //array is empty
+			return NIL
+		}
+		shifted := a.Members[0]
+		a.Members = a.Members[1:]
+		return shifted
+	}
+	idx := args[0].(*Integer).Int64
+	if idx < 0 || idx > int64(last) {
+		panic(NewError(line, INDEXERROR, idx))
+	}
+	shifted := a.Members[idx]
+	a.Members = append(a.Members[:idx], a.Members[idx+1:]...)
+	return shifted
+}
+
+func (a *Array) UnShift(line string, args ...Object) Object {
+	l := len(args)
+	if l != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", l))
+	}
+
+	a.Members = append([]Object{args[0]}, a.Members... )
 	return a
 }
 
