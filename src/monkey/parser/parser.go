@@ -681,7 +681,7 @@ func (p *Parser) parseIncludeStatement() *ast.IncludeStatement {
 func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, error) {
 	path := p.path
 
-	fn := path + "/" + importpath + ".my"
+	fn := filepath.Join(path, importpath + ".my")
 	f, err := ioutil.ReadFile(fn)
 	if err != nil { //error occurred, maybe the file do not exists.
 		// Check for 'MONKEY_ROOT' environment variable
@@ -689,11 +689,7 @@ func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, error) 
 		if len(includeRoot) == 0 { //'MONKEY_ROOT' environment variable is not set
 			return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, path)
 		} else {
-			if includeRoot[len(includeRoot)-1:] == "/" {
-				fn = includeRoot + importpath + ".my"
-			} else {
-				fn = includeRoot + "/" + importpath + ".my"
-			}
+			fn = filepath.Join(includeRoot, importpath + ".my")
 			e, err := ioutil.ReadFile(fn)
 			if err != nil {
 				return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, includeRoot)
