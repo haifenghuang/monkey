@@ -18,7 +18,7 @@ type SyncCondObj struct {
 	Cond *sync.Cond
 }
 
-func (c *SyncCondObj) Inspect() string  { return SYNCCOND_OBJ }
+func (c *SyncCondObj) Inspect() string  { return "<" + SYNCCOND_OBJ + ">" }
 func (c *SyncCondObj) Type() ObjectType { return SYNCCOND_OBJ }
 
 func (c *SyncCondObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -65,7 +65,7 @@ type SyncOnceObj struct {
 	Once *sync.Once
 }
 
-func (o *SyncOnceObj) Inspect() string  { return SYNCONCE_OBJ }
+func (o *SyncOnceObj) Inspect() string  { return "<" + SYNCONCE_OBJ + ">" }
 func (o *SyncOnceObj) Type() ObjectType { return SYNCONCE_OBJ }
 
 func (o *SyncOnceObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -110,7 +110,7 @@ type SyncMutexObj struct {
 	Mutex *sync.Mutex
 }
 
-func (m *SyncMutexObj) Inspect() string  { return SYNCMUTEX_OBJ }
+func (m *SyncMutexObj) Inspect() string  { return "<" + SYNCMUTEX_OBJ + ">" }
 func (m *SyncMutexObj) Type() ObjectType { return SYNCMUTEX_OBJ }
 
 func (m *SyncMutexObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -146,7 +146,7 @@ type SyncRWMutexObj struct {
 	RWMutex *sync.RWMutex
 }
 
-func (rwm *SyncRWMutexObj) Inspect() string  { return SYNCRWMUTEX_OBJ }
+func (rwm *SyncRWMutexObj) Inspect() string  { return "<" + SYNCRWMUTEX_OBJ + ">" }
 func (rwm *SyncRWMutexObj) Type() ObjectType { return SYNCRWMUTEX_OBJ }
 
 func (rwm *SyncRWMutexObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -204,7 +204,7 @@ type SyncWaitGroupObj struct {
 	WaitGroup *sync.WaitGroup
 }
 
-func (wg *SyncWaitGroupObj) Inspect() string  { return SYNCWAITGROUP_OBJ }
+func (wg *SyncWaitGroupObj) Inspect() string  { return "<" + SYNCWAITGROUP_OBJ + ">" }
 func (wg *SyncWaitGroupObj) Type() ObjectType { return SYNCWAITGROUP_OBJ }
 
 func (wg *SyncWaitGroupObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

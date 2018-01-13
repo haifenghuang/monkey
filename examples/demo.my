@@ -379,13 +379,9 @@ filepath.walk(".", walkf)
 println(filelist)
 
 //filepath.walk(".", fn(path, fileinfo) {
-//	if (filepath.ext(path) == ".my") {
-//		if (filepath.base(path) == "db.my") {
-//			println("============skipping eval.my============")
-//			return "SKIP_DIR"
-//		} else {
-//			println(path)
-//		}
+//	if (filepath.dir(path) =="examples") {
+//			println("============skipping examples dir============")
+//			return filepath.SKIP_DIR
 //	}
 //	else {
 //		println(path)

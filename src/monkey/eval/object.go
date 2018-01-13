@@ -199,7 +199,7 @@ func (e *Enum) GetName(line string, args ...Object) Object {
 	return NIL
 }
 
-func (b *Builtin) Inspect() string  { return "builtin function" }
+func (b *Builtin) Inspect() string  { return "<builtin function>" }
 func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 func (b *Builtin) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	panic(NewError(line, NOMETHODERROR, method, b.Type()))

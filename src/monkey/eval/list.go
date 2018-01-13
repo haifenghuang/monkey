@@ -14,7 +14,7 @@ type ListObject struct {
 	List *list.List
 }
 
-func (l *ListObject) Inspect() string  { return LIST_OBJ }
+func (l *ListObject) Inspect() string  { return "<list>" }
 func (l *ListObject) Type() ObjectType { return LIST_OBJ }
 func (l *ListObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

@@ -33,7 +33,7 @@ func NewSortObj() Object {
 
 type SortObj struct{}
 
-func (s *SortObj) Inspect() string  { return sort_name }
+func (s *SortObj) Inspect() string  { return "<" + sort_name + ">" }
 func (s *SortObj) Type() ObjectType { return SORT_OBJ }
 
 func (s *SortObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

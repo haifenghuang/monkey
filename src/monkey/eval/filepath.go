@@ -11,7 +11,7 @@ func NewFilePathObj() *FilePathObj {
 	ret := &FilePathObj{}
 	SetGlobalObj(filepath_name, ret)
 
-	SetGlobalObj(filepath_name+".SKIP_DIR", NewString("SKIP_DIR"))
+	SetGlobalObj(filepath_name+".SKIP_DIR", NewInteger(SKIP_DIR))
 	SetGlobalObj(filepath_name+".SEPARATOR", NewString(string(filepath.Separator)))
 	SetGlobalObj(filepath_name+".LISTSEPARATOR", NewString(string(filepath.ListSeparator)))
 
@@ -19,13 +19,14 @@ func NewFilePathObj() *FilePathObj {
 }
 
 const (
+	SKIP_DIR = 1
 	FILEPATH_OBJ = "FILEPATH_OBJ"
 	filepath_name = "filepath"
 )
 
 type FilePathObj struct{}
 
-func (f *FilePathObj) Inspect() string  { return filepath_name }
+func (f *FilePathObj) Inspect() string  { return "<" + filepath_name + ">" }
 func (f *FilePathObj) Type() ObjectType { return FILEPATH_OBJ }
 
 func (f *FilePathObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -424,10 +425,9 @@ func walkFunc(scope *Scope, f *Function, path string, info os.FileInfo) error {
 	}
 
 	//check for return value, is it a skipDir?
-	str, ok := r.(*String)
+	iObj, ok := r.(*Integer)
 	if ok {
-		skipDir, _ := GetGlobalObj("SKIP_DIR")
-		if skipDir.(*String).String == str.String {
+		if iObj.Int64 == SKIP_DIR {
 			return filepath.SkipDir
 		}
 	}

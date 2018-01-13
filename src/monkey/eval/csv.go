@@ -32,7 +32,7 @@ type CsvObj struct {
 	Writer     *csv.Writer
 }
 
-func (c *CsvObj) Inspect() string  { return csv_name }
+func (c *CsvObj) Inspect() string  { return "<" + csv_name + ">"}
 func (c *CsvObj) Type() ObjectType { return CSV_OBJ }
 
 func (c *CsvObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

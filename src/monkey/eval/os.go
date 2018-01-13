@@ -54,7 +54,7 @@ func NewOsObj() Object {
 	return ret
 }
 
-func (o *Os) Inspect() string  { return os_name }
+func (o *Os) Inspect() string  { return "<" + os_name + ">" }
 func (o *Os) Type() ObjectType { return OS_OBJ }
 
 func (o *Os) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

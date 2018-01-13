@@ -28,7 +28,7 @@ type LoggerObj struct {
 	Logger *log.Logger
 }
 
-func (l *LoggerObj) Inspect() string  { return logger_name }
+func (l *LoggerObj) Inspect() string  { return "<" + logger_name + ">" }
 func (l *LoggerObj) Type() ObjectType { return LOGGER_OBJ }
 
 func (l *LoggerObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

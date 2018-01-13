@@ -31,7 +31,7 @@ func NewTemplateObj() Object {
 	return ret
 }
 
-func (t *TemplateObj) Inspect() string  { return template_name }
+func (t *TemplateObj) Inspect() string  { return "<" + template_name +">" }
 func (t *TemplateObj) Type() ObjectType { return TEMPLATE_OBJ }
 
 func (t *TemplateObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

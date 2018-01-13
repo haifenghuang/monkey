@@ -21,7 +21,7 @@ type FlagObj struct {
 	arguments map[Object]interface{}
 }
 
-func (f *FlagObj) Inspect() string  { return flag_name }
+func (f *FlagObj) Inspect() string  { return "<" + flag_name + ">" }
 func (f *FlagObj) Type() ObjectType { return FLAG_OBJ }
 
 func (f *FlagObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

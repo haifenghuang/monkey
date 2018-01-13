@@ -30,7 +30,7 @@ func NewNetObj() Object {
 	return ret
 }
 
-func (n *NetObj) Inspect() string  { return net_name }
+func (n *NetObj) Inspect() string  { return "<" + net_name + ">" }
 func (n *NetObj) Type() ObjectType { return NET_OBJ }
 
 func (n *NetObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

@@ -22,7 +22,7 @@ func NewIOUtilObj() Object {
 	return ret
 }
 
-func (i *IOUtilObj) Inspect() string  { return ioutil_name }
+func (i *IOUtilObj) Inspect() string  { return "<" + ioutil_name + ">" }
 func (i *IOUtilObj) Type() ObjectType { return IOUTIL_OBJ }
 func (i *IOUtilObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -185,7 +185,7 @@ type FileObject struct {
 }
 
 func (f *FileObject) IOWriter() io.Writer { return f.File }
-func (f *FileObject) Inspect() string     { return f.Name }
+func (f *FileObject) Inspect() string     { return "<file object: " + f.Name + ">" }
 func (f *FileObject) Type() ObjectType    { return FILE_OBJ }
 func (f *FileObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {

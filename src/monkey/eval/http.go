@@ -106,7 +106,7 @@ func NewHTTPObj() Object {
 	return ret
 }
 
-func (h *HttpObj) Inspect() string  { return http_name }
+func (h *HttpObj) Inspect() string  { return "<" + http_name + ">" }
 func (h *HttpObj) Type() ObjectType { return HTTP_OBJ }
 
 func (h *HttpObj) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -415,7 +415,7 @@ type HttpClient struct {
 	Client *http.Client
 }
 
-func (h *HttpClient) Inspect() string  { return "httpclient" }
+func (h *HttpClient) Inspect() string  { return "<httpclient>" }
 func (h *HttpClient) Type() ObjectType { return HTTPCLIENT_OBJ }
 func (h *HttpClient) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -544,7 +544,7 @@ type HttpResponse struct {
 	Response *http.Response
 }
 
-func (h *HttpResponse) Inspect() string  { return "httpresponse" }
+func (h *HttpResponse) Inspect() string  { return "<httpresponse>" }
 func (h *HttpResponse) Type() ObjectType { return HTTPRESPONSE_OBJ }
 func (h *HttpResponse) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -593,7 +593,7 @@ type HttpRequest struct {
 	Request *http.Request
 }
 
-func (h *HttpRequest) Inspect() string  { return "httprequest" }
+func (h *HttpRequest) Inspect() string  { return "<httprequest>" }
 func (h *HttpRequest) Type() ObjectType { return HTTPREQUEST_OBJ }
 func (h *HttpRequest) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -655,7 +655,7 @@ type HttpResponseWriter struct {
 }
 
 func (h *HttpResponseWriter) IOWriter() io.Writer { return h.Writer }
-func (h *HttpResponseWriter) Inspect() string     { return "http responsewriter" }
+func (h *HttpResponseWriter) Inspect() string     { return "<httpresponsewriter>" }
 func (h *HttpResponseWriter) Type() ObjectType    { return HTTPRESPONSEWRITER_OBJ }
 func (h *HttpResponseWriter) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -715,7 +715,7 @@ type HttpServer struct {
 	Server *http.Server
 }
 
-func (h *HttpServer) Inspect() string  { return "httpserver" }
+func (h *HttpServer) Inspect() string  { return "<httpserver>" }
 func (h *HttpServer) Type() ObjectType { return HTTPSERVER_OBJ }
 func (h *HttpServer) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
@@ -827,7 +827,7 @@ type HttpHeader struct {
 	Header http.Header
 }
 
-func (h *HttpHeader) Inspect() string  { return "httpheader" }
+func (h *HttpHeader) Inspect() string  { return "<httpheader>" }
 func (h *HttpHeader) Type() ObjectType { return HTTPHEADER_OBJ }
 func (h *HttpHeader) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
