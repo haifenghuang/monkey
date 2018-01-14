@@ -46,6 +46,10 @@ func (s *SortObj) CallMethod(line string, scope *Scope, method string, args ...O
 		return s.SortInts(line, args...)
 	case "intsAreSorted":
 		return s.IntsAreSorted(line, args...)
+	case "sortUInts":
+		return s.SortUInts(line, args...)
+	case "uintsAreSorted":
+		return s.UIntsAreSorted(line, args...)
 	case "sortStrings":
 		return s.SortStrings(line, args...)
 	case "stringsAreSorted":
@@ -87,6 +91,8 @@ func (s *SortObj) SortFloats(line string, args ...Object) Object {
 		var f float64
 		if v.Type() == INTEGER_OBJ {
 			f = float64(v.(*Integer).Int64)
+		} else if v.Type() == UINTEGER_OBJ {
+			f = float64(v.(*UInteger).UInt64)
 		} else {
 			f = v.(*Float).Float64
 		}
@@ -123,6 +129,8 @@ func (s *SortObj) FloatsAreSorted(line string, args ...Object) Object {
 		var f float64
 		if v.Type() == INTEGER_OBJ {
 			f = float64(v.(*Integer).Int64)
+		} else if v.Type() == UINTEGER_OBJ {
+			f = float64(v.(*UInteger).UInt64)
 		} else {
 			f = v.(*Float).Float64
 		}
@@ -170,14 +178,14 @@ func (s *SortObj) SortInts(line string, args ...Object) Object {
 		}
 	}
 
-	var sortArr []int
+	var sortArr []int64
 	for _, v := range IntsArr.Members {
 		if v.Type() != INTEGER_OBJ {
 			panic(NewError(line, GENERICERROR, "Not all data are ints"))
 		}
 
 		i := v.(*Integer).Int64
-		sortArr = append(sortArr, int(i))
+		sortArr = append(sortArr, i)
 	}
 
 	intSlice := IntSlice{IntArr: sortArr, SortOrder: sortOrdering}
@@ -200,13 +208,13 @@ func (s *SortObj) IntsAreSorted(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "first", "intsAreSorted", "*Array", args[0].Type()))
 	}
 
-	var sortArr []int
+	var sortArr []int64
 	for _, v := range intArr.Members {
 		if v.Type() != INTEGER_OBJ {
 			panic(NewError(line, GENERICERROR, "Not all data are ints"))
 		}
 
-		i := int(v.(*Integer).Int64)
+		i := v.(*Integer).Int64
 		sortArr = append(sortArr, i)
 	}
 
@@ -223,6 +231,87 @@ func (s *SortObj) IntsAreSorted(line string, args ...Object) Object {
 	}
 
 	sorted := IntsAreSorted(sortArr, sortOrdering)
+	if sorted {
+		return TRUE
+	}
+	return FALSE
+}
+
+func (s *SortObj) SortUInts(line string, args ...Object) Object {
+	if len(args) != 1 && len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
+	}
+
+	UIntsArr, ok := args[0].(*Array)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "sortUInts", "*Array", args[0].Type()))
+	}
+
+	sortOrdering := Ascending
+	if len(args) == 2 {
+		sortOrder, ok := args[1].(*Integer)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "second", "sortInts", "*Integer", args[1].Type()))
+		}
+
+		if sortOrder.Int64 >= int64(Ascending) && sortOrder.Int64 <= int64(Descending) {
+			sortOrdering = Ordering(sortOrder.Int64)
+		}
+	}
+
+	var sortArr []uint64
+	for _, v := range UIntsArr.Members {
+		if v.Type() != UINTEGER_OBJ {
+			panic(NewError(line, GENERICERROR, "Not all data are uints"))
+		}
+
+		i := v.(*UInteger).UInt64
+		sortArr = append(sortArr, uint64(i))
+	}
+
+	intSlice := UIntSlice{UIntArr: sortArr, SortOrder: sortOrdering}
+	intSlice.Sort()
+
+	ret := &Array{}
+	for _, v := range intSlice.UIntArr {
+		ret.Members = append(ret.Members, NewUInteger(uint64(v)))
+	}
+	return ret
+}
+
+func (s *SortObj) UIntsAreSorted(line string, args ...Object) Object {
+	if len(args) != 1 && len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
+	}
+
+	uintArr, ok := args[0].(*Array)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "uintsAreSorted", "*Array", args[0].Type()))
+	}
+
+	var sortArr []uint64
+	for _, v := range uintArr.Members {
+		if v.Type() != UINTEGER_OBJ {
+			panic(NewError(line, GENERICERROR, "Not all data are uints"))
+		}
+
+		i := v.(*UInteger).UInt64
+		sortArr = append(sortArr, i)
+	}
+
+	sortOrdering := Ascending
+	if len(args) == 2 {
+		sortOrder, ok := args[1].(*Integer)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "second", "uintsAreSorted", "*Integer", args[1].Type()))
+		}
+
+		if sortOrder.Int64 >= int64(Ascending) && sortOrder.Int64 <= int64(Descending) {
+			sortOrdering = Ordering(sortOrder.Int64)
+		}
+	}
+
+	sorted := UIntsAreSorted(sortArr, sortOrdering)
 	if sorted {
 		return TRUE
 	}
@@ -314,7 +403,7 @@ func (s *SortObj) StringsAreSorted(line string, args ...Object) Object {
 
 // IntSlice attaches the methods of Interface to []int, sorting in ascending/descending order.
 type IntSlice struct {
-	IntArr    []int
+	IntArr    []int64
 	SortOrder Ordering
 }
 
@@ -331,6 +420,27 @@ func (p IntSlice) Less(i, j int) bool {
 
 // Sort is a convenience method.
 func (p IntSlice) Sort() { sort.Sort(p) }
+
+// UIntSlice attaches the methods of Interface to []int, sorting in ascending/descending order.
+type UIntSlice struct {
+	UIntArr    []uint64
+	SortOrder Ordering
+}
+
+func (p UIntSlice) Len() int      { return len(p.UIntArr) }
+func (p UIntSlice) Swap(i, j int) { p.UIntArr[i], p.UIntArr[j] = p.UIntArr[j], p.UIntArr[i] }
+func (p UIntSlice) Less(i, j int) bool {
+	switch p.SortOrder {
+	case Descending:
+		return p.UIntArr[i] > p.UIntArr[j]
+	default:
+		return p.UIntArr[i] < p.UIntArr[j]
+	}
+}
+
+// Sort is a convenience method.
+func (p UIntSlice) Sort() { sort.Sort(p) }
+
 
 // Float64Slice attaches the methods of Interface to []float64, sorting in ascending/descending order.
 type Float64Slice struct {
@@ -386,7 +496,10 @@ func (p StringSlice) Less(i, j int) bool {
 func (p StringSlice) Sort() { sort.Sort(p) }
 
 // IntsAreSorted tests whether a slice of ints is sorted in ascending/descending order.
-func IntsAreSorted(a []int, o Ordering) bool { return sort.IsSorted(IntSlice{IntArr: a, SortOrder: o}) }
+func IntsAreSorted(a []int64, o Ordering) bool { return sort.IsSorted(IntSlice{IntArr: a, SortOrder: o}) }
+
+// UIntsAreSorted tests whether a slice of uints is sorted in ascending/descending order.
+func UIntsAreSorted(a []uint64, o Ordering) bool { return sort.IsSorted(UIntSlice{UIntArr: a, SortOrder: o}) }
 
 // Float64sAreSorted tests whether a slice of float64s is sorted in ascending/descending order.
 func Float64sAreSorted(a []float64, o Ordering) bool {

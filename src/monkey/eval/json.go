@@ -50,6 +50,13 @@ func (j *Json) Marshal(line string, args ...Object) Object {
 			return NewNil(err.Error())
 		}
 		return NewString(string(res))
+	case *UInteger:
+		value := args[0].(*UInteger)
+		res, err := value.MarshalJSON()
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return NewString(string(res))
 	case *Float:
 		value := args[0].(*Float)
 		res, err := value.MarshalJSON()

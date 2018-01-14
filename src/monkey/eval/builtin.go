@@ -46,14 +46,18 @@ func absBuiltin() *Builtin {
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
-			i, ok := args[0].(*Integer)
-			if !ok {
-				panic(NewError(line, PARAMTYPEERROR, "first", "abs", "*Integer", args[0].Type()))
+
+			switch o := args[0].(type) {
+			case *Integer:
+				if o.Int64 > -1 {
+					return o
+				}
+				return NewInteger(o.Int64 * -1)
+			case *UInteger:
+				return o
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "abs", "*Integer|*UInteger", args[0].Type()))
 			}
-			if i.Int64 > -1 {
-				return i
-			}
-			return NewInteger(i.Int64 * -1)
 		}, //Here the ',' is a must, it confused me a lot
 	}
 }
@@ -64,23 +68,32 @@ func rangeBuiltin() *Builtin {
 			if len(args) != 1 && len(args) != 2 {
 				panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
 			}
-			i, ok := args[0].(*Integer)
-			if !ok {
-				panic(NewError(line, PARAMTYPEERROR, "first", "range", "*Integer", args[0].Type()))
+
+			var iValue int64
+			switch o := args[0].(type) {
+			case *Integer:
+				iValue = o.Int64
+			case *UInteger:
+				iValue = int64(o.UInt64)
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "range", "*Integer|*UInteger", args[0].Type()))
 			}
 
-			iValue := i.Int64
 			if iValue <= 0 {
 				return &Array{}
 			}
 
 			var jValue int64
 			if len(args) == 2 {
-				j, ok := args[1].(*Integer)
-				if !ok {
-					panic(NewError(line, PARAMTYPEERROR, "second", "range", "*Integer", args[0].Type()))
+				switch o := args[1].(type) {
+				case *Integer:
+					jValue = o.Int64
+				case *UInteger:
+					jValue = int64(o.UInt64)
+				default:
+					panic(NewError(line, PARAMTYPEERROR, "second", "range", "*Integer|*UInteger", args[0].Type()))
 				}
-				jValue = j.Int64
+
 				if jValue <= 0 {
 					panic(NewError(line, GENERICERROR, "second parameter of 'range' should be >=0"))
 				}
@@ -131,14 +144,21 @@ func chrBuiltin() *Builtin {
 			if len(args) != 1 {
 				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 			}
-			i, ok := args[0].(*Integer)
-			if !ok {
-				panic(NewError(line, PARAMTYPEERROR, "first", "chr", "*Integer", args[0].Type()))
+
+			var i int64
+			switch o := args[0].(type) {
+			case *Integer:
+				i = o.Int64
+			case *UInteger:
+				i = int64(o.UInt64)
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "chr", "*Integer|*UInteger", args[0].Type()))
 			}
-			if i.Int64 < 0 || i.Int64 > 255 {
-				panic(NewError(line, INPUTERROR, i.Inspect(), "chr"))
+
+			if i < 0 || i > 255 {
+				panic(NewError(line, INPUTERROR, string(i), "chr"))
 			}
-			return NewString(string(i.Int64))
+			return NewString(string(i))
 		},
 	}
 }
@@ -204,6 +224,8 @@ func intBuiltin() *Builtin {
 			switch input := args[0].(type) {
 			case *Integer:
 				return input
+			case *UInteger:
+				return NewInteger(int64(input.UInt64))
 			case *Float:
 				return NewInteger(int64(input.Float64))
 			case *DecimalObj:
@@ -217,21 +239,77 @@ func intBuiltin() *Builtin {
 				var n int64
 				var err error
 
-				if strings.HasPrefix(input.String, "0b") {
-					n, err = strconv.ParseInt(input.String[2:], 2, 64)
-				} else if strings.HasPrefix(input.String, "0x") {
-					n, err = strconv.ParseInt(input.String[2:], 16, 64)
-				} else if strings.HasPrefix(input.String, "0c") {
-					n, err = strconv.ParseInt(input.String[2:], 8, 64)
+				var content = input.String
+				if content[len(content)-1] == 'u' {
+					content = content[:len(content)-1]
+				}
+
+				if strings.HasPrefix(content, "0b") {
+					n, err = strconv.ParseInt(content[2:], 2, 64)
+				} else if strings.HasPrefix(content, "0x") {
+					n, err = strconv.ParseInt(content[2:], 16, 64)
+				} else if strings.HasPrefix(content, "0c") {
+					n, err = strconv.ParseInt(content[2:], 8, 64)
 				} else {
-					n, err = strconv.ParseInt(input.String, 10, 64)
+					n, err = strconv.ParseInt(content, 10, 64)
 				}
 				if err != nil {
 					panic(NewError(line, INPUTERROR, "STRING: "+input.String, "int"))
 				}
-				return NewInteger(int64(n))
+				return NewInteger(n)
 			}
-			panic(NewError(line, PARAMTYPEERROR, "first", "int", "*String|*Integer|*Boolean|*Float", args[0].Type()))
+			panic(NewError(line, PARAMTYPEERROR, "first", "int", "*String|*Integer|*UInteger|*Boolean|*Float", args[0].Type()))
+		},
+	}
+}
+
+func uintBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) == 0 {
+				//returns an empty int(defaults to 0)
+				return NewInteger(0)
+			}
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+			switch input := args[0].(type) {
+			case *Integer:
+				return NewUInteger(uint64(input.Int64))
+			case *UInteger:
+				return input
+			case *Float:
+				return NewUInteger(uint64(input.Float64))
+			case *DecimalObj:
+				return NewUInteger(uint64(input.Number.IntPart()))
+			case *Boolean:
+				if input.Bool {
+					return NewUInteger(1)
+				}
+				return NewUInteger(0)
+			case *String:
+				var n uint64
+				var err error
+
+				var content = input.String
+				if input.String[len(input.String)-1] == 'u' {
+					content = input.String[:len(input.String)-1]
+				}
+				if strings.HasPrefix(content, "0b") {
+					n, err = strconv.ParseUint(content[2:], 2, 64)
+				} else if strings.HasPrefix(content, "0x") {
+					n, err = strconv.ParseUint(content[2:], 16, 64)
+				} else if strings.HasPrefix(content, "0c") {
+					n, err = strconv.ParseUint(content[2:], 8, 64)
+				} else {
+					n, err = strconv.ParseUint(content, 10, 64)
+				}
+				if err != nil {
+					panic(NewError(line, INPUTERROR, "STRING: "+input.String, "uint"))
+				}
+				return NewUInteger(n)
+			}
+			panic(NewError(line, PARAMTYPEERROR, "first", "int", "*String|*Integer|*UInteger|*Boolean|*Float", args[0].Type()))
 		},
 	}
 }
@@ -249,6 +327,8 @@ func floatBuiltin() *Builtin {
 			switch input := args[0].(type) {
 			case *Integer:
 				return NewFloat(float64(input.Int64))
+			case *UInteger:
+				return NewFloat(float64(input.UInt64))
 			case *Float:
 				return input
 			case *DecimalObj:
@@ -287,7 +367,7 @@ func floatBuiltin() *Builtin {
 				}
 				return NewFloat(float64(n))
 			}
-			panic(NewError(line, PARAMTYPEERROR, "first", "float", "*String|*Integer|*Boolean|*Float", args[0].Type()))
+			panic(NewError(line, PARAMTYPEERROR, "first", "float", "*String|*Integer|*UInteger|*Boolean|*Float", args[0].Type()))
 		},
 	}
 }
@@ -450,6 +530,8 @@ func decimalBuiltin() *Builtin {
 				return input
 			case *Integer:
 				return &DecimalObj{Number:NewFromFloat(float64(input.Int64)), Valid:true}
+			case *UInteger:
+				return &DecimalObj{Number:NewFromFloat(float64(input.UInt64)), Valid:true}
 			case *Float:
 				return &DecimalObj{Number:NewFromFloat(input.Float64), Valid:true}
 			case *Boolean:
@@ -485,7 +567,7 @@ func decimalBuiltin() *Builtin {
 				}
 				return &DecimalObj{Number:NewFromFloat(n), Valid:true}
 			}
-			panic(NewError(line, PARAMTYPEERROR, "first", "decimal", "*String|*Integer|*Boolean|*Float|*Decimal", args[0].Type()))
+			panic(NewError(line, PARAMTYPEERROR, "first", "decimal", "*String|*Integer|*UInteger|*Boolean|*Float|*Decimal", args[0].Type()))
 		},
 	}
 }
@@ -653,11 +735,16 @@ func chanBuiltin() *Builtin {
 			if len(args) == 0 {
 				return &ChanObject{ch:make(chan Object)}
 			} else if len(args) == 1 {
-				v, ok := args[0].(*Integer)
-				if !ok {
-					panic(NewError(line, PARAMTYPEERROR, "first", "chan", "*Integer", args[0].Type()))
+				var v int64
+				switch o := args[0].(type) {
+				case *Integer:
+					v = o.Int64
+				case *UInteger:
+					v = int64(o.UInt64)
+				default:
+					panic(NewError(line, PARAMTYPEERROR, "first", "chan", "*Integer|*UInteger", args[0].Type()))
 				}
-				return &ChanObject{ch:make(chan Object, v.Int64)}
+				return &ChanObject{ch:make(chan Object, v)}
 			}
 			panic(NewError(line, ARGUMENTERROR, "Not 0|1", len(args)))
 		},
@@ -1213,6 +1300,7 @@ func init() {
 		"chr":     chrBuiltin(),
 		"newFile": newFileBuiltin(),
 		"int":     intBuiltin(),
+		"uint":    uintBuiltin(),
 		"float":   floatBuiltin(),
 		"str":     strBuiltin(),
 		"array":   arrayBuiltin(),

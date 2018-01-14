@@ -126,12 +126,13 @@ Monkey仅支持单行注释.
 
 ### 数据类型
 
-Monkey支持8种基本类型: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash`, `Tuple`和`Nil`
+Monkey支持9种基本类型: `String`, `Int`, `UInt`, `Float`, `Bool`, `Array`, `Hash`, `Tuple`和`Nil`
 
 ```swift
 s1 = "hello, 黄"       # strings are UTF-8 encoded
 s2 = `hello, "world"`  # raw string
 i = 10                 # int
+u = 10u                # uint
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
@@ -142,9 +143,10 @@ n = nil
 
 ### 常量(字面值)
 
-Monkey中，主要有10种类型的常量(字面量).
+Monkey中，主要有11种类型的常量(字面量).
 
 * Integer
+* UInteger
 * Float
 * String
 * 正则表达式
@@ -162,6 +164,13 @@ i2 = 20_000_000
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
 i5 = 0c127          // octal
+
+// Unsigned Integer literals
+ui1 = 10u
+ui2 = 20_000_000u     //for more readable
+ui3 = 0x80u           // hex
+ui4 = 0b10101u        // binary
+ui5 = 0c127u          // octal
 
 // Float literals
 f1 = 10.25
@@ -244,14 +253,15 @@ a, b, c = 1, "hello world", [1,2,3]
 
 ### 类型转换
 
-你可以使用内置的方法：`int()`, `float()`, `str()`, `array()`, `tuple`, `hash`, `decimal`来进行不同类型之间的转换.
+你可以使用内置的方法：`int()`, `uint()`, `float()`, `str()`, `array()`, `tuple`, `hash`, `decimal`来进行不同类型之间的转换.
 
 ```swift
 let i = 0xa
+let u = uint(i)                 // result: 10
 let s = str(i)                  // result: "10"
 let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
-let t = tuple(i)                // result: (10)
+let t = tuple(i)                // result: (10,)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
 let d = decimal("123.45634567") // result: 123.45634567
 ```
@@ -1627,7 +1637,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //插入`null`值. 有六个预定义的null常量：INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
+            //插入`null`值. 有七个预定义的null常量：INT_NULL,UINT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)

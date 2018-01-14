@@ -86,6 +86,10 @@ func (t *Tuple) Count(line string, args ...Object) Object {
 			if c.Int64 == v.(*Integer).Int64 {
 				count++
 			}
+		case *UInteger:
+			if c.UInt64 == v.(*UInteger).UInt64 {
+				count++
+			}
 		case *Float:
 			if c.Float64 == v.(*Float).Float64 {
 				count++
@@ -138,6 +142,10 @@ func (t *Tuple) Index(line string, args ...Object) Object {
 		switch c := args[0].(type) {
 		case *Integer:
 			if c.Int64 == v.(*Integer).Int64 {
+				return NewInteger(int64(i))
+			}
+		case *UInteger:
+			if c.UInt64 == v.(*UInteger).UInt64 {
 				return NewInteger(int64(i))
 			}
 		case *String:

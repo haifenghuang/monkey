@@ -180,6 +180,8 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.Chomp(line, args...)
 	case "parseInt":
 		return s.ParseInt(line, args...)
+	case "parseUInt":
+		return s.ParseUInt(line, args...)
 	case "parseBool":
 		return s.ParseBool(line, args...)
 	case "parseFloat":
@@ -192,6 +194,8 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.WriteLine(line, args...)
 	case "write":
 		return s.Write(line, args...)
+	case "isEmpty":
+		return s.IsEmpty(line, args...)
 	case "valid", "isValid":
 		return s.IsValid(line, args...)
 	case "setValid":
@@ -637,6 +641,28 @@ func (s *String) ParseInt(line string, args ...Object) Object {
 	return NewInteger(ret)
 }
 
+func (s *String) ParseUInt(line string, args ...Object) Object {
+	if len(args) != 0 && len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "0|1", len(args)))
+	}
+
+	var base uint64 = 10
+
+	if len(args) == 1 {
+		iBaseObj, ok := args[0].(*UInteger)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "first", "parseUInt", "*UInteger", args[0].Type()))
+		}
+		base = iBaseObj.UInt64
+	}
+
+	ret, err := strconv.ParseUint(s.String, int(base), 64)
+	if err != nil {
+		return &UInteger{UInt64: 0, Valid: false}
+	}
+	return NewUInteger(ret)
+}
+
 func (s *String) ParseBool(line string, args ...Object) Object {
 	if len(args) != 0 {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
@@ -682,12 +708,17 @@ func (s *String) Itoa(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	iObj, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "itoa", "*Integer", args[0].Type()))
+	var i int
+	switch o := args[0].(type) {
+	case *Integer:
+		i = int(o.Int64)
+	case *UInteger:
+		i = int(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "itoa", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := strconv.Itoa(int(iObj.Int64))
+	ret := strconv.Itoa(i)
 	return NewString(ret)
 }
 
@@ -707,6 +738,18 @@ func (s *String) Write(line string, args ...Object) Object {
 
 	fmt.Print(s.String)
 	return NIL
+}
+
+func (s *String) IsEmpty(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if len(s.String) == 0 {
+		return TRUE
+	}
+
+	return FALSE
 }
 
 func (s *String) IsValid(line string, args ...Object) Object {
@@ -827,6 +870,8 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.Chomp(line, args...)
 	case "parseInt":
 		return s.ParseInt(line, args...)
+	case "parseUInt":
+		return s.ParseUInt(line, args...)
 	case "parseBool":
 		return s.ParseBool(line, args...)
 	case "parseFloat":
@@ -839,6 +884,8 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.WriteLine(line, args...)
 	case "write":
 		return s.Write(line, args...)
+	case "isEmpty":
+		return s.IsEmpty(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, s.Type()))
 }
@@ -1403,6 +1450,32 @@ func (s *StringsObj) ParseInt(line string, args ...Object) Object {
 	return NewInteger(ret)
 }
 
+func (s *StringsObj) ParseUInt(line string, args ...Object) Object {
+	if len(args) != 1 && len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "1|2", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "parseUInt", "*String", args[0].Type()))
+	}
+
+	var base uint64 = 10
+	if len(args) == 2 {
+		iBaseObj, ok := args[1].(*UInteger)
+		if !ok {
+			panic(NewError(line, PARAMTYPEERROR, "second", "parseUInt", "*UInteger", args[1].Type()))
+		}
+		base = iBaseObj.UInt64
+	}
+
+	ret, err := strconv.ParseUint(strObj.String, int(base), 64)
+	if err != nil {
+		return &UInteger{UInt64: 0, Valid: false}
+	}
+	return NewUInteger(ret)
+}
+
 func (s *StringsObj) ParseBool(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
@@ -1463,12 +1536,17 @@ func (s *StringsObj) Itoa(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	iObj, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "itoa", "*Integer", args[0].Type()))
+	var i int
+	switch o := args[0].(type) {
+	case *Integer:
+		i = int(o.Int64)
+	case *UInteger:
+		i = int(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "itoa", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := strconv.Itoa(int(iObj.Int64))
+	ret := strconv.Itoa(i)
 	return NewString(ret)
 }
 
@@ -1498,4 +1576,20 @@ func (s *StringsObj) Write(line string, args ...Object) Object {
 
 	fmt.Print(strObj.String)
 	return NIL
+}
+
+func (s *StringsObj) IsEmpty(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "isEmpty", "*String", args[0].Type()))
+	}
+
+	if len(strObj.String) == 0 {
+		return TRUE
+	}
+	return FALSE
 }

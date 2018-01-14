@@ -610,6 +610,28 @@ func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
 ///////////////////////////////////////////////////////////
+//               UNSIGNED INTEGER LITERAL                //
+///////////////////////////////////////////////////////////
+type UIntegerLiteral struct { //U: Unsigned
+	Token token.Token
+	Value uint64
+}
+
+func (il *UIntegerLiteral) Pos() token.Position {
+	return il.Token.Pos
+}
+
+func (il *UIntegerLiteral) End() token.Position {
+	length := utf8.RuneCountInString(il.Token.Literal)
+	pos := il.Token.Pos
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+}
+
+func (il *UIntegerLiteral) expressionNode()      {}
+func (il *UIntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *UIntegerLiteral) String() string       { return il.Token.Literal }
+
+///////////////////////////////////////////////////////////
 //                     FLOAT LITERAL                     //
 ///////////////////////////////////////////////////////////
 type FloatLiteral struct {

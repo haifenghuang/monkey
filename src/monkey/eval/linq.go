@@ -367,6 +367,8 @@ func (lq *LinqObj) CallMethod(line string, scope *Scope, method string, args ...
 		return lq.SingleWith(line, scope, args...)
 	case "sumInts":
 		return lq.SumInts(line, args...)
+	case "sumUInts":
+		return lq.SumUInts(line, args...)
 	case "sumFloats":
 		return lq.SumFloats(line, args...)
 	case "min":
@@ -2515,6 +2517,29 @@ func (lq *LinqObj) SumInts(line string, args ...Object) Object {
 	return NewInteger(r)
 }
 
+// SumUInts computes the sum of a collection of numeric values.
+//
+// Method returns zero if collection contains no elements.
+func (lq *LinqObj) SumUInts(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	next := lq.Query.Iterate()
+	item, ok := next()
+	if !ok.Bool {
+		return NewInteger(0)
+	}
+
+	var r uint64 = item.(*UInteger).UInt64
+
+	for item, ok = next(); ok.Bool; item, ok = next() {
+		r += item.(*UInteger).UInt64
+	}
+
+	return NewUInteger(r)
+}
+
 // SumFloats computes the sum of a collection of numeric values.
 //
 // Method returns zero if collection contains no elements.
@@ -2606,6 +2631,15 @@ func (lq *LinqObj) Average(line string, args ...Object) Object {
 
 		for item, ok = next(); ok.Bool; item, ok = next() {
 			sum += item.(*Integer).Int64
+			n++
+		}
+
+		r = float64(sum)
+	case *UInteger:
+		var sum uint64 = item.(*UInteger).UInt64
+
+		for item, ok = next(); ok.Bool; item, ok = next() {
+			sum += item.(*UInteger).UInt64
 			n++
 		}
 
@@ -2889,6 +2923,18 @@ func getComparer(data Object) comparer {
 			case a.Int64 > b.Int64:
 				return 1
 			case b.Int64 > a.Int64:
+				return -1
+			default:
+				return 0
+			}
+		}
+	case *UInteger:
+		return func(x, y Object) int {
+			a, b := x.(*UInteger), y.(*UInteger)
+			switch {
+			case a.UInt64 > b.UInt64:
+				return 1
+			case b.UInt64 > a.UInt64:
 				return -1
 			default:
 				return 0

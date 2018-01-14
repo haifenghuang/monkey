@@ -449,6 +449,13 @@ func (t *TemplateObj) Execute(line string, args ...Object) Object {
 		if err != nil {
 			return NewFalseObj(err.Error())
 		}
+	case UINTEGER_OBJ:
+		//convert 'UInteger' object to interface{}
+		i := args[1].(*UInteger)
+		data, err = i.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
 	case FLOAT_OBJ:
 		//convert 'Float' object to interface{}
 		f := args[1].(*Float)
@@ -485,7 +492,7 @@ func (t *TemplateObj) Execute(line string, args ...Object) Object {
 			return NewFalseObj(err.Error())
 		}
 	default:
-		panic(NewError(line, PARAMTYPEERROR, "second", "execute", "*Integer|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
+		panic(NewError(line, PARAMTYPEERROR, "second", "execute", "*Integer|*UInteger|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
 	}
 
 	var obj interface{}
@@ -581,6 +588,13 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 		if err != nil {
 			return NewFalseObj(err.Error())
 		}
+	case UINTEGER_OBJ:
+		//convert 'UInteger' object to interface{}
+		i := args[2].(*UInteger)
+		data, err = i.MarshalJSON()
+		if err != nil {
+			return NewFalseObj(err.Error())
+		}
 	case FLOAT_OBJ:
 		//convert 'Float' object to interface{}
 		f := args[2].(*Float)
@@ -617,7 +631,7 @@ func (t *TemplateObj) ExecuteTemplate(line string, args ...Object) Object {
 			return NewFalseObj(err.Error())
 		}
 	default:
-		panic(NewError(line, PARAMTYPEERROR, "third", "executeTemplate", "*Integer|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
+		panic(NewError(line, PARAMTYPEERROR, "third", "executeTemplate", "*Integer|*UInteger|*Float|*String|*Boolean|*Nil|*TimeObj|*Array|*Hash", objType))
 	}
 
 	var obj interface{}

@@ -86,6 +86,10 @@ func (i *Integer) HashKey() HashKey {
 	return HashKey{Type: i.Type(), Value: uint64(i.Int64)}
 }
 
+func (u *UInteger) HashKey() HashKey {
+	return HashKey{Type: u.Type(), Value: u.UInt64}
+}
+
 func (s *String) HashKey() HashKey {
 	h := fnv.New64a()
 	h.Write([]byte(s.String))

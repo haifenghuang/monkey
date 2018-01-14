@@ -774,12 +774,17 @@ func (p *PipeObj) Read(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	readlen, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "read", "*Integer", args[0].Type()))
+	var readlen int
+	switch o := args[0].(type) {
+	case *Integer:
+		readlen = int(o.Int64)
+	case *UInteger:
+		readlen = int(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "read", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	buffer := make([]byte, int(readlen.Int64))
+	buffer := make([]byte, readlen)
 	_, err := p.Reader.Read(buffer)
 	if err != io.EOF && err != nil {
 		return NewNil(err.Error())

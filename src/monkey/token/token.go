@@ -8,6 +8,7 @@ const (
 
 	IDENT //identifier
 	INT   //int literal
+	UINT  //unsigned int
 	FLOAT //float literal
 
 	EQ         // ==
@@ -157,6 +158,8 @@ func (tt TokenType) String() string {
 		return "IDENT"
 	case INT:
 		return "INT"
+	case UINT:
+		return "UINT"
 	case FLOAT:
 		return "FLOAT"
 	case EQ:

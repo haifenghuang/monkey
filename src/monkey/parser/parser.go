@@ -118,6 +118,7 @@ func New(l *lexer.Lexer, wd string) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.UINT, p.parseUIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.PLUS, p.parsePrefixExpression)
@@ -947,6 +948,31 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return lit
 }
 
+func (p *Parser) parseUIntegerLiteral() ast.Expression {
+	lit := &ast.UIntegerLiteral{Token: p.curToken}
+
+	var value uint64
+	var err error
+
+	if strings.HasPrefix(p.curToken.Literal, "0b") {
+		value, err = strconv.ParseUint(p.curToken.Literal[2:], 2, 64)
+	} else if strings.HasPrefix(p.curToken.Literal, "0x") {
+		value, err = strconv.ParseUint(p.curToken.Literal[2:], 16, 64)
+	} else if strings.HasPrefix(p.curToken.Literal, "0c") {
+		value, err = strconv.ParseUint(p.curToken.Literal[2:], 8, 64)
+	} else {
+		value, err = strconv.ParseUint(p.curToken.Literal, 10, 64)
+	}
+
+	if err != nil {
+		msg := fmt.Sprintf("Syntax Error: %v - could not parse %q as unsigned integer", p.curToken.Pos, p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+	}
+	lit.Value = value
+	return lit
+}
+
+
 func (p *Parser) parseFloatLiteral() ast.Expression {
 	lit := &ast.FloatLiteral{Token: p.curToken}
 
@@ -1191,7 +1217,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 	}
 
 	p.nextToken() //skip the '{'
-	keyExpr := p.parseExpression(SLICE) //note the precedence
+	keyExpr := p.parseExpression(SLICE) //note the precedence,if is LOWEST, then it will be parsed as sliceExpression
 
 	if p.peekTokenIs(token.COLON) { //a hash comprehension
 		p.nextToken() //skip current token

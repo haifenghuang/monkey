@@ -285,11 +285,15 @@ func (l *Lexer) readRunesToken() token.Token {
 		tok.Type = token.LookupIdent(tok.Literal)
 		return tok
 	case isDigit(l.ch):
-		literal, _ := l.readNumber()
+		literal, isUnsigned, _ := l.readNumber()
 		if strings.Contains(literal, ".") {
 			tok.Type = token.FLOAT
 		} else {
-			tok.Type = token.INT
+			if isUnsigned {
+				tok.Type = token.UINT
+			} else {
+				tok.Type = token.INT
+			}
 		}
 		tok.Literal = literal
 		return tok
@@ -473,7 +477,8 @@ func isLetter(ch rune) bool {
 }
 
 // scanNumber returns number begining at current position.
-func (l *Lexer) readNumber() (string, error) {
+func (l *Lexer) readNumber() (string, bool, error) {
+	var isUnsigned bool
 	var ret []rune
 	ch := l.ch
 	ret = append(ret, ch)
@@ -511,6 +516,11 @@ func (l *Lexer) readNumber() (string, error) {
 				l.readNext()
 			}
 		}
+
+		if l.ch == 'u' {
+			isUnsigned = true
+			l.readNext()
+		}
 	} else {
 		for isDigit(l.ch) || l.ch == '.' || l.ch == '_' {
 			if l.ch == '_' {
@@ -520,9 +530,9 @@ func (l *Lexer) readNumber() (string, error) {
 
 			if l.ch == '.' {
 				if l.peek() == '.' { //range operator
-					return string(ret), nil
+					return string(ret), false, nil
 				} else if !isDigit(l.peek()) && l.peek() != 'e' && l.peek() != 'E' { //should be a method calling, e.g. 10.next()
-					return string(ret), nil
+					return string(ret), false, nil
 				}
 			} //end if
 
@@ -553,12 +563,19 @@ func (l *Lexer) readNumber() (string, error) {
 				ret = append(ret, l.ch)
 				l.readNext()
 			}
+		} else if l.ch == 'u' {
+			isUnsigned = true
+			l.readNext()
 		}
 //		if isLetter(l.ch) {
 //			return "", errors.New("identifier starts immediately after numeric literal")
 //		}
 	}
-	return string(ret), nil
+
+	if isUnsigned {
+		return string(ret), true, nil
+	}
+	return string(ret), false, nil
 }
 
 func isDigit(ch rune) bool {

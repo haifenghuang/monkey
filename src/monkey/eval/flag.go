@@ -38,6 +38,8 @@ func (f *FlagObj) CallMethod(line string, scope *Scope, method string, args ...O
 		return f.Bool(line, args...)
 	case "int":
 		return f.Int(line, args...)
+	case "uint":
+		return f.UInt(line, args...)
 	case "float":
 		return f.Float(line, args...)
 	case "string":
@@ -156,6 +158,33 @@ func (f *FlagObj) Int(line string, args ...Object) Object {
 	return ret
 }
 
+func (f *FlagObj) UInt(line string, args ...Object) Object {
+	if len(args) != 3 {
+		panic(NewError(line, ARGUMENTERROR, "3", len(args)))
+	}
+
+	name, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "uint", "*String", args[0].Type()))
+	}
+
+	value, ok := args[1].(*UInteger)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "uint", "*UInteger", args[1].Type()))
+	}
+
+	usage, ok := args[2].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "third", "uint", "*String", args[2].Type()))
+	}
+
+	i := flag.Uint64(name.String, value.UInt64, usage.String)
+	ret := NewUInteger(value.UInt64)
+	f.arguments[ret] = i
+
+	return ret
+}
+
 func (f *FlagObj) Float(line string, args ...Object) Object {
 	if len(args) != 3 {
 		panic(NewError(line, ARGUMENTERROR, "3", len(args)))
@@ -252,6 +281,11 @@ func (f *FlagObj) Parse(line string, args ...Object) Object {
 			i := key.(*Integer)
 			v := value.(*int64)
 			i.Int64 = *v
+
+		case *UInteger:
+			i := key.(*UInteger)
+			v := value.(*uint64)
+			i.UInt64 = *v
 
 		case *Float:
 			f := key.(*Float)

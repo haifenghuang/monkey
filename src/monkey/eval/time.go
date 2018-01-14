@@ -187,13 +187,15 @@ func (t *TimeObj) FromEpoch(line string, args ...Object) Object {
 	}
 
 	aType := args[0].Type()
-	if aType != INTEGER_OBJ && aType != FLOAT_OBJ {
-		panic(NewError(line, PARAMTYPEERROR, "first", "fromEpoch", "*Integer|*Float", args[0].Type()))
+	if aType != INTEGER_OBJ && aType != UINTEGER_OBJ && aType != FLOAT_OBJ {
+		panic(NewError(line, PARAMTYPEERROR, "first", "fromEpoch", "*Integer|*UInteger|*Float", args[0].Type()))
 	}
 
 	var f float64
 	if aType == INTEGER_OBJ {
 		f = float64(args[0].(*Integer).Int64)
+	} else if aType == UINTEGER_OBJ {
+		f = float64(args[0].(*UInteger).UInt64)
 	} else {
 		f = args[0].(*Float).Float64
 	}

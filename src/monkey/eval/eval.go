@@ -77,6 +77,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.IntegerLiteral:
 		return evalIntegerLiteral(node)
+	case *ast.UIntegerLiteral:
+		return evalUIntegerLiteral(node)
 	case *ast.FloatLiteral:
 		return evalFloatLiteral(node)
 	case *ast.StringLiteral:
@@ -277,9 +279,12 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 	var rightVal float64
 
 	isInt := left.Type() == INTEGER_OBJ && val.Type() == INTEGER_OBJ
+	isUInt := left.Type() == UINTEGER_OBJ && val.Type() == UINTEGER_OBJ
 
 	if left.Type() == INTEGER_OBJ {
 		leftVal = float64(left.(*Integer).Int64)
+	} else if left.Type() == UINTEGER_OBJ {
+		leftVal = float64(left.(*UInteger).UInt64)
 	} else {
 		leftVal = left.(*Float).Float64
 	}
@@ -287,6 +292,8 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 	//Check `right`'s type
 	if val.Type() == INTEGER_OBJ {
 		rightVal = float64(val.(*Integer).Int64)
+	} else if val.Type() == UINTEGER_OBJ {
+		rightVal = float64(val.(*UInteger).UInt64)
 	} else {
 		rightVal = val.(*Float).Float64
 	}
@@ -294,13 +301,19 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 	var ok bool
 	switch a.Token.Literal {
 	case "+=":
-		if isInt {
-			ret, ok = scope.Reset(name, NewInteger(int64(leftVal+rightVal)))
+		result := leftVal + rightVal
+		if isInt { //only 'INTEGER + INTEGER'
+			ret, ok = scope.Reset(name, NewInteger(int64(result)))
+			if ok {
+				return
+			}
+		} else if isUInt { //only 'UINTEGER + UINTEGER'
+			ret, ok = scope.Reset(name, NewUInteger(uint64(result)))
 			if ok {
 				return
 			}
 		} else {
-			ret, ok = scope.Reset(name, NewFloat(leftVal+rightVal))
+			ret, ok = checkNumAssign(scope, name, left, val, result)
 			if ok {
 				return
 			}
@@ -308,13 +321,19 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 
 	case "-=":
+		result := leftVal-rightVal
 		if isInt {
-			ret, ok = scope.Reset(name, NewInteger(int64(leftVal-rightVal)))
+			ret, ok = scope.Reset(name, NewInteger(int64(result)))
+			if ok {
+				return
+			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(result)))
 			if ok {
 				return
 			}
 		} else {
-			ret, ok = scope.Reset(name, NewFloat(leftVal-rightVal))
+			ret, ok = checkNumAssign(scope, name, left, val, result)
 			if ok {
 				return
 			}
@@ -322,13 +341,19 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 
 	case "*=":
+		result := leftVal*rightVal
 		if isInt {
-			ret, ok = scope.Reset(name, NewInteger(int64(leftVal*rightVal)))
+			ret, ok = scope.Reset(name, NewInteger(int64(result)))
+			if ok {
+				return
+			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(result)))
 			if ok {
 				return
 			}
 		} else {
-			ret, ok = scope.Reset(name, NewFloat(leftVal*rightVal))
+			ret, ok = checkNumAssign(scope, name, left, val, result)
 			if ok {
 				return
 			}
@@ -340,16 +365,11 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 			panic(NewError(a.Pos().Sline(), DIVIDEBYZERO))
 		}
 
-		if isInt {
-			ret, ok = scope.Reset(name, NewInteger(int64(leftVal/rightVal)))
-			if ok {
-				return
-			}
-		} else {
-			ret, ok = scope.Reset(name, NewFloat(leftVal/rightVal))
-			if ok {
-				return
-			}
+		result := leftVal/rightVal
+		//Always return Float
+		ret, ok = scope.Reset(name, NewFloat(result))
+		if ok {
+			return
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 
@@ -359,8 +379,14 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 			if ok {
 				return
 			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(leftVal)%uint64(rightVal)))
+			if ok {
+				return
+			}
 		} else {
-			ret, ok = scope.Reset(name, NewFloat(math.Mod(leftVal, rightVal)))
+			result := math.Mod(leftVal, rightVal)
+			ret, ok = checkNumAssign(scope, name, left, val, result)
 			if ok {
 				return
 			}
@@ -373,12 +399,22 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 			if ok {
 				return
 			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(leftVal)^uint64(rightVal)))
+			if ok {
+				return
+			}
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 
 	case "|=":
 		if isInt {
 			ret, ok = scope.Reset(name, NewInteger(int64(leftVal)|int64(rightVal)))
+			if ok {
+				return
+			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(leftVal)|uint64(rightVal)))
 			if ok {
 				return
 			}
@@ -391,10 +427,32 @@ func evalNumAssignExpression(a *ast.AssignExpression, name string, left Object, 
 			if ok {
 				return
 			}
+		} else if isUInt {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(leftVal)&uint64(rightVal)))
+			if ok {
+				return
+			}
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	}
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
+}
+
+func checkNumAssign(scope *Scope, name string, left Object, right Object, result float64) (ret Object, ok bool) {
+	if (left.Type() == FLOAT_OBJ || right.Type() == FLOAT_OBJ) {
+		ret, ok = scope.Reset(name, NewFloat(result))
+		return
+	}
+
+	if (left.Type() == INTEGER_OBJ && right.Type() == UINTEGER_OBJ) ||
+		(left.Type() == UINTEGER_OBJ && right.Type() == INTEGER_OBJ) {
+		if result > math.MaxInt64 {
+			ret, ok = scope.Reset(name, NewUInteger(uint64(result)))
+		} else {
+			ret, ok = scope.Reset(name, NewInteger(int64(result)))
+		}
+	}
+	return
 }
 
 //str[idx] = item
@@ -412,11 +470,15 @@ func evalStrAssignExpression(a *ast.AssignExpression, name string, left Object, 
 				ret = NIL
 				return
 			}
-			if index.Type() != INTEGER_OBJ { //must be an integer
-				panic(NewError(a.Pos().Sline(), GENERICERROR, "Array index value should evaluate to an integer"))
-			}
 
-			idx := index.(*Integer).Int64
+			var idx int64
+			switch o := index.(type) {
+			case *Integer:
+				idx = o.Int64
+			case *UInteger:
+				idx = int64(o.UInt64)
+			}
+			
 			if idx < 0 || idx >= int64(len(leftVal)) {
 				panic(NewError(a.Pos().Sline(), INDEXERROR, idx))
 			}
@@ -462,11 +524,14 @@ func evalArrayAssignExpression(a *ast.AssignExpression, name string, left Object
 				ret = NIL
 				return
 			}
-			if index.Type() != INTEGER_OBJ { //must be an integer
-				panic(NewError(a.Pos().Sline(), GENERICERROR, "Array index value should evaluate to an integer"))
-			}
 
-			idx := index.(*Integer).Int64
+			var idx int64
+			switch o := index.(type) {
+			case *Integer:
+				idx = o.Int64
+			case *UInteger:
+				idx = int64(o.UInt64)
+			}
 			if idx < 0 {
 				panic(NewError(a.Pos().Sline(), INDEXERROR, idx))
 			}
@@ -590,7 +655,7 @@ func evalStructAssignExpression(a *ast.AssignExpression, scope *Scope, val Objec
 	}
 
 	switch aVal.Type() {
-	case INTEGER_OBJ, FLOAT_OBJ:
+	case INTEGER_OBJ, UINTEGER_OBJ, FLOAT_OBJ:
 		retVal = evalNumAssignExpression(a, strArr[1], aVal, structScope, val)
 		st.Scope = structScope
 		return
@@ -662,7 +727,7 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 	}
 
 	switch left.Type() {
-	case INTEGER_OBJ, FLOAT_OBJ:
+	case INTEGER_OBJ, UINTEGER_OBJ, FLOAT_OBJ:
 		val = evalNumAssignExpression(a, name, left, scope, val)
 		return
 	case STRING_OBJ:
@@ -743,6 +808,10 @@ func nativeBoolToBooleanObject(input bool) *Boolean {
 // Literals
 func evalIntegerLiteral(i *ast.IntegerLiteral) Object {
 	return NewInteger(i.Value)
+}
+
+func evalUIntegerLiteral(i *ast.UIntegerLiteral) Object {
+	return NewUInteger(i.Value)
 }
 
 func evalFloatLiteral(f *ast.FloatLiteral) Object {
@@ -890,6 +959,14 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 			i := right.(*Integer)
 			i.Int64 = -i.Int64
 			return i
+		case UINTEGER_OBJ:
+			i := right.(*UInteger)
+			if i.UInt64 == 0 {
+				i.UInt64 = 0
+				return i
+			} else {
+				panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
+			}
 		case FLOAT_OBJ:
 			f := right.(*Float)
 			f.Float64 = -f.Float64
@@ -910,6 +987,10 @@ func evalIncrementPrefixOperatorExpression(p *ast.PrefixExpression, right Object
 		rightObj := right.(*Integer)
 		rightObj.Int64 = rightObj.Int64 + 1
 		return NewInteger(rightObj.Int64)
+	case UINTEGER_OBJ:
+		rightObj := right.(*UInteger)
+		rightObj.UInt64 = rightObj.UInt64 + 1
+		return NewUInteger(rightObj.UInt64)
 	case FLOAT_OBJ:
 		rightObj := right.(*Float)
 		rightObj.Float64 = rightObj.Float64 + 1
@@ -925,6 +1006,10 @@ func evalDecrementPrefixOperatorExpression(p *ast.PrefixExpression, right Object
 		rightObj := right.(*Integer)
 		rightObj.Int64 = rightObj.Int64 - 1
 		return NewInteger(rightObj.Int64)
+	case UINTEGER_OBJ:
+		rightObj := right.(*UInteger)
+		rightObj.UInt64 = rightObj.UInt64 - 1
+		return NewUInteger(rightObj.UInt64)
 	case FLOAT_OBJ:
 		rightObj := right.(*Float)
 		rightObj.Float64 = rightObj.Float64 - 1
@@ -1024,6 +1109,11 @@ func objectToNativeBoolean(o Object) bool {
 			return false
 		}
 		return true
+	case *UInteger:
+		if obj.UInt64 == 0 {
+			return false
+		}
+		return true
 	case *Float:
 		if obj.Float64 == 0.0 {
 			return false
@@ -1052,16 +1142,23 @@ func objectToNativeBoolean(o Object) bool {
 func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
 	var leftVal float64
 	var rightVal float64
+
 	isInt := left.Type() == INTEGER_OBJ && right.Type() == INTEGER_OBJ
+	isUInt := left.Type() == UINTEGER_OBJ && right.Type() == UINTEGER_OBJ
+
 
 	if left.Type() == INTEGER_OBJ {
 		leftVal = float64(left.(*Integer).Int64)
+	} else if left.Type() == UINTEGER_OBJ {
+		leftVal = float64(left.(*UInteger).UInt64)
 	} else {
 		leftVal = left.(*Float).Float64
 	}
 
 	if right.Type() == INTEGER_OBJ {
 		rightVal = float64(right.(*Integer).Int64)
+	} else if right.Type() == UINTEGER_OBJ {
+		rightVal = float64(right.(*UInteger).UInt64)
 	} else {
 		rightVal = right.(*Float).Float64
 	}
@@ -1071,44 +1168,65 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		val := math.Pow(leftVal, rightVal)
 		if isInt {
 			return NewInteger(int64(val))
+		} else if isUInt {
+			return NewUInteger(uint64(val))
+		} else {
+			return checkNumInfix(left, right, val)
 		}
-		return NewFloat(val)
 	case "&":
 		if isInt {
 			val := int64(leftVal) & int64(rightVal)
 			return NewInteger(int64(val))
+		} else if isUInt {
+			val := uint64(leftVal) & uint64(rightVal)
+			return NewUInteger(uint64(val))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	case "|":
 		if isInt {
 			val := int64(leftVal) | int64(rightVal)
 			return NewInteger(int64(val))
+		} else if isUInt {
+			val := uint64(leftVal) | uint64(rightVal)
+			return NewUInteger(uint64(val))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	case "^":
 		if isInt {
 			val := int64(leftVal) ^ int64(rightVal)
 			return NewInteger(int64(val))
+		} else if isUInt {
+			val := uint64(leftVal) ^ uint64(rightVal)
+			return NewUInteger(uint64(val))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	case "+":
 		val := leftVal + rightVal
 		if isInt {
 			return NewInteger(int64(val))
+		} else if isUInt {
+			return NewUInteger(uint64(val))
+		} else {
+			return checkNumInfix(left, right, val)
 		}
-		return NewFloat(val)
 	case "-":
 		val := leftVal - rightVal
 		if isInt {
 			return NewInteger(int64(val))
+		} else if isUInt {
+			return NewUInteger(uint64(val))
+		} else {
+			return checkNumInfix(left, right, val)
 		}
-		return NewFloat(val)
 	case "*":
 		val := leftVal * rightVal
 		if isInt {
 			return NewInteger(int64(val))
+		} else 	if isUInt {
+			return NewUInteger(uint64(val))
+		} else {
+			return checkNumInfix(left, right, val)
 		}
-		return NewFloat(val)
 	case "/":
 		if rightVal == 0 {
 			panic(NewError(node.Pos().Sline(), DIVIDEBYZERO))
@@ -1119,17 +1237,25 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 	case "%":
 		if isInt {
 			return NewInteger(int64(leftVal) % int64(rightVal))
+		} else if isUInt {
+			return NewUInteger(uint64(leftVal) % uint64(rightVal))
 		}
 		return NewFloat(math.Mod(leftVal, rightVal))
 	case ">>":
 		if isInt {
 			aRes := uint64(leftVal) >> uint64(rightVal)
 			return NewInteger(int64(aRes)) //NOTE: CAST MAYBE NOT CORRECT
+		} else if isUInt {
+			aRes := uint64(leftVal) >> uint64(rightVal)
+			return NewUInteger(uint64(aRes))
 		}
 	case "<<":
 		if isInt {
 			aRes := uint64(leftVal) << uint64(rightVal)
 			return NewInteger(int64(aRes)) //NOTE: CAST MAYBE NOT CORRECT
+		} else if isUInt {
+			aRes := uint64(leftVal) << uint64(rightVal)
+			return NewUInteger(uint64(aRes))
 		}
 
 	case "<":
@@ -1151,12 +1277,17 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 	return NIL
 }
 
-func evalModuloExpression(left *Integer, right *Integer) Object {
-	mod := left.Int64 % right.Int64
-	if mod < 0 {
-		mod += right.Int64
+func checkNumInfix(left Object, right Object, val float64) Object {
+	if (left.Type() == INTEGER_OBJ && right.Type() == UINTEGER_OBJ) ||
+		(left.Type() == UINTEGER_OBJ && right.Type() == INTEGER_OBJ) {
+		if val > math.MaxInt64 {
+			return NewUInteger(uint64(val))
+		} else {
+			return NewInteger(int64(val))
+		}
 	}
-	return NewInteger(mod)
+
+	return NewFloat(val)
 }
 
 func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
@@ -1204,10 +1335,16 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		if left.Type() == INTEGER_OBJ {
 			integer := left.(*Integer).Int64
 			return NewString(strings.Repeat(right.Inspect(), int(integer)))
+		} else if left.Type() == UINTEGER_OBJ {
+			uinteger := left.(*UInteger).UInt64
+			return NewString(strings.Repeat(right.Inspect(), int(uinteger)))
 		}
 		if right.Type() == INTEGER_OBJ {
 			integer := right.(*Integer).Int64
 			return NewString(strings.Repeat(left.Inspect(), int(integer)))
+		} else if right.Type() == UINTEGER_OBJ {
+			uinteger := right.(*UInteger).UInt64
+			return NewString(strings.Repeat(left.Inspect(), int(uinteger)))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	case "==":
@@ -1242,6 +1379,8 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		var str string
 		if left.Type() == INTEGER_OBJ {
 			str = fmt.Sprintf("%d", left.(*Integer).Int64)
+		} else if left.Type() == UINTEGER_OBJ {
+			str = fmt.Sprintf("%d", left.(*UInteger).UInt64)
 		} else if left.Type() == FLOAT_OBJ {
 			str = fmt.Sprintf("%g", left.(*Float).Float64)
 		}
@@ -1255,6 +1394,8 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		var str string
 		if left.Type() == INTEGER_OBJ {
 			str = fmt.Sprintf("%d", left.(*Integer).Int64)
+		} else if left.Type() == UINTEGER_OBJ {
+			str = fmt.Sprintf("%d", left.(*UInteger).UInt64)
 		} else if left.Type() == FLOAT_OBJ {
 			str = fmt.Sprintf("%g", left.(*Float).Float64)
 		}
@@ -1792,17 +1933,23 @@ func evalListRangeComprehension(lc *ast.ListRangeComprehension, scope *Scope) Ob
 	startIdx := Eval(lc.StartIdx, innerScope)
 	endIdx := Eval(lc.EndIdx, innerScope)
 
-	var j int64
 	arr := &Array{}
 
 	switch startIdx.(type) {
 	case *Integer:
 		startVal := startIdx.(*Integer).Int64
-		if endIdx.Type() != INTEGER_OBJ {
-			panic(NewError(lc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ, endIdx.Type()))
-		}
-		endVal := endIdx.(*Integer).Int64
 
+		var endVal int64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = o.Int64
+		case *UInteger:
+			endVal = int64(o.UInt64)
+		default:
+			panic(NewError(lc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j int64
 		if startVal >= endVal {
 			for j = startVal; j >= endVal; j = j - 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
@@ -1810,6 +1957,29 @@ func evalListRangeComprehension(lc *ast.ListRangeComprehension, scope *Scope) Ob
 		} else {
 			for j = startVal; j <= endVal; j = j + 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		}
+	case *UInteger:
+		startVal := startIdx.(*UInteger).UInt64
+
+		var endVal uint64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = uint64(o.Int64)
+		case *UInteger:
+			endVal = o.UInt64
+		default:
+			panic(NewError(lc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j uint64
+		if startVal >= endVal {
+			for j = startVal; j >= endVal; j = j - 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
+			}
+		} else {
+			for j = startVal; j <= endVal; j = j + 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
 			}
 		}
 	case *String:
@@ -2002,17 +2172,23 @@ func evalHashRangeComprehension(hc *ast.HashRangeComprehension, scope *Scope) Ob
 	startIdx := Eval(hc.StartIdx, innerScope)
 	endIdx := Eval(hc.EndIdx, innerScope)
 
-	var j int64
 	arr := &Array{}
 
 	switch startIdx.(type) {
 	case *Integer:
 		startVal := startIdx.(*Integer).Int64
-		if endIdx.Type() != INTEGER_OBJ {
-			panic(NewError(hc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ, endIdx.Type()))
-		}
-		endVal := endIdx.(*Integer).Int64
 
+		var endVal int64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = o.Int64
+		case *UInteger:
+			endVal = int64(o.UInt64)
+		default:
+			panic(NewError(hc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j int64
 		if startVal >= endVal {
 			for j = startVal; j >= endVal; j = j - 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
@@ -2020,6 +2196,29 @@ func evalHashRangeComprehension(hc *ast.HashRangeComprehension, scope *Scope) Ob
 		} else {
 			for j = startVal; j <= endVal; j = j + 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		}
+	case *UInteger:
+		startVal := startIdx.(*UInteger).UInt64
+
+		var endVal uint64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = uint64(o.Int64)
+		case *UInteger:
+			endVal = o.UInt64
+		default:
+			panic(NewError(hc.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j uint64
+		if startVal >= endVal {
+			for j = startVal; j >= endVal; j = j - 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
+			}
+		} else {
+			for j = startVal; j <= endVal; j = j + 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
 			}
 		}
 	case *String:
@@ -2527,17 +2726,23 @@ func evalForEachDotRangeExpression(fdr *ast.ForEachDotRange, scope *Scope) Objec
 	//		panic(NewError(fdr.Pos().Sline(), RANGETYPEERROR, endIdx.Type()))
 	//	}
 
-	var j int64
 	arr := &Array{}
 
 	switch startIdx.(type) {
 	case *Integer:
 		startVal := startIdx.(*Integer).Int64
-		if endIdx.Type() != INTEGER_OBJ {
-			panic(NewError(fdr.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ, endIdx.Type()))
-		}
-		endVal := endIdx.(*Integer).Int64
 
+		var endVal int64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = o.Int64
+		case *UInteger:
+			endVal = int64(o.UInt64)
+		default:
+			panic(NewError(fdr.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j int64
 		if startVal >= endVal {
 			for j = startVal; j >= endVal; j = j - 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
@@ -2545,6 +2750,29 @@ func evalForEachDotRangeExpression(fdr *ast.ForEachDotRange, scope *Scope) Objec
 		} else {
 			for j = startVal; j <= endVal; j = j + 1 {
 				arr.Members = append(arr.Members, NewInteger(j))
+			}
+		}
+	case *UInteger:
+		startVal := startIdx.(*UInteger).UInt64
+
+		var endVal uint64
+		switch o := endIdx.(type) {
+		case *Integer:
+			endVal = uint64(o.Int64)
+		case *UInteger:
+			endVal = o.UInt64
+		default:
+			panic(NewError(fdr.Pos().Sline(), RANGETYPEERROR, INTEGER_OBJ + "|" + UINTEGER_OBJ, endIdx.Type()))
+		}
+
+		var j uint64
+		if startVal >= endVal {
+			for j = startVal; j >= endVal; j = j - 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
+			}
+		} else {
+			for j = startVal; j <= endVal; j = j + 1 {
+				arr.Members = append(arr.Members, NewUInteger(j))
 			}
 		}
 	case *String:
@@ -2640,6 +2868,10 @@ func IsTrue(obj Object) bool {
 		switch obj.Type() {
 		case INTEGER_OBJ:
 			if obj.(*Integer).Int64 == 0 {
+				return false
+			}
+		case UINTEGER_OBJ:
+			if obj.(*UInteger).UInt64 == 0 {
 				return false
 			}
 		case FLOAT_OBJ:
@@ -2955,7 +3187,14 @@ func evalStringIndex(str *String, ie *ast.IndexExpression, scope *Scope) Object 
 	if index.Type() == ERROR_OBJ {
 		return index
 	}
-	idx = index.(*Integer).Int64
+
+	switch o := index.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
+
 	if idx >= length || idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -2975,7 +3214,13 @@ func evalStringSliceExpression(str *String, se *ast.SliceExpression, scope *Scop
 	if startIdx.Type() == ERROR_OBJ {
 		return startIdx
 	}
-	idx = startIdx.(*Integer).Int64
+
+	switch o := startIdx.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
 	if idx >= length || idx < 0 {
 		panic(NewError(se.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -2987,7 +3232,13 @@ func evalStringSliceExpression(str *String, se *ast.SliceExpression, scope *Scop
 		if slIndex.Type() == ERROR_OBJ {
 			return slIndex
 		}
-		slice = slIndex.(*Integer).Int64
+
+		switch o := slIndex.(type) {
+		case *Integer:
+			slice = o.Int64
+		case *UInteger:
+			slice = int64(o.UInt64)
+		}
 		if slice >= (length + 1) {
 			panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
 		}
@@ -3033,7 +3284,14 @@ func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scop
 	if startIdx.Type() == ERROR_OBJ {
 		return startIdx
 	}
-	idx = startIdx.(*Integer).Int64
+
+	switch o := startIdx.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
+
 	if idx < 0 {
 		panic(NewError(se.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -3049,7 +3307,13 @@ func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scop
 		if slIndex.Type() == ERROR_OBJ {
 			return slIndex
 		}
-		slice = slIndex.(*Integer).Int64
+
+		switch o := slIndex.(type) {
+		case *Integer:
+			slice = o.Int64
+		case *UInteger:
+			slice = int64(o.UInt64)
+		}
 		if slice >= (length+1) || slice < 0 {
 			panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
 		}
@@ -3078,7 +3342,13 @@ func evalArrayIndex(array *Array, ie *ast.IndexExpression, scope *Scope) Object 
 	if index.Type() == ERROR_OBJ {
 		return index
 	}
-	idx = index.(*Integer).Int64
+
+	switch o := index.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
 	if idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -3098,7 +3368,13 @@ func evalTupleSliceExpression(tuple *Tuple, se *ast.SliceExpression, scope *Scop
 	if startIdx.Type() == ERROR_OBJ {
 		return startIdx
 	}
-	idx = startIdx.(*Integer).Int64
+
+	switch o := startIdx.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
 	if idx < 0 {
 		panic(NewError(se.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -3114,7 +3390,13 @@ func evalTupleSliceExpression(tuple *Tuple, se *ast.SliceExpression, scope *Scop
 		if slIndex.Type() == ERROR_OBJ {
 			return slIndex
 		}
-		slice = slIndex.(*Integer).Int64
+
+		switch o := slIndex.(type) {
+		case *Integer:
+			slice = o.Int64
+		case *UInteger:
+			slice = int64(o.UInt64)
+		}
 		if slice >= (length+1) || slice < 0 {
 			panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
 		}
@@ -3144,7 +3426,13 @@ func evalTupleIndex(tuple *Tuple, ie *ast.IndexExpression, scope *Scope) Object 
 	if index.Type() == ERROR_OBJ {
 		return index
 	}
-	idx = index.(*Integer).Int64
+
+	switch o := index.(type) {
+	case *Integer:
+		idx = o.Int64
+	case *UInteger:
+		idx = int64(o.UInt64)
+	}
 	if idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
 	}
@@ -3172,6 +3460,11 @@ func evalIncrementPostfixOperatorExpression(node *ast.PostfixExpression, left Ob
 		returnVal := NewInteger(leftObj.Int64)
 		leftObj.Int64 = leftObj.Int64 + 1
 		return returnVal
+	case UINTEGER_OBJ:
+		leftObj := left.(*UInteger)
+		returnVal := NewUInteger(leftObj.UInt64)
+		leftObj.UInt64 = leftObj.UInt64 + 1
+		return returnVal
 	case FLOAT_OBJ:
 		leftObj := left.(*Float)
 		returnVal := NewFloat(leftObj.Float64)
@@ -3188,6 +3481,11 @@ func evalDecrementPostfixOperatorExpression(node *ast.PostfixExpression, left Ob
 		leftObj := left.(*Integer)
 		returnVal := NewInteger(leftObj.Int64)
 		leftObj.Int64 = leftObj.Int64 - 1
+		return returnVal
+	case UINTEGER_OBJ:
+		leftObj := left.(*UInteger)
+		returnVal := NewUInteger(leftObj.UInt64)
+		leftObj.UInt64 = leftObj.UInt64 - 1
 		return returnVal
 	case FLOAT_OBJ:
 		leftObj := left.(*Float)
@@ -3341,6 +3639,8 @@ func obj2Expression(obj Object) ast.Expression {
 		return &ast.Boolean{Value: value.Bool}
 	case *Integer:
 		return &ast.IntegerLiteral{Value: value.Int64}
+	case *UInteger:
+		return &ast.UIntegerLiteral{Value: value.UInt64}
 	case *Float:
 		return &ast.FloatLiteral{Value: value.Float64}
 	case *String:

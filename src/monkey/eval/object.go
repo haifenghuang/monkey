@@ -33,7 +33,6 @@ var colorMap = map[string]string{
 
 type ObjectType string
 
-// INTEGER_OBJ/*_OBJ = object types
 const (
 	availFlags = "-+# 0"
 
@@ -41,6 +40,7 @@ const (
 	LOCAL = 1
 
 	INTEGER_OBJ      = "INTEGER"
+	UINTEGER_OBJ     = "UINTEGER"
 	FLOAT_OBJ        = "FLOAT"
 	BOOLEAN_OBJ      = "BOOLEAN"
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
@@ -476,18 +476,251 @@ func (i *Integer) MarshalJSON() ([]byte, error) {
 }
 
 func (i *Integer) UnmarshalJSON(b []byte) error {
-	if string(b) == "null" {
+	content := string(b)
+	if content == "null" {
 		i.Valid = false
 		i.Int64 = 0
 		return nil
 	}
 
 	var err error
-	i.Int64, err = strconv.ParseInt(string(b), 10, 64)
+
+	if content[len(content)-1] == 'u' {
+		content = content[:len(content)-1]
+	}
+	if strings.HasPrefix(content, "0b") {
+		i.Int64, err = strconv.ParseInt(content[2:], 2, 64)
+	} else if strings.HasPrefix(content, "0x") {
+		i.Int64, err = strconv.ParseInt(content[2:], 16, 64)
+	} else if strings.HasPrefix(content, "0c") {
+		i.Int64, err = strconv.ParseInt(content[2:], 8, 64)
+	} else {
+		i.Int64, err = strconv.ParseInt(content, 10, 64)
+	}
 	if err != nil {
 		i.Valid = false
 		return err
 	}
+
+	i.Valid = true
+	return nil
+}
+
+//Returns a valid Unsigned Integer Object, that is Valid=true
+func NewUInteger(i uint64) *UInteger {
+	return &UInteger{UInt64: i, Valid: true}
+}
+
+type UInteger struct {
+	UInt64 uint64
+	Valid bool
+}
+
+func (i *UInteger) Inspect() string {
+	if i.Valid {
+		return fmt.Sprintf("%d", i.UInt64)
+	}
+	return "ERROR: Unsigned Integer is null"
+}
+
+func (i *UInteger) Type() ObjectType { return UINTEGER_OBJ }
+func (i *UInteger) number()          {}
+func (i *UInteger) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+
+	switch method {
+	case "valid", "isValid":
+		return i.IsValid(line, args...)
+	case "setValid":
+		return i.SetValid(line, args...)
+	case "next":
+		return i.Next(line, args...)
+	case "prev":
+		return i.Prev(line, args...)
+	case "isEven":
+		return i.IsEven(line, args...)
+	case "isOdd":
+		return i.IsOdd(line, args...)
+	case "downto":
+		return i.Downto(line, args...)
+	case "upto":
+		return i.Upto(line, args...)
+	}
+	panic(NewError(line, NOMETHODERROR, method, i.Type()))
+}
+
+func (i *UInteger) IsValid(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		return TRUE
+	}
+	return &Boolean{Bool: i.Valid, Valid: false}
+}
+
+func (i *UInteger) SetValid(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 0 && argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "0|1", argLen))
+	}
+
+	if argLen == 0 {
+		i.UInt64, i.Valid = 0, true
+		return i
+	}
+
+	val, ok := args[0].(*UInteger)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "setValid", "*UInteger", args[0].Type()))
+	}
+
+	i.UInt64, i.Valid = val.UInt64, true
+	return i
+}
+
+func (i *UInteger) Next(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		return NewUInteger(i.UInt64 + 1)
+	}
+	return NewFalseObj("Unsigned Integer is not valid\n")
+}
+
+func (i *UInteger) Prev(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		return NewUInteger(i.UInt64 - 1)
+	}
+	return NewFalseObj("Unsigned Integer is not valid\n")
+}
+
+func (i *UInteger) IsEven(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		if i.UInt64 % 2 == 0 {
+			return TRUE
+		}
+		return FALSE
+	}
+	return NewFalseObj("Unsigned Integer is not valid\n")
+}
+
+func (i *UInteger) IsOdd(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	if i.Valid {
+		if i.UInt64 % 2 != 0 {
+			return TRUE
+		}
+		return FALSE
+	}
+	return NewFalseObj("Unsigned Integer is not valid\n")
+}
+
+func (i *UInteger) Downto(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	val, ok := args[0].(*UInteger)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "downto", "*UInteger", args[0].Type()))
+	}
+
+	retArr := &Array{}
+	for x := i.UInt64; x >= val.UInt64; x-- {
+		retArr.Members = append(retArr.Members, NewUInteger(x))
+	}
+	return retArr
+}
+
+func (i *UInteger) Upto(line string, args ...Object) Object {
+	argLen := len(args)
+	if argLen != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", argLen))
+	}
+
+	val, ok := args[0].(*UInteger)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "upto", "*UInteger", args[0].Type()))
+	}
+
+	retArr := &Array{}
+	for x := i.UInt64; x <= val.UInt64; x++ {
+		retArr.Members = append(retArr.Members, NewUInteger(x))
+	}
+	return retArr
+}
+
+//Implements sql's Scanner Interface.
+//So when calling sql.Rows.Scan(xxx), or sql.Row.Scan(xxx), we could pass this object to `Scan` method
+func (i *UInteger) Scan(value interface{}) error {
+	if value == nil {
+		i.Valid = false
+		return nil
+	}
+	i.UInt64, i.Valid = value.(uint64), true
+	return nil
+}
+
+//Implements driver's Valuer Interface.
+//So when calling sql.Exec(xx), we could pass this object to `Exec` method
+func (i UInteger) Value() (driver.Value, error) {
+	if !i.Valid {
+		return nil, nil
+	}
+	return i.UInt64, nil
+}
+
+//Json marshal handling
+func (i *UInteger) MarshalJSON() ([]byte, error) {
+	if i.Valid {
+		return []byte(fmt.Sprintf("%v", i.UInt64)), nil
+	} else {
+		return json.Marshal(nil)
+	}
+}
+
+func (i *UInteger) UnmarshalJSON(b []byte) error {
+	content := string(b)
+	if content == "null" {
+		i.Valid = false
+		i.UInt64 = 0
+		return nil
+	}
+
+	var err error
+
+	if content[len(content)-1] == 'u' {
+		content = content[:len(content)-1]
+	}
+	if strings.HasPrefix(content, "0b") {
+		i.UInt64, err = strconv.ParseUint(content[2:], 2, 64)
+	} else if strings.HasPrefix(content, "0x") {
+		i.UInt64, err = strconv.ParseUint(content[2:], 16, 64)
+	} else if strings.HasPrefix(content, "0c") {
+		i.UInt64, err = strconv.ParseUint(content[2:], 8, 64)
+	} else {
+		i.UInt64, err = strconv.ParseUint(content, 10, 64)
+	}
+	if err != nil {
+		i.Valid = false
+		return err
+	}
+
 	i.Valid = true
 	return nil
 }
@@ -621,10 +854,12 @@ func (f *Float) Pow(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		temp = float64(input.Int64)
+	case *UInteger:
+		temp = float64(input.UInt64)
 	case *Float:
 		temp = input.Float64
 	default:
-		panic(NewError(line, PARAMTYPEERROR, "first", "pow", "*Integer|*Float", args[0].Type()))
+		panic(NewError(line, PARAMTYPEERROR, "first", "pow", "*Integer|*UInteger|*Float", args[0].Type()))
 	}
 
 	if f.Valid {
@@ -639,12 +874,16 @@ func (f *Float) Round(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	iObj, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "round", "*Integer", args[0].Type()))
+	var precision int64
+	switch o := args[0].(type) {
+	case *Integer:
+		precision = o.Int64
+	case *UInteger:
+		precision = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "round", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	precision := iObj.Int64
 	format := fmt.Sprintf("%%.%df", precision) //'%.xf', x is the precision, e.g. %.2f
 	resultStr := fmt.Sprintf(format, f.Float64)   //convert to string
 	ret, err := strconv.ParseFloat(resultStr, 64) //convert string back to float
@@ -679,14 +918,15 @@ func (f *Float) MarshalJSON() ([]byte, error) {
 }
 
 func (f *Float) UnmarshalJSON(b []byte) error {
-	if string(b) == "null" {
+	content := string(b)
+	if content == "null" {
 		f.Valid = false
 		f.Float64 = 0.0
 		return nil
 	}
 
 	var err error
-	f.Float64, err = strconv.ParseFloat(string(b), 64)
+	f.Float64, err = strconv.ParseFloat(content, 64)
 	if err != nil {
 		f.Valid = false
 		return err
@@ -861,6 +1101,7 @@ func init() {
 	NewRegExpObj()
 	NewTemplateObj()
 	NewDecimalObj()
+	NewUnicodeObj()
 }
 
 func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
@@ -872,6 +1113,13 @@ func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
 	switch obj.(type) {
 	case *Integer:
 		value := obj.(*Integer)
+		res, err := value.MarshalJSON()
+		if err != nil {
+			return bytes.Buffer{}, err
+		}
+		out.WriteString(string(res))
+	case *UInteger:
+		value := obj.(*UInteger)
 		res, err := value.MarshalJSON()
 		if err != nil {
 			return bytes.Buffer{}, err
@@ -991,6 +1239,8 @@ func object2RawValue(obj Object) interface{} {
 		ret = arrayObj2RawValue(obj.(*Array))
 	case INTEGER_OBJ:
 		ret = obj.(*Integer).Int64
+	case UINTEGER_OBJ:
+		ret = obj.(*UInteger).UInt64
 	case FLOAT_OBJ:
 		ret = obj.(*Float).Float64
 	case BOOLEAN_OBJ:
@@ -1083,6 +1333,11 @@ func (ft *Formatter) Format(s fmt.State, verb rune) {
 			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset
 		}
 		fmt.Fprintf(s, formatStr, obj.Int64)
+	case *UInteger:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.UInt64)
 	case *Float:
 		if REPLColor {
 			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset

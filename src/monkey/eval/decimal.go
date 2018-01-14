@@ -42,8 +42,6 @@ func (d *DecimalObj) CallMethod(line string, scope *Scope, method string, args .
 		return d.FromFloat(line, args...)
 	case "fromFloatWithExponent":
 		return d.FromFloatWithExponent(line, args...)
-	case "fromInt":
-		return d.FromInt(line, args...)
 
 	// aggregate
 	case "avg":
@@ -147,7 +145,6 @@ func (d *DecimalObj) New(line string, args ...Object) Object {
 	return &DecimalObj{Number: NewDec(value.Int64, int32(exp.Int64)), Valid:true}
 }
 
-//func NewFromString(value string) (Decimal, error)
 func (d *DecimalObj) FromString(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
@@ -175,10 +172,12 @@ func (d *DecimalObj) FromFloat(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		value = float64(input.Int64)
+	case *UInteger:
+		value = float64(input.UInt64)
 	case *Float:
 		value = input.Float64
 	default:
-		panic(NewError(line, PARAMTYPEERROR, "first", "fromFloat", "*Float|*Integer", args[0].Type()))
+		panic(NewError(line, PARAMTYPEERROR, "first", "fromFloat", "*Float|*Integer|*UInteger", args[0].Type()))
 	}
 
 	return &DecimalObj{Number:NewFromFloat(value), Valid:true}
@@ -189,9 +188,16 @@ func (d *DecimalObj) FromFloatWithExponent(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
 	}
 
-	value, ok := args[0].(*Float)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "fromFloatWithExponent", "*Float", args[0].Type()))
+	var value float64
+	switch input := args[0].(type) {
+	case *Integer:
+		value = float64(input.Int64)
+	case *UInteger:
+		value = float64(input.UInt64)
+	case *Float:
+		value = input.Float64
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "fromFloatWithExponent", "*Float|*Integer|*UInteger", args[0].Type()))
 	}
 
 	exp, ok := args[1].(*Integer)
@@ -199,20 +205,7 @@ func (d *DecimalObj) FromFloatWithExponent(line string, args ...Object) Object {
 		panic(NewError(line, PARAMTYPEERROR, "second", "fromFloatWithExponent", "*Integer", args[1].Type()))
 	}
 
-	return &DecimalObj{Number:NewFromFloatWithExponent(value.Float64, int32(exp.Int64)), Valid:true}
-}
-
-func (d *DecimalObj) FromInt(line string, args ...Object) Object {
-	if len(args) != 1 {
-		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
-	}
-
-	value, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "fromInt", "*Integer", args[0].Type()))
-	}
-
-	return &DecimalObj{Number:NewFromFloat(float64(value.Int64)), Valid:true}
+	return &DecimalObj{Number:NewFromFloatWithExponent(value, int32(exp.Int64)), Valid:true}
 }
 
 func (d *DecimalObj) Avg(line string, args ...Object) Object {
@@ -327,6 +320,8 @@ func (d *DecimalObj) Add(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -355,6 +350,8 @@ func (d *DecimalObj) Sub(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -383,6 +380,8 @@ func (d *DecimalObj) Mul(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -411,6 +410,8 @@ func (d *DecimalObj) Div(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -439,6 +440,8 @@ func (d *DecimalObj) DivRound(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -472,6 +475,8 @@ func (d *DecimalObj) Mod(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -500,6 +505,8 @@ func (d *DecimalObj) Pow(line string, args ...Object) Object {
 	switch input := args[0].(type) {
 	case *Integer:
 		d2 = NewFromFloat(float64(input.Int64))
+	case *UInteger:
+		d2 = NewFromFloat(float64(input.UInt64))
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -534,12 +541,17 @@ func (d *DecimalObj) Round(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	places, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "round", "*Integer", args[0].Type()))
+	var places int64
+	switch o := args[0].(type) {
+	case *Integer:
+		places = o.Int64
+	case *UInteger:
+		places = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "round", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := d.Number.Round(int32(places.Int64))
+	ret := d.Number.Round(int32(places))
 
 	return &DecimalObj{Number:ret, Valid:true}
 }
@@ -549,12 +561,17 @@ func (d *DecimalObj) Truncate(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	precision, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "trunc", "*Integer", args[0].Type()))
+	var precision int64
+	switch o := args[0].(type) {
+	case *Integer:
+		precision = o.Int64
+	case *UInteger:
+		precision = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "trunc", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := d.Number.Truncate(int32(precision.Int64))
+	ret := d.Number.Truncate(int32(precision))
 
 	return &DecimalObj{Number:ret, Valid:true}
 }
@@ -674,12 +691,17 @@ func (d *DecimalObj) StringFixed(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	places, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "second", "stringFixed", "*Integer", args[0].Type()))
+	var places int64
+	switch o := args[0].(type) {
+	case *Integer:
+		places = o.Int64
+	case *UInteger:
+		places = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "stringFixed", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := d.Number.StringFixed(int32(places.Int64))
+	ret := d.Number.StringFixed(int32(places))
 
 	return NewString(ret)
 }
@@ -689,12 +711,17 @@ func (d *DecimalObj) StringScaled(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	exp, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "stringScaled", "*Integer", args[0].Type()))
+	var exp int64
+	switch o := args[0].(type) {
+	case *Integer:
+		exp = o.Int64
+	case *UInteger:
+		exp = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "stringScaled", "*Integer|*UInteger", args[0].Type()))
 	}
 
-	ret := d.Number.StringScaled(int32(exp.Int64))
+	ret := d.Number.StringScaled(int32(exp))
 
 	return NewString(ret)
 }
@@ -754,11 +781,17 @@ func (d *DecimalObj) SetDivisionPrecision(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	value, ok := args[0].(*Integer)
-	if !ok {
-		panic(NewError(line, PARAMTYPEERROR, "first", "setDivisionPrecision", "*Integer", args[0].Type()))
+	var value int64
+	switch o := args[0].(type) {
+	case *Integer:
+		value = o.Int64
+	case *UInteger:
+		value = int64(o.UInt64)
+	default:
+		panic(NewError(line, PARAMTYPEERROR, "first", "setDivisionPrecision", "*Integer|*UInteger", args[0].Type()))
 	}
-	DivisionPrecision = int(value.Int64)
+
+	DivisionPrecision = int(value)
 
 	return NIL
 }

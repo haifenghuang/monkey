@@ -41,6 +41,7 @@ func NewSqlsObject() Object {
 	//when we want to insert null to a certain column, we could
 	//use these variables
 	SetGlobalObj(sql_name+".INT_NULL",     &Integer{Int64: 0, Valid: false})    //NullInteger
+	SetGlobalObj(sql_name+".UINT_NULL",    &UInteger{UInt64: 0, Valid: false})    //NullUInteger
 	SetGlobalObj(sql_name+".FLOAT_NULL",   &Float{Float64: 0.0, Valid: false})  //NullFloat
 	SetGlobalObj(sql_name+".STRING_NULL",  &String{String: "", Valid: false})   //NullString
 	SetGlobalObj(sql_name+".BOOL_NULL",    &Boolean{Bool: true, Valid: false})  //NullBool
@@ -714,7 +715,7 @@ func scan(rowObj interface{}, line string, args ...Object) Object {
 	var values []interface{}
 	for _, v := range args {
 		switch v.(type) {
-		case *Integer, *Boolean, *Float, *String, *TimeObj:
+		case *Integer, *UInteger, *Boolean, *Float, *String, *TimeObj:
 			values = append(values, v)
 		default:
 			panic(NewError(line, DBSCANERROR))

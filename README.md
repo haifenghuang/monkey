@@ -124,12 +124,13 @@ Monkey only support single line comment.
 
 ### Data Types
 
-Monkey supports 8 basic data types: `String`, `Int`, `Float`, `Bool`, `Array`, `Hash`, `Tuple` and `Nil`
+Monkey supports 9 basic data types: `String`, `Int`, `UInt`, `Float`, `Bool`, `Array`, `Hash`, `Tuple` and `Nil`
 
 ```swift
 s1 = "hello, 黄"       # strings are UTF-8 encoded
 s2 = `hello, "world"`  # raw string
 i = 10                 # int
+u = 10u                # uint
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
@@ -140,9 +141,10 @@ n = nil
 
 ### Constants(Literal)
 
-In monkey, there are mainly ten types of constants(Literals).
+In monkey, there are mainly eleven types of constants(Literals).
 
 * Integer
+* UInteger
 * Float
 * String
 * Regular expression
@@ -160,6 +162,13 @@ i2 = 20_000_000     //for more readable
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
 i5 = 0c127          // octal
+
+// Unsigned Integer literals
+ui1 = 10u
+ui2 = 20_000_000u     //for more readable
+ui3 = 0x80u           // hex
+ui4 = 0b10101u        // binary
+ui5 = 0c127u          // octal
 
 // Float literals
 f1 = 10.25
@@ -244,14 +253,15 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 
 ### Type conversion
 
-You can use the builtin `int()`, `float()`, `str()`, `array()`, `tuple()`, `hash`, `decimal` functions for type conversion.
+You can use the builtin `int()`, `uint()`, `float()`, `str()`, `array()`, `tuple()`, `hash`, `decimal` functions for type conversion.
 
 ```swift
 let i = 0xa
+let u = uint(i)                 // result: 10
 let s = str(i)                  // result: "10"
 let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
-let t = tuple(i)                // result:(10)
+let t = tuple(i)                // result:(10,)
 let h = hash(("key", "value"))  // result: {"key"=>"value}
 let d = decimal("123.45634567") // result: 123.45634567
 ```
@@ -1662,7 +1672,7 @@ let dbOp = fn() {
     for (i = 0; i < 105; i++) {
         let name = "您好" + i
         if (i>100) {
-            //insert `null` value. There are six predefined values:INT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
+            //insert `null` value. There are seven predefined values:INT_NULL,UINT_NULL,FLOAT_NULL,STRING_NULL,BOOL_NULL,TIME_NULL, DECIMAL_NULL.
             let rs = stmt.exec(i, sql.STRING_NULL)
         } else {
             let rs = stmt.exec(i, name)
