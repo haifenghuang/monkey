@@ -196,6 +196,8 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.Write(line, args...)
 	case "isEmpty":
 		return s.IsEmpty(line, args...)
+	case "hash":
+		return s.Hash(line, args...)
 	case "valid", "isValid":
 		return s.IsValid(line, args...)
 	case "setValid":
@@ -752,6 +754,20 @@ func (s *String) IsEmpty(line string, args ...Object) Object {
 	return FALSE
 }
 
+//code stolen from https://github.com/AlasdairF/Hash/blob/master/hash.go
+func (s *String) Hash(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	var v uint64 = 14695981039346656037
+	data := []rune(s.String)
+	for _, c := range data {
+		v = (v ^ uint64(c)) * 1099511628211
+	}
+	return NewUInteger(v)
+}
+
 func (s *String) IsValid(line string, args ...Object) Object {
 	if len(args) != 0 {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
@@ -886,6 +902,8 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.Write(line, args...)
 	case "isEmpty":
 		return s.IsEmpty(line, args...)
+	case "hash":
+		return s.Hash(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, s.Type()))
 }
@@ -1565,7 +1583,7 @@ func (s *StringsObj) WriteLine(line string, args ...Object) Object {
 }
 
 func (s *StringsObj) Write(line string, args ...Object) Object {
-	if len(args) != 0 {
+	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
@@ -1579,7 +1597,7 @@ func (s *StringsObj) Write(line string, args ...Object) Object {
 }
 
 func (s *StringsObj) IsEmpty(line string, args ...Object) Object {
-	if len(args) != 0 {
+	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
 	}
 
@@ -1592,4 +1610,23 @@ func (s *StringsObj) IsEmpty(line string, args ...Object) Object {
 		return TRUE
 	}
 	return FALSE
+}
+
+//code stolen from https://github.com/AlasdairF/Hash/blob/master/hash.go
+func (s *StringsObj) Hash(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	strObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "hash", "*String", args[0].Type()))
+	}
+
+	var v uint64 = 14695981039346656037
+	data := []rune(strObj.String)
+	for _, c := range data {
+		v = (v ^ uint64(c)) * 1099511628211
+	}
+	return NewUInteger(v)
 }
