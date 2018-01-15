@@ -168,19 +168,16 @@ func (d *DecimalObj) FromFloat(line string, args ...Object) Object {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
 	}
 
-	var value float64
 	switch input := args[0].(type) {
 	case *Integer:
-		value = float64(input.Int64)
+		return &DecimalObj{Number:NewFromInt(input.Int64), Valid:true}
 	case *UInteger:
-		value = float64(input.UInt64)
+		return &DecimalObj{Number:NewFromUInt(input.UInt64), Valid:true}
 	case *Float:
-		value = input.Float64
+		return &DecimalObj{Number:NewFromFloat(input.Float64), Valid:true}
 	default:
 		panic(NewError(line, PARAMTYPEERROR, "first", "fromFloat", "*Float|*Integer|*UInteger", args[0].Type()))
 	}
-
-	return &DecimalObj{Number:NewFromFloat(value), Valid:true}
 }
 
 func (d *DecimalObj) FromFloatWithExponent(line string, args ...Object) Object {
@@ -319,9 +316,9 @@ func (d *DecimalObj) Add(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -349,9 +346,9 @@ func (d *DecimalObj) Sub(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -379,9 +376,9 @@ func (d *DecimalObj) Mul(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -409,9 +406,9 @@ func (d *DecimalObj) Div(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -439,9 +436,9 @@ func (d *DecimalObj) DivRound(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -474,9 +471,9 @@ func (d *DecimalObj) Mod(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -504,9 +501,9 @@ func (d *DecimalObj) Pow(line string, args ...Object) Object {
 	var d2 Decimal
 	switch input := args[0].(type) {
 	case *Integer:
-		d2 = NewFromFloat(float64(input.Int64))
+		d2 = NewFromInt(input.Int64)
 	case *UInteger:
-		d2 = NewFromFloat(float64(input.UInt64))
+		d2 = NewFromUInt(input.UInt64)
 	case *Float:
 		d2 = NewFromFloat(input.Float64)
 	case *String:
@@ -1053,6 +1050,17 @@ func NewFromFloatWithExponent(value float64, exp int32) Decimal {
 	return Decimal{
 		value: dValue,
 		exp:   exp,
+	}
+}
+
+func NewFromInt(value int64) Decimal {
+	return NewDec(value, 0)
+}
+
+func NewFromUInt(value uint64) Decimal {
+	return Decimal{
+		value: big.NewInt(0).SetUint64(value),
+		exp:   0,
 	}
 }
 

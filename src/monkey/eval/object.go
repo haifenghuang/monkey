@@ -1363,6 +1363,11 @@ func (ft *Formatter) Format(s fmt.State, verb rune) {
 			formatStr = "\033[1;" + colorMap["TUPLE"] + "m" + formatStr + reset
 		}
 		fmt.Fprintf(s, formatStr, obj.Inspect())
+	case *DecimalObj:
+		if REPLColor {
+			formatStr = "\033[1;" + colorMap["NUMBER"] + "m" + formatStr + reset
+		}
+		fmt.Fprintf(s, formatStr, obj.Inspect())
 	default:
 		fmt.Fprintf(s, formatStr, obj.Inspect())
 	}
