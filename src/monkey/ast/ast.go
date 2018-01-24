@@ -766,6 +766,8 @@ type FunctionLiteral struct {
 	Values map[string]Expression
 
 	Variadic bool
+
+	ModifierLevel ModifierLevel //for 'class' use
 }
 
 func (fl *FunctionLiteral) Pos() token.Position {
@@ -802,34 +804,36 @@ func (fl *FunctionLiteral) String() string {
 }
 
 ///////////////////////////////////////////////////////////
-//                 Named FUNCTION LITERAL                //
+//                  FUNCTION STATEMENT                   //
 ///////////////////////////////////////////////////////////
-type NamedFunction struct {
+type FunctionStatement struct {
 	Token           token.Token
-	Ident           *Identifier //Function name
+	Name            *Identifier
 	FunctionLiteral *FunctionLiteral
 }
 
-func (nf *NamedFunction) Pos() token.Position {
-	return nf.Token.Pos
+func (f *FunctionStatement) Pos() token.Position {
+	return f.Token.Pos
 }
 
-func (nf *NamedFunction) End() token.Position {
-	return nf.FunctionLiteral.Body.End()
+func (f *FunctionStatement) End() token.Position {
+	return f.FunctionLiteral.Body.End()
 }
 
-func (nf *NamedFunction) statementNode() {}
-func (nf *NamedFunction) TokenLiteral() string { return nf.Token.Literal }
-func (nf *NamedFunction) String() string {
+func (f *FunctionStatement) statementNode() {}
+func (f *FunctionStatement) TokenLiteral() string { return f.Token.Literal }
+func (f *FunctionStatement) String() string {
 	var out bytes.Buffer
 
+	out.WriteString(f.FunctionLiteral.ModifierLevel.String())
+
 	out.WriteString("fn ")
-	out.WriteString(nf.Ident.String())
+	out.WriteString(f.Name.String())
 
 	params := []string{}
-	for i, p := range nf.FunctionLiteral.Parameters {
+	for i, p := range f.FunctionLiteral.Parameters {
 		param := p.String()
-		if nf.FunctionLiteral.Variadic && i == len(nf.FunctionLiteral.Parameters)-1 {
+		if f.FunctionLiteral.Variadic && i == len(f.FunctionLiteral.Parameters)-1 {
 			param = "..." + param
 		}
 
@@ -840,7 +844,7 @@ func (nf *NamedFunction) String() string {
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString("{ ")
-	out.WriteString(nf.FunctionLiteral.Body.String())
+	out.WriteString(f.FunctionLiteral.Body.String())
 	out.WriteString(" }")
 
 	return out.String()
@@ -1170,6 +1174,8 @@ type LetStatement struct {
 	Token  token.Token
 	Names  []*Identifier
 	Values []Expression
+
+	ModifierLevel ModifierLevel //used in 'class'
 }
 
 func (ls *LetStatement) Pos() token.Position {
@@ -1189,6 +1195,8 @@ func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer
+
+	out.WriteString(ls.ModifierLevel.String())
 
 	valuesLen := len(ls.Values)
 
@@ -2283,6 +2291,260 @@ func (t *TupleLiteral) String() string {
 
 	out.WriteString(strings.Join(members, ", "))
 	out.WriteString(")")
+
+	return out.String()
+}
+
+
+//class's method modifier
+type ModifierLevel int8
+const (
+	ModifierDefault ModifierLevel = iota
+	ModifierPrivate
+	ModifierProtected
+	ModifierPublic
+)
+
+//for debug purpose
+func (m ModifierLevel) String() string {
+	switch {
+	//note the last space.
+	case m == ModifierPrivate:
+		return "private "
+	case m == ModifierProtected:
+		return "protected "
+	case m == ModifierPublic:
+		return "public "
+	}
+
+	return ""
+}
+
+///////////////////////////////////////////////////////////
+//                      CLASS LITERAL                    //
+///////////////////////////////////////////////////////////
+// class : parentClass { block }
+type ClassLiteral struct {
+	Token      token.Token
+	Name       string
+	Parent     string
+	Members    []*LetStatement  //class's fields
+	Properties map[string]*PropertyDeclStmt //class's properties
+	Methods    map[string]*FunctionStatement //class's methods
+	Block      *BlockStatement //mainly used for debugging purpose
+	Modifier   ModifierLevel  //NOT IMPLEMENTED
+}
+
+func (c *ClassLiteral) Pos() token.Position {
+	return c.Token.Pos
+}
+
+func (c *ClassLiteral) End() token.Position {
+	return c.Block.End()
+}
+
+func (c *ClassLiteral) expressionNode()       {}
+func (c *ClassLiteral) TokenLiteral() string { return c.Token.Literal }
+
+func (c *ClassLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(c.TokenLiteral() + " ")
+	out.WriteString(c.Name)
+	if len(c.Parent) != 0 {
+		out.WriteString(" : " + c.Parent + " ")
+	}
+
+	out.WriteString("{ ")
+	out.WriteString(c.Block.String())
+	out.WriteString("} ")
+
+	return out.String()
+}
+
+//class classname : parentClass { block }
+///////////////////////////////////////////////////////////
+//                     CLASS STATEMENT                   //
+///////////////////////////////////////////////////////////
+type ClassStatement struct {
+	Token           token.Token
+	Name            *Identifier //Class name
+	ClassLiteral    *ClassLiteral
+}
+
+func (c *ClassStatement) Pos() token.Position {
+	return c.Token.Pos
+}
+
+func (c *ClassStatement) End() token.Position {
+	return c.ClassLiteral.Block.End()
+}
+
+func (c *ClassStatement) statementNode() {}
+func (c *ClassStatement) TokenLiteral() string { return c.Token.Literal }
+func (c *ClassStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(c.Token.Literal + " ")
+	out.WriteString(c.Name.String())
+
+	if len(c.ClassLiteral.Parent) > 0 {
+		out.WriteString(" : " + c.ClassLiteral.Parent)
+	}
+
+	out.WriteString("{ ")
+	out.WriteString(c.ClassLiteral.Block.String())
+	out.WriteString(" }")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//                   NEW EXPRESSION                      //
+///////////////////////////////////////////////////////////
+
+type NewExpression struct {
+	Token     token.Token
+	Class     Expression
+	Arguments []Expression
+}
+
+func (c *NewExpression) Pos() token.Position {
+	return c.Token.Pos
+}
+
+func (c *NewExpression) End() token.Position {
+	aLen := len(c.Arguments)
+	if aLen > 0 {
+		return c.Arguments[aLen-1].End()
+	}
+	return c.Class.End()
+}
+
+func (n *NewExpression) expressionNode()      {}
+func (n *NewExpression) TokenLiteral() string { return n.Token.Literal }
+func (n *NewExpression) String() string {
+	var out bytes.Buffer
+
+	args := []string{}
+	for _, a := range n.Arguments {
+		args = append(args, a.String())
+	}
+
+	out.WriteString(n.TokenLiteral() + " ")
+	out.WriteString(n.Class.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(") ")
+
+	return out.String()
+}
+
+//class's property declaration
+type PropertyDeclStmt struct {
+	Token         token.Token
+	Name          *Identifier      //property name
+	Getter        *GetterStmt      //getter
+	Setter        *SetterStmt      //setter
+	ModifierLevel ModifierLevel   //property's modifier
+}
+
+func (p *PropertyDeclStmt) Pos() token.Position {
+	return p.Token.Pos
+}
+
+func (p *PropertyDeclStmt) End() token.Position {
+	if p.Getter == nil {
+		return p.Setter.End()
+	}
+	return p.Getter.End()
+}
+
+func (p *PropertyDeclStmt) statementNode()       {}
+func (p *PropertyDeclStmt) TokenLiteral() string { return p.Token.Literal }
+
+func (p *PropertyDeclStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(p.ModifierLevel.String())
+
+	out.WriteString("property ")
+	out.WriteString(p.Name.String() +" ")
+	out.WriteString("{ ")
+
+	if p.Getter != nil {
+		out.WriteString(p.Getter.String())
+	}
+
+	if p.Setter != nil {
+		out.WriteString(p.Setter.String())
+	}
+
+	out.WriteString("} ")
+	return out.String()
+}
+
+//property's getter statement
+type GetterStmt struct {
+	Token token.Token
+	Body *BlockStatement
+}
+
+func (g *GetterStmt) Pos() token.Position {
+	return g.Token.Pos
+}
+
+func (g *GetterStmt) End() token.Position {
+	return g.Body.End()
+}
+
+func (g *GetterStmt) statementNode()       {}
+func (g *GetterStmt) TokenLiteral() string { return g.Token.Literal }
+
+func (g *GetterStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("get")
+	if len(g.Body.Statements) == 0 {
+		out.WriteString("; ")
+	} else {
+		out.WriteString("{")
+		out.WriteString(g.Body.String())
+		out.WriteString("} ")
+	}
+
+	return out.String()
+}
+
+//property's setter statement
+//setter variable is always 'value' like c#
+type SetterStmt struct {
+	Token token.Token
+	Body *BlockStatement
+}
+
+func (s *SetterStmt) Pos() token.Position {
+	return s.Token.Pos
+}
+
+func (s *SetterStmt) End() token.Position {
+	return s.Body.End()
+}
+
+func (s *SetterStmt) statementNode()       {}
+func (s *SetterStmt) TokenLiteral() string { return s.Token.Literal }
+
+func (s *SetterStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("set")
+	if len(s.Body.Statements) == 0 {
+		out.WriteString("; ")
+	} else {
+		out.WriteString("{")
+		out.WriteString(s.Body.String())
+		out.WriteString("} ")
+	}
 
 	return out.String()
 }

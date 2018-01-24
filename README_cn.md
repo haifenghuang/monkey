@@ -84,6 +84,7 @@ printf("2 - age  = %v\n", p.getAge())
 * pipe操作符支持
 * 支持可变参数和缺省参数的函数
 * 支持列表推导(list comprehension)和哈希推导(hash comprehension)
+* 简单面向对象（oop)支持
 
 这个项目的目的主要有以下几点：
 
@@ -882,6 +883,240 @@ println(tp) //结果: (1, 3, 5, 2, 4, 6, 7, 8, 9)
 
 revTuple = reverse(tp)
 println(revTuple) //结果: (9, 8, 7, 6, 4, 2, 5, 3, 1)
+```
+
+## 类
+
+Monkey支持简单的面向对象编程, 例如继承和多态。
+
+monkey解析器(parser)能够正确的处理关键字`public`, `private`, `protected`, 但是解释器(evaluator)会忽略这些。
+也就是说，monkey现在暂时不支持访问限定。
+
+你可以使用`class`关键字来声明一个类，使用`new Class(xxx)`来创建一个类的实例。
+
+```swift
+class Animal {
+    let name = ""
+    fn init(naem) {    //'init'是构造方法
+        //do somthing
+    }
+}
+```
+
+在monkey中，所有的类都继承于`object`根类。`object`根类包含几个所有类的共通方法。比如`toString()`, `instanceOf()`, `is_a()`, `classOf()`, `hashCode`。
+`instanceOf()`等价于`is_a()`
+
+下面的代码和上面的代码等价:
+
+```swift
+class Animal : object {
+    let name = ""
+    fn init(naem) {    //'init'是构造方法
+        //do somthing
+    }
+}
+```
+
+你使用`:`来表示继承关系:
+
+```swift
+class Dog : Animal { //Dog类继承于Animal类
+}
+```
+
+在子类中，你可以使用`parent`来访问基类的方法和字段。
+
+请看下面的例子:
+
+```swift
+class Animal {
+    let Name;
+
+    fn MakeNoise()
+    {
+        println("generic noise")
+    }
+    fn ToString()
+    {
+        return "oooooooo"
+    }
+}
+
+class Cat : Animal {
+    fn init(name)
+    {
+        this.Name = name
+    }
+
+    fn MakeNoise()
+    {
+        println("Meow")
+    }
+
+    fn ToString()
+    {
+        return Name + " cat"
+    }
+}
+
+class Dog : Animal {
+    fn init(name)
+    {
+        this.Name = name
+    }
+
+    fn MakeNoise()
+    {
+        println("Woof!")
+    }
+
+    fn ToString()
+    {
+        return Name + " dog"
+    }
+
+    fn OnlyDogMethod()
+    {
+        println("secret dog only method")
+    }
+}
+
+
+cat = new Cat("pearl")
+dog = new Dog("cole")
+randomAnimal = new Animal()
+
+animals = [cat, dog, randomAnimal]
+
+for animal in animals
+{
+    println("Animal name: " + animal.Name)
+    animal.MakeNoise()
+    println(animal.ToString())
+    if is_a(animal, "Dog") {
+        animal.OnlyDogMethod()
+    }
+}
+```
+
+运行结果如下:
+
+```
+Animal name: pearl
+Meow
+pearl cat
+Animal name: cole
+Woof!
+cole dog
+secret dog only method
+Animal name: nil
+generic noise
+oooooooo
+```
+
+Monkey也支持简单的操作符重载:
+
+```swift
+class Vector {
+    let x = 0;
+    let y = 0;
+
+    // 构造函数
+    fn init (a, b, c) {
+        if (!a) { a = 0;}
+        if (!b) {b = 0;}
+        x = a; y = b
+    }
+
+    fn +(v) { //重载'+'
+        if (type(v) == "INTEGER" {
+            return new Vector(x + v, y + v);
+        } elseif v.is_a(Vector) {
+            return new Vector(x + v.x, y + v.y);
+        }
+        return nil;
+    }
+
+    fn String() {
+        return fmt.sprintf("(%v),(%v)", this.x, this.y);
+    }
+}
+
+fn Vectormain() {
+    v1 = new Vector(1,2);
+    v2 = new Vector(4,5);
+    
+    // 下面的代码会调用Vector对象的'+'方法
+    v3 = v1 + v2 //等价于'v3 = v1.+(v2)'
+    // 返回"(5),(7)"
+    println(v3.String());
+    
+    v4 = v1 + 10 //等价于v4 = v1.+(10);
+    //返回"(11),(12)"
+    println(v4.String());
+}
+
+Vectormain()
+```
+
+Monkey也支持简单的属性(类似C#) also support simple class `property`:
+
+```swift
+class Date {
+    let month = 7;  // Backing store
+    property Month
+    {
+        get { return month }
+        set {
+            if ((value > 0) && (value < 13))
+            {
+                month = value
+            } else {
+               println("BAD, month is invalid")
+            }
+        }
+    }
+
+    property Year { get; set;}
+
+    property Day { get; }
+
+    property OtherInfo1 { get; }
+    property OtherInfo2 { set; }
+
+    fn init(year, month, day) {
+        this.Year = year
+        this.Month = month
+        this.Day = day
+    }
+
+    fn getDateInfo() {
+        printf("Year:%v, Month:%v, Day=%v\n", this.Year, this.Month, this.Day) //note here, you need to use 'this.Property', not 'Property'
+    }
+}
+
+dateObj = new Date(2000, 5, 11)
+//printf("Calling Date's getter, month=%d\n", dateObj.Month)
+dateObj.getDateInfo()
+
+println()
+dateObj.Month = 10
+printf("dateObj.Month=%d\n", dateObj.Month)
+
+dateObj.Year = 2018
+println()
+dateObj.getDateInfo()
+
+//下面的代码会报错，因为OtherInfo1是个只读属性
+//dateObj.OtherInfo1 = "Other Date Info"
+//println(dateObj.OtherInfo1)
+
+//下面的代码会报错，因为OtherInfo2是个只写属性
+//dateObj.OtherInfo2 = "Other Date Info2"
+//println(dateObj.OtherInfo2)
+
+//下面的代码会报错，因为Day属性是个只读属性
+//dateObj.Day = 18
 ```
 
 ## 标准输入/输出/错误

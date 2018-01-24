@@ -52,6 +52,10 @@ func (s *Scope) Get(name string) (Object, bool) {
 	s.RLock()
 	defer s.RUnlock()
 
+	if name == "object" {
+		return BASE_CLASS, true
+	}
+
 	obj, ok := s.store[name]
 	if !ok && s.parentScope != nil {
 		obj, ok = s.parentScope.Get(name)
@@ -59,19 +63,19 @@ func (s *Scope) Get(name string) (Object, bool) {
 	return obj, ok
 }
 
-func (s *Scope) DebugPrint() {
+func (s *Scope) DebugPrint(indent string) {
 	s.Lock()
 	defer s.Unlock()
 
 	for k, v := range s.store {
-		fmt.Printf("key(%s)=>value(%v)\n", k, v.Inspect())
+		fmt.Printf("%s<%s> = <%s>  value.Type: %T\n", indent, k, v.Inspect(), v)
 	}
 
-	fmt.Printf("ParentScope:\n")
 	if s.parentScope != nil {
-		s.parentScope.DebugPrint()
+		fmt.Printf("\n%sParentScope:\n", indent)
+		s.parentScope.DebugPrint(indent + "  ")
 	}
-	fmt.Println()
+
 }
 
 func (s *Scope) Set(name string, val Object) Object {

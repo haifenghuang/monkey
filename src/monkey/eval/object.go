@@ -118,7 +118,7 @@ func (s *Struct) CallMethod(line string, scope *Scope, method string, args ...Ob
 		panic(NewError(line, NOMETHODERROR, method, s.Type()))
 	}
 	fn.Scope = NewScope(scope)
-	fn.Scope.Set("self", s)
+	fn.Scope.Set("this", s)
 	for i, v := range fn.Literal.Parameters {
 		fn.Scope.Set(v.String(), args[i])
 	}
@@ -220,10 +220,16 @@ type Function struct {
 	Literal  *ast.FunctionLiteral
 	Variadic bool
 	Scope    *Scope
+	Instance *ObjectInstance //For use with class functions
 }
 
 func (f *Function) Inspect() string  { return f.Literal.String() }
 func (r *Function) Type() ObjectType { return FUNCTION_OBJ }
+
+func (f *Function) classMethod() ast.ModifierLevel { 
+	return f.Literal.ModifierLevel
+}
+
 func (f *Function) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	panic(NewError(line, NOMETHODERROR, method, f.Type()))
 }

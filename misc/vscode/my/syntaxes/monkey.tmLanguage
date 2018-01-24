@@ -39,7 +39,7 @@
 		<dict>
 			<key>begin</key>
 			<string>(?x)^\s*
-					(class|interface)\s+
+					(class)\s+
 					(\w+)\s* # identifier
 					(?:\(\s*([^\)]+)\s*\)|)\s* # Template type
 					(?:
@@ -349,6 +349,12 @@
 		</dict>
 		<dict>
 			<key>match</key>
+			<string>\b(class|new|property|get|set|this|parent)\b</string>
+			<key>name</key>
+			<string>keyword.control.class.my</string>
+		</dict>
+		<dict>
+			<key>match</key>
 			<string>\b(break|continue)\b</string>
 			<key>name</key>
 			<string>keyword.control.branch.my</string>
@@ -560,7 +566,7 @@
 		<key>regular_expressions</key>
 		<dict>
 			<key>comment</key>
-			<string>Change disabled to 1 to turn off syntax highlighting in “r” strings.</string>
+			<string>Change disabled to 1 to turn off syntax highlighting in “r Estrings.</string>
 			<key>disabled</key>
 			<integer>1</integer>
 			<key>patterns</key>
@@ -741,7 +747,7 @@
 		<key>support-type-built-ins-classes-d</key>
 		<dict>
 			<key>match</key>
-			<string>\b(abs|range|addm|chr|newFile|int|float|str|array|len|methods|ord|print|printf|println|type|chan|assert|reverse|dialTCP|listenTCP|dialUDP|dialUnix|listenUnix|dbOpen|newTime|newDate|newCond|newOnce|newMutex|newRWMutex|newWaitGroup|newPipe|newLogger|newList|deepEqual|newCsvReader|newCsvWriter)\b</string>
+			<string>\b(abs|range|addm|chr|newFile|int|float|str|array|len|methods|ord|print|printf|println|type|chan|assert|reverse|dialTCP|listenTCP|dialUDP|dialUnix|listenUnix|dbOpen|newTime|newDate|newCond|newOnce|newMutex|newRWMutex|newWaitGroup|newPipe|newLogger|newList|deepEqual|newCsvReader|newCsvWriter|instanceOf|is_a|classOf)\b</string>
 			<key>name</key>
 			<string>support.type.built-ins.functions.my</string>
 		</dict>

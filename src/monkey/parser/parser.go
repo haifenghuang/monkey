@@ -150,6 +150,8 @@ func New(l *lexer.Lexer, wd string) *Parser {
 	p.registerPrefix(token.NIL, p.parseNilExpression)
 	p.registerPrefix(token.ENUM, p.parseEnumExpression)
 	p.registerPrefix(token.QW, p.parseQWExpression)
+	p.registerPrefix(token.CLASS, p.parseClassLiteral)
+	p.registerPrefix(token.NEW, p.parseNewExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -215,9 +217,10 @@ func (p *Parser) ParseProgram() *ast.Program {
 		stmt := p.parseStatement()
 		if stmt != nil {
 			if include, ok := stmt.(*ast.IncludeStatement); ok {
-				_, ok := program.Includes[include.IncludePath.String()]
+				includePath := strings.TrimSpace(include.IncludePath.String())
+				_, ok := program.Includes[includePath]
 				if !ok {
-					program.Includes[include.IncludePath.String()] = include
+					program.Includes[includePath] = include
 				}
 			} else {
 				program.Statements = append(program.Statements, stmt)
@@ -243,14 +246,20 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.THROW:
 		return p.parseThrowStatement()
 	case token.FUNCTION:
-		if p.peekTokenIs(token.IDENT) {
-			return p.parseNamedFunction()
-		} else {
-			// if we reach here, it means the "FN" token is
-			// assumed to be the beginning of an expression.
-			return nil
-		}
+		//if p.peekTokenIs(token.IDENT) { //function statement. e.g. 'func add(x,y) { xxx }'
+		//	return p.parseFunctionStatement()
+		//} else {
+		//	// if we reach here, it means the "FN" token is
+		//	// assumed to be the beginning of an expression.
+		//	return nil
+		//}
 		
+		//Because we need to support operator overloading,like:
+		//     fn +(v) { block }
+		//so we should not use above code
+		return p.parseFunctionStatement()
+	case token.CLASS:
+		return p.parseClassStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -266,6 +275,23 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	}
 	return stmt
 }
+
+//class classname : parentClass { block }
+func (p *Parser) parseClassStatement() *ast.ClassStatement {
+	stmt := &ast.ClassStatement{Token: p.curToken}
+
+	if !p.expectPeek(token.IDENT) { //classname
+		msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
+	stmt.ClassLiteral.Name = stmt.Name.Value
+
+	return stmt
+}
+
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
@@ -414,7 +440,7 @@ func (p *Parser) parseTryStatement() ast.Expression {
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}
-	ts.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	ts.Block = p.parseBlockStatement()
 	p.nextToken()
 
 	for {
@@ -440,14 +466,14 @@ func (p *Parser) parseTryStatement() ast.Expression {
 			if !p.expectPeek(token.LBRACE) {
 				return nil
 			}
-			catchStmt.Block = p.parseBlockStatement().(*ast.BlockStatement)
+			catchStmt.Block = p.parseBlockStatement()
 			ts.Catches = append(ts.Catches, catchStmt)
 		} else {
 			if !p.curTokenIs(token.LBRACE) {
 				return nil
 			}
 			catchAllStmt := &ast.CatchAllStmt{Token: savedToken}
-			catchAllStmt.Block = p.parseBlockStatement().(*ast.BlockStatement)
+			catchAllStmt.Block = p.parseBlockStatement()
 			ts.Catches = append(ts.Catches, catchAllStmt)
 		}
 
@@ -468,7 +494,7 @@ func (p *Parser) parseTryStatement() ast.Expression {
 			p.nextToken()
 		}
 
-		ts.Finally = p.parseBlockStatement().(*ast.BlockStatement)
+		ts.Finally = p.parseBlockStatement()
 	}
 
 	if len(ts.Catches) == 0 && ts.Finally == nil { //no catch and no finally
@@ -556,7 +582,8 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 	return &ast.ContinueExpression{Token: p.curToken}
 }
 
-//let a,b,c = 1,2,3
+//let a,b,c = 1,2,3 (with assignment)
+//let a; (without assignment, 'a' is assumed to be 'nil')
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
@@ -567,14 +594,27 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		stmt.Names = append(stmt.Names, name)
 
 		p.nextToken()
-		if p.curTokenIs(token.ASSIGN) {
+		if p.curTokenIs(token.ASSIGN) || p.curTokenIs(token.SEMICOLON) {
 			break
 		}
 	}
 
+	if p.curTokenIs(token.SEMICOLON) { //let x;
+		return stmt
+	}
+
+	i := 0
 	p.nextToken()
 	for {
-		v := p.parseExpressionStatement().Expression
+		var v ast.Expression
+		if p.curTokenIs(token.CLASS) { //e.g.  let cls = class { block }
+			v = p.parseClassLiteral()
+			if len(stmt.Names) >= i {
+				v.(*ast.ClassLiteral).Name = stmt.Names[i].Value  //get ClassLiteral's class Name
+			}
+		} else {
+			v = p.parseExpressionStatement().Expression
+		}
 		stmt.Values = append(stmt.Values, v)
 
 		if !p.peekTokenIs(token.COMMA) {
@@ -582,14 +622,17 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		}
 		p.nextToken()
 		p.nextToken()
+
+		i += 1
 	}
+
 	return stmt
 }
 
-func (p *Parser) parseBlockStatement() ast.Expression {
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	expression := &ast.BlockStatement{Token: p.curToken}
 	expression.Statements = []ast.Statement{}
-	p.nextToken()
+	p.nextToken()  //skip '{'
 	for !p.curTokenIs(token.RBRACE) {
 		stmt := p.parseStatement()
 		if stmt != nil {
@@ -624,7 +667,11 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 	if n, ok := name.(*ast.Identifier); ok {
 		e.Name = n
 	} else if call, ok := name.(*ast.MethodCallExpression); ok { //might be 'includeModule.a = xxx' or 'aHashObj.key = value'
-		e.Name = &ast.Identifier{Token: p.curToken, Value: call.String()}
+		//why not using 'call.String()' directly?
+		//because in the ast code, we may change the 'call.String()'
+		//to include a trailing space for debugging readability.
+		tmpValue := strings.TrimSpace(call.String())
+		e.Name = &ast.Identifier{Token: p.curToken, Value: tmpValue}
 		p.nextToken()
 		e.Value = p.parseExpression(LOWEST)
 		return e
@@ -662,7 +709,7 @@ func (p *Parser) parseIncludeStatement() *ast.IncludeStatement {
 
 	oldToken := p.curToken
 	stmt.IncludePath = p.parseExpressionStatement().Expression
-	includePath := stmt.IncludePath.String()
+	includePath := strings.TrimSpace(stmt.IncludePath.String())
 	if oldToken.Type == token.STRING { //if token type is STRING, we need to extract the basename of the path.
 		path := stmt.IncludePath.(*ast.StringLiteral).Value
 		includePath = path
@@ -715,7 +762,7 @@ func (p *Parser) parseDoLoopExpression() ast.Expression {
 	loop := &ast.DoLoop{Token: p.curToken}
 
 	p.expectPeek(token.LBRACE)
-	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	loop.Block = p.parseBlockStatement()
 
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
@@ -740,7 +787,7 @@ func (p *Parser) parseWhileLoopExpression() ast.Expression {
 		return nil
 	}
 
-	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	loop.Block = p.parseBlockStatement()
 
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
@@ -802,7 +849,7 @@ func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
 		return nil
 	}
 
-	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	loop.Block = p.parseBlockStatement()
 
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
@@ -844,7 +891,7 @@ func (p *Parser) parseForEachArrayOrRangeExpression(curToken token.Token, variab
 		return nil
 	}
 
-	aBlock := p.parseBlockStatement().(*ast.BlockStatement)
+	aBlock := p.parseBlockStatement()
 
 	var result ast.Expression
 	if !isRange {
@@ -893,7 +940,7 @@ func (p *Parser) parseForEachMapExpression(curToken token.Token, variable string
 		return nil
 	}
 
-	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	loop.Block = p.parseBlockStatement()
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
 
@@ -908,7 +955,7 @@ func (p *Parser) parseForEverLoopExpression(curToken token.Token) ast.Expression
 	loop := &ast.ForEverLoop{Token: curToken}
 
 	p.expectPeek(token.LBRACE)
-	loop.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	loop.Block = p.parseBlockStatement()
 
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
@@ -1004,7 +1051,7 @@ func (p *Parser) parseGrepBlockExpression(tok token.Token) ast.Expression {
 	gl := &ast.GrepExpr{Token: p.curToken, Var: "$_"}
 
 	p.nextToken()
-	gl.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	gl.Block = p.parseBlockStatement()
 
 	p.nextToken()
 	gl.Value = p.parseExpression(LOWEST)
@@ -1041,7 +1088,7 @@ func (p *Parser) parseMapBlockExpression(tok token.Token) ast.Expression {
 	me := &ast.MapExpr{Token: p.curToken, Var: "$_"}
 
 	p.nextToken()
-	me.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	me.Block = p.parseBlockStatement()
 
 	p.nextToken()
 	me.Value = p.parseExpression(LOWEST)
@@ -1083,11 +1130,11 @@ func (p *Parser) parseMapExprExpression(tok token.Token) ast.Expression {
 //		return nil
 //	}
 //
-//	expression.Consequence = p.parseBlockStatement().(*ast.BlockStatement)
+//	expression.Consequence = p.parseBlockStatement()
 //	if p.peekTokenIs(token.ELSE) {
 //		p.nextToken()
 //		if p.expectPeek(token.LBRACE) {
-//			expression.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+//			expression.Alternative = p.parseBlockStatement()
 //		}
 //	}
 //
@@ -1103,7 +1150,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken() //skip "}"
 		p.nextToken() //skip "else"
-		ie.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+		ie.Alternative = p.parseBlockStatement()
 	}
 
 	return ie
@@ -1140,7 +1187,7 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 		return nil
 	}
 
-	ic.Block = p.parseBlockStatement().(*ast.BlockStatement)
+	ic.Block = p.parseBlockStatement()
 
 	return ic
 }
@@ -1162,11 +1209,11 @@ func (p *Parser) parseUnlessExpression() ast.Expression {
 		return nil
 	}
 
-	expression.Consequence = p.parseBlockStatement().(*ast.BlockStatement)
+	expression.Consequence = p.parseBlockStatement()
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken()
 		if p.expectPeek(token.LBRACE) {
-			expression.Alternative = p.parseBlockStatement().(*ast.BlockStatement)
+			expression.Alternative = p.parseBlockStatement()
 		}
 	}
 
@@ -1540,7 +1587,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 			aElse := &ast.CaseElseExpr{Token: p.curToken}
 			ce.Matches = append(ce.Matches, aElse)
 			p.nextToken()
-			aElse.Block = p.parseBlockStatement().(*ast.BlockStatement)
+			aElse.Block = p.parseBlockStatement()
 			p.nextToken() //skip the '}'
 		} else {
 			var aMatches []*ast.CaseMatchExpr
@@ -1563,7 +1610,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 				p.errors = append(p.errors, msg)
 			}
 
-			aMatchBlock := p.parseBlockStatement().(*ast.BlockStatement)
+			aMatchBlock := p.parseBlockStatement()
 			for i := 0; i < len(aMatches); i++ {
 				aMatches[i].Block = aMatchBlock
 			}
@@ -1583,15 +1630,16 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 	return ce
 }
 
-func (p *Parser) parseNamedFunction() ast.Statement {
-	namedFn := &ast.NamedFunction{Token: p.curToken}
+//fn name(paramenters)
+func (p *Parser) parseFunctionStatement() ast.Statement {
+	FnStmt := &ast.FunctionStatement{Token: p.curToken}
 
 	p.nextToken()
-	namedFn.Ident = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	FnStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	namedFn.FunctionLiteral = p.parseFunctionLiteral().(*ast.FunctionLiteral)
+	FnStmt.FunctionLiteral = p.parseFunctionLiteral().(*ast.FunctionLiteral)
 
-	return namedFn
+	return FnStmt
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
@@ -1603,7 +1651,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	p.parseFuncExpressionArray(fn, token.RPAREN)
 
 	if p.expectPeek(token.LBRACE) {
-		fn.Body = p.parseBlockStatement().(*ast.BlockStatement)
+		fn.Body = p.parseBlockStatement()
 	}
 	return fn
 }
@@ -1842,6 +1890,228 @@ func (p *Parser) parseQWExpression() ast.Expression {
 	return array
 }
 
+func isClassStmtToken(t token.Token) bool {
+	//only allow below statements:
+	//1. let xxx; or let xxx=yyy
+	//2. property xxx { }
+	//3. fn xxx(parameters) {}
+	tt := t.Type //tt: token type
+	if tt == token.LET || tt == token.PROPERTY || tt == token.FUNCTION {
+		return true
+	} 
+
+	if tt == token.PUBLIC || tt == token.PROTECTED || tt == token.PRIVATE { //modifier
+		return true
+	}
+
+	return false
+}
+
+// class : parentClass { block }.
+//e.g. let classname = class : parentClass { block }
+func (p *Parser) parseClassLiteral() ast.Expression {
+	cls := &ast.ClassLiteral{
+		Token:      p.curToken,
+		Members:    make([]*ast.LetStatement, 0),
+		Properties: make(map[string]*ast.PropertyDeclStmt),
+		Methods:    make(map[string]*ast.FunctionStatement),
+	}
+
+	p.nextToken()
+	if p.curTokenIs(token.COLON) {
+		if !p.expectPeek(token.IDENT) {
+			msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		cls.Parent = p.curToken.Literal
+		p.nextToken()
+	}
+	if !p.curTokenIs(token.LBRACE) {
+		msg := fmt.Sprintf("Syntax Error: %v - expected current token to be IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	//why not calling parseBlockStatement()?
+	//Because we need to parse 'public', 'private' modifiers, also 'get' and 'set'.
+	//parseBlockStatement() function do not handling these.
+	//cls.Block = p.parseBlockStatement() 
+
+	cls.Block = p.parseClassBody()
+	for _, statement := range cls.Block.Statements {
+		//fmt.Printf("In parseClassLiteral, stmt=%s\n", statement.String()) //debugging purpose
+
+		switch s := statement.(type) {
+		case *ast.LetStatement:  //class fields
+			cls.Members = append(cls.Members, s)
+		case *ast.FunctionStatement: //class methods
+			cls.Methods[s.Name.Value] = s
+		case *ast.PropertyDeclStmt: //properties
+			cls.Properties[s.Name.Value] = s
+		default:
+			msg := fmt.Sprintf("Syntax Error: %v - Only 'let' statement and 'function' statement is allow in class definition.", p.peekToken.Pos)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+	}
+
+	return cls
+}
+
+func (p *Parser) parseClassBody() *ast.BlockStatement {
+	stmts := &ast.BlockStatement{Token: p.curToken, Statements:[]ast.Statement{}}
+
+	p.nextToken() //skip '{'
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		if !isClassStmtToken(p.curToken) {
+			break
+		}
+
+		stmt := p.parseClassStmt()
+		if stmt != nil {
+			stmts.Statements = append(stmts.Statements, stmt)
+		}
+
+		p.nextToken()
+	}
+
+	if p.peekTokenIs(token.EOF) && !p.curTokenIs(token.RBRACE) {
+		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got EOF instead. Block should end with '}'.", p.peekToken.Pos)
+		p.errors = append(p.errors, msg)
+	}
+
+	return stmts
+}
+
+func (p *Parser) parseClassStmt() ast.Statement {
+	if !isClassStmtToken(p.curToken) {
+		msg := fmt.Sprintf("Syntax Error: %v - expected statements.", p.peekToken.Pos)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	modifierLevel := ast.ModifierDefault
+	tt := p.curToken.Type
+	if tt == token.PUBLIC || tt == token.PROTECTED || tt == token.PRIVATE { //modifier
+		p.nextToken() //skip the modifier
+
+		switch tt {
+		case token.PUBLIC:
+			modifierLevel = ast.ModifierPublic
+		case token.PROTECTED:
+			modifierLevel = ast.ModifierProtected
+		case token.PRIVATE:
+			modifierLevel = ast.ModifierPrivate
+		}
+	}
+
+	return p.parseClassSubStmt(modifierLevel)
+}
+
+func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel) ast.Statement {
+	var r ast.Statement
+
+	switch p.curToken.Type {
+	case token.LET:
+		r = p.parseLetStatement()
+	case token.PROPERTY:
+		r = p.parsePropertyDeclStmt()
+	case token.FUNCTION:
+		r = p.parseFunctionStatement()
+	}
+
+	switch o := r.(type) {
+	case *ast.LetStatement:
+		o.ModifierLevel = modifierLevel
+	case *ast.PropertyDeclStmt:
+		o.ModifierLevel = modifierLevel
+	case *ast.FunctionStatement:
+		o.FunctionLiteral.ModifierLevel = modifierLevel
+	}
+
+	return r
+}
+
+func(p *Parser) parsePropertyDeclStmt() *ast.PropertyDeclStmt {
+	stmt := &ast.PropertyDeclStmt{Token:p.curToken}
+
+	if !p.expectPeek(token.IDENT) {  //must be an identifier, it's property name
+		return nil
+	}
+
+	//get property name
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	p.nextToken()
+	if p.curTokenIs(token.GET) {
+		stmt.Getter = p.parseGetter()
+		p.nextToken()
+	}
+
+	if p.curTokenIs(token.SET) {
+		stmt.Setter = p.parseSetter()
+		p.nextToken()
+	}
+
+	if !p.curTokenIs(token.RBRACE) {
+		return nil
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseGetter() *ast.GetterStmt {
+	stmt := &ast.GetterStmt{Token:p.curToken}
+	p.nextToken() //skip the 'get' keyword
+
+	switch p.curToken.Type {
+	case token.SEMICOLON:
+		stmt.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
+	case token.LBRACE:
+		stmt.Body = p.parseBlockStatement()
+	}
+	return stmt
+
+}
+
+func (p *Parser) parseSetter() *ast.SetterStmt {
+	stmt := &ast.SetterStmt{Token:p.curToken}
+	p.nextToken() //skip the set keyword
+
+	switch p.curToken.Type {
+	case token.SEMICOLON:
+		stmt.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
+	case token.LBRACE:
+		stmt.Body = p.parseBlockStatement()
+	}
+	return stmt
+}
+
+//new classname(xx, xx, xx, xx)
+func (p *Parser) parseNewExpression() ast.Expression {
+	newExp := &ast.NewExpression{Token: p.curToken}
+
+	p.nextToken()
+	exp := p.parseExpression(LOWEST)
+
+	call, ok := exp.(*ast.CallExpression)
+	if !ok {
+		msg := fmt.Sprintf("Syntax Error: %v - Invalid object construction for 'new'.", p.peekToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	newExp.Class = call.Function
+	newExp.Arguments = call.Arguments
+
+	return newExp
+}
+
 func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 	var allowedPair = map[string]token.TokenType{
 		"(": token.RPAREN,
@@ -1926,7 +2196,7 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 
 	p.nextToken()
 	if p.curTokenIs(token.LBRACE) { //if it's block, we use parseBlockStatement
-		fn.Body = p.parseBlockStatement().(*ast.BlockStatement)
+		fn.Body = p.parseBlockStatement()
 	} else { //not block, we use parseStatement
 		/* Note here, if we use parseExpressionStatement, then below is not correct:
 		      (x) -> return x  //error: no prefix parse functions for 'RETURN' found

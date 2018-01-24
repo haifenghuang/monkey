@@ -37,6 +37,12 @@ const (
 	FUNCCALLBACKERROR
 	FILEMODEERROR
 	FILEOPENERROR
+	NOTCLASSERROR
+	PARENTNOTDECL
+	CLSNOTDEFINE
+	CLSMEMBERPRIVATE
+	CLSCALLPRIVATE
+	PROPERTYUSEERROR
 	GENERICERROR
 )
 
@@ -73,6 +79,12 @@ var errorType = map[int]string{
 	FUNCCALLBACKERROR: "callback error: must be '%d' parameter(s), got '%d'",
 	FILEMODEERROR:     "known file mode supplied",
 	FILEOPENERROR:     "file open failed, reason: %s",
+	NOTCLASSERROR:     "Identifier %s is not a class",
+	PARENTNOTDECL:     "Parent class %s not declared",
+	CLSNOTDEFINE:      "Class %s not defined",
+	CLSMEMBERPRIVATE:  "Variable(%s) of class(%s) is private",
+	CLSCALLPRIVATE:    "Method %s() of class(%s) is private",
+	PROPERTYUSEERROR:  "Invalid use of Property(%s) of class(%s)",
 	GENERICERROR:      "%s",
 }
 

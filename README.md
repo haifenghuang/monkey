@@ -83,6 +83,7 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * pipe operator support(see demo for help)
 * function with default value and variadic parameters
 * list comprehension and hash comprehension support
+* simple oop support
 
 There are a number of tasks to complete, as well as a number of bugs. The purpose of this project was to dive deeper into Go, as well as get a better understanding of how programming languages work. It has been successful in those goals. There may or may not be continued work - I do plan on untangling a few messy spots, and there are a few features I'd like to see implemented. This will happen as time and interest allows.
 
@@ -892,6 +893,240 @@ println(tp) //result: (1, 3, 5, 2, 4, 6, 7, 8, 9)
 
 revTuple = reverse(tp)
 println(revTuple) //result: (9, 8, 7, 6, 4, 2, 5, 3, 1)
+```
+
+## class
+
+Monkey has limited support for the oop concept, like inheritance and polymorphism.
+
+The monkey parser could parse `public`, `private`, `protected`, but it has no effect in the evaluation phase.
+That means monkey do not support access modifiers at present.
+
+You use `class` keyword to declare a class and use `new class(xxx)` to create an instance of a `class`.
+
+```swift
+class Animal {
+    let name = ""
+    fn init(naem) {    //'init' is the constructor
+        //do somthing
+    }
+}
+```
+
+In monkey, all class is inherited from the root class `object`. 
+`object` class include some common method like `toString()`, `instanceOf()`, `is_a()`, `classOf()`, `hashCode`.
+
+Above code is same as:
+
+```swift
+class Animal : object {
+    let name = ""
+    fn init(naem) {    //'init' is the constructor
+        //do somthing
+    }
+}
+```
+
+You can inherit a class using `:`:
+
+```swift
+class Dog : Animal { //Dog inherits from Animal
+}
+```
+
+In the child class, you can use the `parent` to access parent class's members or methods.
+
+please see below for an example：
+
+```swift
+class Animal {
+    let Name;
+
+    fn MakeNoise()
+    {
+        println("generic noise")
+    }
+    fn ToString()
+    {
+        return "oooooooo"
+    }
+}
+
+class Cat : Animal {
+    fn init(name)
+    {
+        this.Name = name
+    }
+
+    fn MakeNoise()
+    {
+        println("Meow")
+    }
+
+    fn ToString()
+    {
+        return Name + " cat"
+    }
+}
+
+class Dog : Animal {
+    fn init(name)
+    {
+        this.Name = name
+    }
+
+    fn MakeNoise()
+    {
+        println("Woof!")
+    }
+
+    fn ToString()
+    {
+        return Name + " dog"
+    }
+
+    fn OnlyDogMethod()
+    {
+        println("secret dog only method")
+    }
+}
+
+
+cat = new Cat("pearl")
+dog = new Dog("cole")
+randomAnimal = new Animal()
+
+animals = [cat, dog, randomAnimal]
+
+for animal in animals
+{
+    println("Animal name: " + animal.Name)
+    animal.MakeNoise()
+    println(animal.ToString())
+    if is_a(animal, "Dog") {
+        animal.OnlyDogMethod()
+    }
+}
+```
+
+The result is:
+
+```
+Animal name: pearl
+Meow
+pearl cat
+Animal name: cole
+Woof!
+cole dog
+secret dog only method
+Animal name: nil
+generic noise
+oooooooo
+```
+
+Monkey also support simple operator overloading:
+
+```swift
+class Vector {
+    let x = 0;
+    let y = 0;
+
+    // constructor
+    fn init (a, b, c) {
+        if (!a) { a = 0;}
+        if (!b) {b = 0;}
+        x = a; y = b
+    }
+
+    fn +(v) { //overloading '+'
+        if (type(v) == "INTEGER" {
+            return new Vector(x + v, y + v);
+        } elseif v.is_a(Vector) {
+            return new Vector(x + v.x, y + v.y);
+        }
+        return nil;
+    }
+
+    fn String() {
+        return fmt.sprintf("(%v),(%v)", this.x, this.y);
+    }
+}
+
+fn Vectormain() {
+    v1 = new Vector(1,2);
+    v2 = new Vector(4,5);
+    
+    // call + function in the vector object
+    v3 = v1 + v2 //same as 'v3 = v1.+(v2)'
+    // returns string "(5),(7)"
+    println(v3.String());
+    
+    v4 = v1 + 10 //same as v4 = v1.+(10);
+    //returns string "(11),(12)"
+    println(v4.String());
+}
+
+Vectormain()
+```
+
+Monkey also support simple class `property` like c#:
+
+```swift
+class Date {
+    let month = 7;  // Backing store
+    property Month
+    {
+        get { return month }
+        set {
+            if ((value > 0) && (value < 13))
+            {
+                month = value
+            } else {
+               println("BAD, month is invalid")
+            }
+        }
+    }
+
+    property Year { get; set;}
+
+    property Day { get; }
+
+    property OtherInfo1 { get; }
+    property OtherInfo2 { set; }
+
+    fn init(year, month, day) {
+        this.Year = year
+        this.Month = month
+        this.Day = day
+    }
+
+    fn getDateInfo() {
+        printf("Year:%v, Month:%v, Day=%v\n", this.Year, this.Month, this.Day) //note here, you need to use 'this.Property', not 'Property'
+    }
+}
+
+dateObj = new Date(2000, 5, 11)
+//printf("Calling Date's getter, month=%d\n", dateObj.Month)
+dateObj.getDateInfo()
+
+println()
+dateObj.Month = 10
+printf("dateObj.Month=%d\n", dateObj.Month)
+
+dateObj.Year = 2018
+println()
+dateObj.getDateInfo()
+
+//Below code will raise an execution error! Because OtherInfo1 is a READONLY property.
+//dateObj.OtherInfo1 = "Other Date Info"
+//println(dateObj.OtherInfo1)
+
+//Below code will raise an execution error! Because OtherInfo2 is a WRITEONLY property.
+//dateObj.OtherInfo2 = "Other Date Info2"
+//println(dateObj.OtherInfo2)
+
+//Below code will raise an execution error! Because Day is a READONLY property.
+//dateObj.Day = 18
 ```
 
 ## Standard input/output/error

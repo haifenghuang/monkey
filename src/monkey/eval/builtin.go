@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"monkey/ast"
 	"net"
 	"os"
 	"reflect"
@@ -1288,6 +1289,49 @@ func newCsvWriterBuiltin() *Builtin {
 	}
 }
 
+func instanceOfBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			argLen := len(args)
+			if argLen != 2 {
+				panic(NewError(line, ARGUMENTERROR, "2", argLen))
+			}
+
+			instance, ok := args[0].(*ObjectInstance)
+			if !ok {
+				return FALSE
+			}
+
+			switch class := args[1].(type) {
+			case *String:
+				return nativeBoolToBooleanObject(InstanceOf(class.String, instance))
+			case *Class:
+				return nativeBoolToBooleanObject(InstanceOf(class.Name, instance))
+			}
+
+			panic(NewError(line, GENERICERROR, "is_a/instanceOf expected a class or string for second argument"))
+		},
+	}
+}
+
+func classOfBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			argLen := len(args)
+			if argLen != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", argLen))
+			}
+
+			instance, ok := args[0].(*ObjectInstance)
+			if !ok {
+				return NewString("")
+			}
+
+			return NewString(instance.Class.Name)
+		},
+	}
+}
+
 func RegisterBuiltin(name string, f *Builtin) {
 	builtins[strings.ToLower(name)] = f
 }
@@ -1355,5 +1399,34 @@ func init() {
 		//csv
 		"newCsvReader": newCsvReaderBuiltin(),
 		"newCsvWriter": newCsvWriterBuiltin(),
+
+		//class related
+		"is_a"      : instanceOfBuiltin(),
+		"instanceOf": instanceOfBuiltin(),
+		"classOf"   : classOfBuiltin(),
 	}
+}
+
+const BUILTINMETHOD_OBJ = "BUILTINMETHOD_OBJ"
+type BuiltinMethodFunction func(line string, self *ObjectInstance, scope *Scope, args ...Object) Object
+
+type BuiltinMethod struct {
+	Fn       BuiltinMethodFunction
+	Instance *ObjectInstance
+}
+
+func (b *BuiltinMethod) Inspect() string  { return "builtin method" }
+func (b *BuiltinMethod) Type() ObjectType { return BUILTINMETHOD_OBJ }
+
+//Could be used as class function
+func (b *BuiltinMethod) classMethod() ast.ModifierLevel {
+	return ast.ModifierPublic
+}
+
+func (b *BuiltinMethod) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+	panic(NewError(line, NOMETHODERROR, method, b.Type()))
+}
+
+func MakeBuiltinMethod(fn BuiltinMethodFunction) *BuiltinMethod {
+	return &BuiltinMethod{Fn: fn}
 }

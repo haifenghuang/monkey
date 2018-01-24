@@ -26,7 +26,10 @@ var (
 
 var includeScope *Scope
 var importedCache map[string]Object
+var currentInstance *ObjectInstance
+
 var mux sync.Mutex
+var classMux sync.Mutex
 
 //REPL with color support
 var REPLColor bool
@@ -71,8 +74,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalReturnStatment(node, scope)
 	case *ast.DeferStmt:
 		return evalDeferStatment(node, scope)
-	case *ast.NamedFunction:
-		return evalNamedFnStatement(node, scope)
+	case *ast.FunctionStatement:
+		return evalFunctionStatement(node, scope)
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.IntegerLiteral:
@@ -184,6 +187,14 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return NIL
 	case *ast.Pipe:
 		return evalPipeExpression(node, scope)
+
+	//Class related
+	case *ast.ClassStatement:
+		return evalClassStatement(node, scope)
+	case *ast.ClassLiteral:
+		return evalClassLiteral(node, scope)
+	case *ast.NewExpression:
+		return evalNewExpression(node, scope)
 	}
 	return nil
 }
@@ -694,6 +705,50 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			panic(NewError(a.Pos().Sline(), GENERICERROR, "Enum value cannot be reassigned!"))
 		} else if aObj.Type() == HASH_OBJ { //e.g. hash.key = value
 			return evalHashAssignExpression(a, strArr[0], aObj, scope, val)
+		} else if aObj.Type() == INSTANCE_OBJ { //e.g. this.var = xxxx
+			instanceObj := aObj.(*ObjectInstance)
+
+//			//get variable's modifier level
+//			ml := instanceObj.GetModifierLevel(strArr[1], ClassMemberKind) //ml:modifier level
+//			if ml == ast.ModifierPrivate {
+//				panic(NewError(a.Pos().Sline(), CLSMEMBERPRIVATE, strArr[1], instanceObj.Class.Name))
+//			}
+
+			//check if it's a property
+			p := instanceObj.GetProperty(strArr[1])
+			if p == nil { //not property, return value from scope
+				instanceObj.Scope.Set(strArr[1], val)
+			} else {
+					if p.Setter == nil { //property xxx { get; }
+						_, ok := instanceObj.Scope.Get(strArr[1])
+						if !ok { //it's the first time assignment
+							if currentInstance != nil { //inside class body assignment
+								instanceObj.Scope.Set(strArr[1], val)
+							} else {  //outside class body assignment
+								panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
+							}
+						} else {
+							panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
+						}
+				} else {
+					if len(p.Setter.Body.Statements) == 0 { // property xxx { set; }
+						instanceObj.Scope.Set("_" + strArr[1], val)
+					} else {
+						newScope := NewScope(instanceObj.Scope)
+						newScope.Set("value", val)
+						results := Eval(p.Setter.Body, newScope)
+						if results.Type() == RETURN_VALUE_OBJ {
+							return results.(*ReturnValue).Value
+						}
+					}
+				}
+			}
+			return
+		} else if aObj.Type() == CLASS_OBJ { //e.g. parent.var = xxxx
+			//clsObj := aObj.(*Class)
+			currentInstance.Scope.Set(strArr[1], val)
+			//return evalFunctionCall(o, currentInstance.Scope) //should be Function's scope
+			return
 		}
 
 		return evalStructAssignExpression(a, scope, val)
@@ -915,11 +970,11 @@ func evalEnumLiteral(e *ast.EnumLiteral, scope *Scope) Object {
 	return &Enum{Scope: enumScope}
 }
 
-func evalNamedFnStatement(namedFn *ast.NamedFunction, scope *Scope) Object {
-	fnObj := evalFunctionLiteral(namedFn.FunctionLiteral, scope)
-	scope.Set(namedFn.Ident.String(), fnObj) //save to scope
+func evalFunctionStatement(FnStmt *ast.FunctionStatement, scope *Scope) Object {
+	fnObj := evalFunctionLiteral(FnStmt.FunctionLiteral, scope)
+	scope.Set(FnStmt.Name.String(), fnObj) //save to scope
 
-	return NIL
+	return fnObj
 }
 
 func evalFunctionLiteral(fl *ast.FunctionLiteral, scope *Scope) Object {
@@ -1051,6 +1106,8 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 		return evalMixedTypeInfixExpression(node, left, right)
 	case (left.Type() == HASH_OBJ && right.Type() == HASH_OBJ):
 		return evalHashInfixExpression(node, left, right)
+	case left.Type() == INSTANCE_OBJ:
+		return evalInstanceInfixExpression(node, left, right)
 	case node.Operator == "==":
 		if left.Type() != right.Type() {
 			return FALSE
@@ -1058,7 +1115,7 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 
 		//Here we need to special handling for `Boolean` object. Because most of the time `BOOLEAN` will
 		//return TRUE and FALSE. But sometimes we have to returns a new `Boolean` object,
-		//Here we need to compare `Boolean.Bool`，or else when we using
+		//Here we need to compare `Boolean.Bool` or else when we using
 		//   if (aBool == true)
 		//it will return false, but actually aBool is true.
 		if left.Type() == BOOLEAN_OBJ && right.Type() == BOOLEAN_OBJ {
@@ -1611,6 +1668,48 @@ func compareHashObj(left, right map[HashKey]HashPair) bool {
 	}
 
 	return found == len(left)
+}
+
+// for operaotor overloading, e.g.
+//    class Vector {
+//        fn +(v) { xxxxx }
+//    }
+//
+//    v1 = new Vector()
+//    v2 = new Vector()
+//    v3 = v1 + v2   //here is the operator overloading, same as 'v3 = v1.+(v2)
+func evalInstanceInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
+	instanceObj := left.(*ObjectInstance)
+
+	//get methods's modifier level
+//	ml := instanceObj.GetModifierLevel(node.Operator, ClassMethodKind) //ml:modifier level
+//	if ml == ast.ModifierPrivate {
+//		panic(NewError(node.Pos().Sline(), CLSCALLPRIVATE, node.Operator, instanceObj.Class.Name))
+//	}
+
+	method := instanceObj.GetMethod(node.Operator)
+	if method != nil {
+		switch m := method.(type) {
+			case *Function:
+				fn := &Function{
+					Literal:    m.Literal,
+					Scope:       NewScope(instanceObj.Scope),
+					Instance:   instanceObj,
+				}
+				if instanceObj.Class.Parent != nil {
+					fn.Scope.Set("parent", instanceObj.Class.Parent)
+				}
+
+				args := []Object{right}
+				return evalFunctionDirect(method, args, fn.Scope)
+			case *BuiltinMethod:
+				args := []Object{right}
+				builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: instanceObj}
+				aScope := NewScope(instanceObj.Scope)
+				return evalFunctionDirect(builtinMethod, args, aScope)
+		}
+	}
+	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
 
 // IF expressions, if (evaluates to boolean) True: { Block Statement } Optional Else: {Block Statement}
@@ -2966,11 +3065,11 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 				panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
 			}
 		} else if builtin, ok := builtins[call.Function.String()]; ok {
-			//let complex={ "add"=>fn(x,y){ fn(z) {x+y+z} } }
-			//complex["add"](2,3)(4)
 			args := evalArgs(call.Arguments, scope)
 			return builtin.Fn(call.Function.Pos().Sline(), args...)
 		} else if callExpr, ok := call.Function.(*ast.CallExpression); ok { //call expression
+			//let complex={ "add"=>fn(x,y){ fn(z) {x+y+z} } }
+			//complex["add"](2,3)(4)
 			aValue := Eval(callExpr, scope)
 			if aValue.Type() == ERROR_OBJ {
 				return aValue
@@ -2981,6 +3080,7 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 			panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
 		}
 	}
+
 	f := fn.(*Function)
 	newScope := NewScope(f.Scope)
 
@@ -3028,7 +3128,12 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 		f.Scope.Set("@_", NewInteger(int64(len(f.Literal.Parameters))))
 	}
 
-	r := Eval(f.Literal.Body, newScope)
+	extendedScope := extendFunctionScope(f, newScope, args)
+	oldInstance := currentInstance
+	currentInstance = f.Instance
+
+	r := Eval(f.Literal.Body, extendedScope)
+	currentInstance = oldInstance
 	if r.Type() == ERROR_OBJ {
 		return r
 	}
@@ -3135,6 +3240,125 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			//return evalFunctionCall(o, scope)   This is a bug: not 'scope'
 			return evalFunctionCall(o, hashPair.Value.(*Function).Scope) //should be Function's scope
 		}
+	case *ObjectInstance:
+		instanceObj := m
+		switch o := call.Call.(type) {
+		//e.g.: instanceObj.key1
+		case *ast.Identifier:
+//			//get methods's modifier level
+//			ml := currentInstance.GetModifierLevel(o.Value, ClassMemberKind) //ml:modifier level
+//			if currentInstance.Class.Name != instanceObj.Class.Name && ml == ast.ModifierPrivate {
+//				panic(NewError(call.Call.Pos().Sline(), CLSMEMBERPRIVATE, o.Value, instanceObj.Class.Name))
+//			}
+
+			val, ok := instanceObj.Scope.Get(o.Value)
+			if ok {
+				switch val.(type) {
+				case *Function: //Function without parameter. e.g. obj.getMonth(), could be called using 'obj.getMonth'
+					return evalFunctionDirect(val, []Object{}, instanceObj.Scope)
+				default:
+					return val
+				}
+			}
+
+			//See if it's a property
+			p := instanceObj.GetProperty(o.Value)
+			if p != nil {
+				if p.Getter == nil { //property xxx { set; }
+					panic(NewError(call.Call.Pos().Sline(), PROPERTYUSEERROR, o.Value, instanceObj.Class.Name))
+				} else {
+					if len(p.Getter.Body.Statements) == 0 { //property xxx { get; }
+						v, _ := instanceObj.Scope.Get("_" + o.Value)
+						//instanceObj.Scope.Set("_" + o.Value, v)
+						return v
+					} else {
+						results := Eval(p.Getter.Body, instanceObj.Scope)
+						if results.Type() == RETURN_VALUE_OBJ {
+							return results.(*ReturnValue).Value
+						}
+					}
+				}
+			}
+			panic(NewError(call.Call.Pos().Sline(), UNKNOWNIDENT, o.Value))
+
+		case *ast.CallExpression:
+			//e.g. instanceObj.method()
+			fname := o.Function.String() // get function name
+
+			//get methods's modifier level
+//			ml := instanceObj.GetModifierLevel(fname, ClassMethodKind) //ml:modifier level
+//			if ml == ast.ModifierPrivate {
+//				panic(NewError(call.Call.Pos().Sline(), CLSCALLPRIVATE, fname, instanceObj.Class.Name))
+//			}
+
+			method := instanceObj.GetMethod(fname)
+			if method != nil {
+				switch m := method.(type) {
+					case *Function:
+						fn := &Function{
+							Literal:    m.Literal,
+							Scope:       NewScope(instanceObj.Scope),
+							Instance:   instanceObj,
+						}
+						if instanceObj.Class.Parent != nil {
+							fn.Scope.Set("parent", instanceObj.Class.Parent)
+						}
+
+						args := evalArgs(o.Arguments, fn.Scope)
+						return evalFunctionDirect(method, args, fn.Scope)
+					case *BuiltinMethod:
+						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: instanceObj}
+						aScope := NewScope(instanceObj.Scope)
+						args := evalArgs(o.Arguments, aScope)
+						return evalFunctionDirect(builtinMethod, args, aScope)
+				}
+			}
+			panic(NewError(call.Call.Pos().Sline(), NOMETHODERROR, call.String(), obj.Type()))
+			return NIL
+		}
+	case *Class:
+		clsObj := m
+		switch o := call.Call.(type) {
+		case *ast.Identifier: //e.g.: classObj.key1=10
+
+//			//get methods's modifier level
+//			ml := currentInstance.GetModifierLevel(o.Value, ClassMemberKind) //ml:modifier level
+//			if currentInstance.Class.Name != clsObj.Name && ml == ast.ModifierPrivate {
+//				panic(NewError(call.Call.Pos().Sline(), CLSMEMBERPRIVATE, o.Value, clsObj.Name))
+//			}
+
+			val, ok := currentInstance.Scope.Get(o.Value)
+			if ok {
+				return val
+			}
+			return NIL
+
+		case *ast.CallExpression: //e.g. classObj.method()
+			if !InstanceOf(clsObj.Name, currentInstance) {
+				return NIL
+			}
+
+			fname := o.Function.String() // get function name
+			method := clsObj.GetMethod(fname)
+			if method != nil {
+				switch m := method.(type) {
+					case *Function:
+						if clsObj.Parent != nil {
+							currentInstance.Scope.Set("parent", clsObj.Parent)
+						}
+
+						args := evalArgs(o.Arguments, scope)
+						return evalFunctionDirect(m, args, currentInstance.Scope)
+					case *BuiltinMethod:
+						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: currentInstance}
+						aScope := NewScope(currentInstance.Scope)
+						args := evalArgs(o.Arguments, aScope)
+						return evalFunctionDirect(builtinMethod, args, aScope)
+					
+				}
+			}
+		}
+
 	default:
 		switch o := call.Call.(type) {
 		case *ast.Identifier:      //e.g. method call like '[1,2,3].first'
@@ -3631,6 +3855,156 @@ func evalPipeExpression(p *ast.Pipe, scope *Scope) Object {
 
 	return NIL
 }
+
+//class name : parent { block }
+func evalClassStatement(c *ast.ClassStatement, scope *Scope) Object {
+	clsObj := evalClassLiteral(c.ClassLiteral, scope)
+	scope.Set(c.Name.Value, clsObj) //save to scope
+
+	return NIL
+}
+
+//let name = class : parent { block }
+func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
+	var parentClass = BASE_CLASS
+	if c.Parent != "" {
+
+		parent, ok := scope.Get(c.Parent)
+		if !ok {
+			panic(NewError(c.Pos().Sline(), PARENTNOTDECL, c.Parent))
+		}
+
+		parentClass, ok = parent.(*Class)
+		if !ok {
+			panic(NewError(c.Pos().Sline(), NOTCLASSERROR, c.Parent))
+		}
+	}
+
+	clsObj := &Class{
+		Name:       c.Name,
+		Parent:     parentClass,
+		Members:    c.Members,
+		Properties: c.Properties,
+		Methods:    make(map[string]ClassMethod, len(c.Methods)),
+	}
+
+	for k, f := range c.Methods {
+		clsObj.Methods[k] = Eval(f, scope).(ClassMethod)
+	}
+
+	return clsObj
+}
+
+//new classname(parameters)
+func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
+	class := Eval(n.Class, scope)
+	if class == NIL || class == nil {
+		panic(NewError(n.Pos().Sline(), CLSNOTDEFINE, n.Class))
+	}
+
+	clsObj, ok := class.(*Class)
+	if !ok {
+		panic(NewError(n.Pos().Sline(), NOTCLASSERROR, n.Class))
+	}
+
+	tmpClass := clsObj
+	classChain := make([]*Class, 0, 3)
+	classChain = append(classChain, clsObj)
+	for tmpClass.Parent != nil {
+		classChain = append(classChain, tmpClass.Parent)
+		tmpClass = tmpClass.Parent
+	}
+
+	//create a new Class scope
+	newScope := NewScope(scope)
+	//evaluate the 'Members' fields of class with proper scope.
+	for idx := len(classChain) - 1; idx >= 0; idx-- {
+		for _, member := range classChain[idx].Members {
+			Eval(member, newScope) //evaluate the 'Members' fields of class
+		}
+		newScope = NewScope(newScope)
+	}
+
+	instance := &ObjectInstance{Class: clsObj, Scope: newScope.parentScope}
+	instance.Scope.Set("this", instance) //make 'this' refer to instance
+
+	if len(classChain) > 1 {
+		instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
+	}
+
+	//Is it has a constructor ?
+	init := clsObj.GetMethod("init")
+	if init == nil {
+		return instance
+	}
+
+	classMux.Lock()
+	defer classMux.Unlock()
+
+	oldInstance := currentInstance
+	currentInstance = instance
+	args := evalArgs(n.Arguments, scope)
+
+	if len(args) == 1 && args[0].Type() == ERROR_OBJ {
+		return args[0]
+	}
+
+	ret := evalFunctionDirect(init, args, instance.Scope); 
+	if ret.Type() == ERROR_OBJ {
+		return ret //return the error object
+	}
+	currentInstance = oldInstance
+	return instance
+}
+
+func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
+	switch fn := fn.(type) {
+	case *Function:
+		if len(args) < len(fn.Literal.Parameters) {
+			panic(NewError("", GENERICERROR, "Not enough parameters to call function"))
+		}
+		extendedScope := extendFunctionScope(fn, scope, args)
+
+		results := Eval(fn.Literal.Body, extendedScope)
+		if results.Type() == RETURN_VALUE_OBJ {
+			return results.(*ReturnValue).Value
+		}
+		return results
+	case *Builtin:
+		return fn.Fn("", args...)
+	case *BuiltinMethod:
+		return fn.Fn("", fn.Instance, scope, args...)
+	}
+
+	panic(NewError("", GENERICERROR, fn.Type() + " is not a function"))
+}
+
+func extendFunctionScope(fn *Function, outer *Scope, args []Object) *Scope {
+	innerScope := NewScope(outer)
+
+	for i, param := range fn.Literal.Parameters {
+		innerScope.Set(param.(*ast.Identifier).Value, args[i])
+	}
+
+	// The "args" variable hold all extra parameters beyond those defined
+	// by the function at runtime. "args[0]" is the first EXTRA parameter
+	// after those that were defined have been bound.
+
+	// Although the elements of the args variable could be reassigned,
+	// I'm trying to discourage it by at least making the variable itself
+	// a constant. Trying to indicate "please don't mess with it". Mainly
+	// this is so the variable isn't overwritten accidentally.
+	if len(args) > len(fn.Literal.Parameters) {
+		innerScope.Set("args", &Array{Members: args[len(fn.Literal.Parameters):]})
+	} else {
+		// The idea is for functions to call "len(args)" to check for
+		// anything extra. "len(nil)" returns 0.
+		innerScope.Set("args", &Array{})
+	}
+
+	return innerScope
+}
+
 
 // Convert a Object to an ast.Expression.
 func obj2Expression(obj Object) ast.Expression {

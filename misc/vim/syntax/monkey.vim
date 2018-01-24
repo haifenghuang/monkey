@@ -18,9 +18,10 @@ syn keyword     monkeyException         try catch finally throw
 syn keyword     monkeyConditional       if else elseif elsif elif unless where and or case in is
 syn keyword     monkeyRepeat            do while for break continue grep map
 syn keyword     monkeyBranch            break continue
-
+syn keyword     monkeyClass             class new property get set this parent
 
 hi def link     monkeyStatement         Statement
+hi def link     monkeyClass             Statement
 hi def link     monkeyConditional       Conditional
 hi def link     monkeyBranch            Conditional
 hi def link     monkeyLabel             Label

@@ -65,6 +65,13 @@ var keywords = map[string]int{
 	"enum":     1,
 	"defer":    1,
 	"nil":      1,
+	"class":    1,
+	"new":      1,
+	"this":     1,
+	"parent":   1,
+	"property": 1,
+	"get":      1,
+	"set":      1,
 }
 
 const (
@@ -213,7 +220,7 @@ func (h *Highlighter) processComment(ch rune) {
 	}
 }
 
-//Really need this function ？
+//Really need this function?
 func (h *Highlighter) processOperator() {
 	opArr := []struct {
 		operator string

@@ -108,6 +108,17 @@ const (
 	ENUM
 	QW
 	UNLESS
+
+	//class related
+	INTERFACE  //NOT IMPLEMENTED
+	CLASS
+	NEW
+	PROPERTY
+	GET
+	SET
+	PUBLIC     //NOT IMPLEMENTED
+	PRIVATE    //NOT IMPLEMENTED
+	PROTECTED  //NOT IMPLEMENTED
 )
 
 var keywords = map[string]TokenType{
@@ -147,6 +158,15 @@ var keywords = map[string]TokenType{
 	"enum":     ENUM,
 	"qw":       QW, //“quoted words”
 	"unless":   UNLESS,
+	"interface":INTERFACE,
+	"class":    CLASS,
+	"new":      NEW,
+	"property": PROPERTY,
+	"get":      GET,
+	"set":      SET,
+	"public":   PUBLIC,
+	"private":  PRIVATE,
+	"protected":PROTECTED,
 }
 
 //for debug & testing
@@ -338,6 +358,24 @@ func (tt TokenType) String() string {
 		return "qw"
 	case UNLESS:
 		return "unless"
+	case INTERFACE:
+		return "interface"
+	case CLASS:
+		return "class"
+	case NEW:
+		return "new"
+	case PROPERTY:
+		return "property"
+	case GET:
+		return "get"
+	case SET:
+		return "set"
+	case PUBLIC:
+		return "public"
+	case PRIVATE:
+		return "private"
+	case PROTECTED:
+		return "protected"
 	default:
 		return "unknown"
 	}
