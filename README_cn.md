@@ -6,7 +6,8 @@
 
 ## 概述
 
-Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python和Perl.
+Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python, Perl和C#.
+支持常用的控制流程，函数式编程和面向对象编程。
 同时它还包括一个实时语法高亮的REPL。
 
 下面是一个使用monkey语言的示例程序:
@@ -1117,6 +1118,92 @@ dateObj.getDateInfo()
 
 //下面的代码会报错，因为Day属性是个只读属性
 //dateObj.Day = 18
+```
+
+Monkey还支持类似C#的索引器(`Indexer`)。
+索引器能够让你像访问数组一样访问对象。
+
+对于一个类， Monkey只支持一个索引器。
+索引器使用如下的方式声明：
+
+使用`property this[parameter]`方式来声明一个索引器。
+Monkey不支持多个索引参数。
+
+```swift
+property this[index] {
+    get { xxx }
+    set { xxx }
+}
+```
+
+请看下面的代码:
+
+```swift
+class IndexedNames
+{
+    let namelist = []
+    let size = 10
+    fn init()
+    {
+        let i = 0
+        for (i = 0; i < size; i++)
+        {
+            namelist[i] = "N. A."
+        }
+    }
+
+    fn getNameList() {
+        println(namelist)
+    }
+
+    property this[index]
+    {
+        get
+        {
+            let tmp;
+            if ( index >= 0 && index <= size - 1 )
+            {
+               tmp = namelist[index]
+            }
+            else
+            {
+               tmp = ""
+            }
+     
+            return tmp
+         }
+         set
+         {
+             if ( index >= 0 && index <= size-1 )
+             {
+                 namelist[index] = value
+             }
+         }
+    }
+}
+
+fn Main()
+{
+    namesObj = new IndexedNames()
+
+    //下面的代码会调用索引器的setter方法
+    namesObj[0] = "Zara"
+    namesObj[1] = "Riz"
+    namesObj[2] = "Nuha"
+    namesObj[3] = "Asif"
+    namesObj[4] = "Davinder"
+    namesObj[5] = "Sunil"
+    namesObj[6] = "Rubic"
+
+    namesObj.getNameList()
+
+    for (i = 0; i < namesObj.size; i++)
+    {
+        println(namesObj[i]) //调用索引器的getter方法
+    }
+}
+
+Main()
 ```
 
 ## 标准输入/输出/错误

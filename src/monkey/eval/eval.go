@@ -61,6 +61,7 @@ func Eval(node ast.Node, scope *Scope) Object {
 		}
 	}()
 
+	//fmt.Printf("node.Type=%T, node=<%s>\n", node, node.String()) //debugging
 	switch node := node.(type) {
 	case *ast.Program:
 		return evalProgram(node, scope)
@@ -271,7 +272,8 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 
 	for idx, item := range l.Names {
 		if idx >= valuesLen { //There are more Values than Names
-			scope.Set(item.String(), NIL)
+			val = NIL
+			scope.Set(item.String(), val)
 		} else {
 			val = Eval(l.Values[idx], scope)
 			if val.Type() != ERROR_OBJ {
@@ -687,6 +689,35 @@ func evalStructAssignExpression(a *ast.AssignExpression, scope *Scope, val Objec
 	panic(NewError(a.Pos().Sline(), INFIXOP, aVal.Type(), a.Token.Literal, val.Type()))
 }
 
+//clsObj[index] = xxx
+func evalClassIndexerAssignExpression(a *ast.AssignExpression, obj Object, indexExpr *ast.IndexExpression, val Object, scope *Scope) Object {
+	instanceObj := obj.(*ObjectInstance)
+	p := instanceObj.GetProperty("this")
+	if p != nil {
+		//no setter or setter block is empty, e.g. 'property xxx { set; }'
+		if p.Setter == nil || len(p.Setter.Body.Statements) == 0 {
+			panic(NewError(a.Pos().Sline(), INDEXERUSEERROR, instanceObj.Class.Name))
+		} else {
+			index := Eval(indexExpr.Index, scope)
+
+			newScope := NewScope(instanceObj.Scope)
+			newScope.Set("value", val)
+			newScope.Set(p.Index.Value, index)
+
+			results := Eval(p.Setter.Body, newScope)
+			if results.Type() == RETURN_VALUE_OBJ {
+				return results.(*ReturnValue).Value
+			} else {
+				return results
+			}
+		}
+	} else {
+		panic(NewError(a.Pos().Sline(), INDEXNOTFOUNDERROR, instanceObj.Class.Name))
+	}
+
+	return val
+}
+
 func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 	val = Eval(a.Value, scope)
 	if val.Type() == ERROR_OBJ {
@@ -760,6 +791,13 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		name = nodeType.Value
 	case *ast.IndexExpression:
 		name = nodeType.Left.(*ast.Identifier).Value
+
+		//check if it's a class indexer assignment, e.g. 'clsObj[index] = xxx'
+		if aObj, ok := scope.Get(name); ok {
+			if aObj.Type() == INSTANCE_OBJ {
+				return evalClassIndexerAssignExpression(a, aObj, nodeType, val, scope)
+			}
+		}
 	}
 
 	if a.Token.Literal == "=" {
@@ -3396,8 +3434,33 @@ func evalIndexExpression(ie *ast.IndexExpression, scope *Scope) Object {
 		return evalStringIndex(iterable, ie, scope)
 	case *Tuple:
 		return evalTupleIndex(iterable, ie, scope)
+	case *ObjectInstance: //class indexer's getter
+		return evalClassInstanceIndex(iterable, ie, scope)
 	}
 	panic(NewError(ie.Pos().Sline(), NOINDEXERROR, left.Type()))
+}
+
+func evalClassInstanceIndex(instanceObj *ObjectInstance, ie *ast.IndexExpression, scope *Scope) Object {
+	p := instanceObj.GetProperty("this")
+	if p != nil {
+		//no getter or getter block is empty, e.g. 'property xxx { get; }'
+		if p.Getter == nil || len(p.Getter.Body.Statements) == 0 {
+			panic(NewError(ie.Pos().Sline(), INDEXERUSEERROR, instanceObj.Class.Name))
+		} else {
+			index := Eval(ie.Index, scope)
+
+			newScope := NewScope(instanceObj.Scope)
+			newScope.Set(p.Index.Value, index)
+
+			results := Eval(p.Getter.Body, newScope)
+			if results.Type() == RETURN_VALUE_OBJ {
+				return results.(*ReturnValue).Value
+			}
+			return results
+		}
+	}
+
+	panic(NewError(ie.Pos().Sline(), INDEXNOTFOUNDERROR, instanceObj.Class.Name))
 }
 
 func evalStringIndex(str *String, ie *ast.IndexExpression, scope *Scope) Object {

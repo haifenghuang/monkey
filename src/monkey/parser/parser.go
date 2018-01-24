@@ -2043,6 +2043,21 @@ func(p *Parser) parsePropertyDeclStmt() *ast.PropertyDeclStmt {
 	//get property name
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
+	if p.curToken.Literal == "this" { //assume it is a indexer declaration
+		if !p.expectPeek(token.LBRACKET) { //e.g. 'property this[index]'
+			return nil
+		}
+
+		if !p.expectPeek(token.IDENT) {  //must be an identifier, it's the index
+			return nil
+		}
+		stmt.Index = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+		if !p.expectPeek(token.RBRACKET) {
+			return nil
+		}
+	}
+
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}
@@ -2075,6 +2090,7 @@ func (p *Parser) parseGetter() *ast.GetterStmt {
 	case token.LBRACE:
 		stmt.Body = p.parseBlockStatement()
 	}
+
 	return stmt
 
 }

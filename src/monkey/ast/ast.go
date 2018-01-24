@@ -1203,7 +1203,10 @@ func (ls *LetStatement) String() string {
 	out.WriteString(ls.TokenLiteral() + " ")
 	for idx, item := range ls.Names {
 		out.WriteString(item.String())
-		out.WriteString(" = ")
+
+		if valuesLen > 0 {
+			out.WriteString(" = ")
+		}
 
 		if idx >= valuesLen {
 			out.WriteString("")
@@ -2446,6 +2449,7 @@ type PropertyDeclStmt struct {
 	Name          *Identifier      //property name
 	Getter        *GetterStmt      //getter
 	Setter        *SetterStmt      //setter
+	Index         *Identifier      //only used in class's indexer
 	ModifierLevel ModifierLevel   //property's modifier
 }
 
@@ -2469,8 +2473,16 @@ func (p *PropertyDeclStmt) String() string {
 	out.WriteString(p.ModifierLevel.String())
 
 	out.WriteString("property ")
-	out.WriteString(p.Name.String() +" ")
-	out.WriteString("{ ")
+	out.WriteString(p.Name.String())
+
+	if p.Index != nil {
+		out.WriteString("[")
+		out.WriteString(p.Index.String())
+		out.WriteString("]")
+	} else {
+	}
+
+	out.WriteString(" { ")
 
 	if p.Getter != nil {
 		out.WriteString(p.Getter.String())

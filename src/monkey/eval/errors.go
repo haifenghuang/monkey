@@ -43,6 +43,9 @@ const (
 	CLSMEMBERPRIVATE
 	CLSCALLPRIVATE
 	PROPERTYUSEERROR
+	INDEXERUSEERROR
+	INDEXERTYPEERROR
+	INDEXNOTFOUNDERROR
 	GENERICERROR
 )
 
@@ -85,6 +88,9 @@ var errorType = map[int]string{
 	CLSMEMBERPRIVATE:  "Variable(%s) of class(%s) is private",
 	CLSCALLPRIVATE:    "Method %s() of class(%s) is private",
 	PROPERTYUSEERROR:  "Invalid use of Property(%s) of class(%s)",
+	INDEXERUSEERROR:   "Invalid use of Indexer of class(%s)",
+	INDEXERTYPEERROR:  "Invalid use of Indexer of class(%s), Only interger type of Indexer is supported",
+	INDEXNOTFOUNDERROR:"Indexer not found for class(%s)",
 	GENERICERROR:      "%s",
 }
 

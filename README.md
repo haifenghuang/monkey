@@ -4,7 +4,8 @@ Chinese version: [中文](README_cn.md)
 
 ## Summary
 
-Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python and Perl.
+Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python, Perl and c#
+It support the normal control flow, functional programming and object oriented programming.
 It also has a REPL with realtime syntax highlighter.
 
 This is a sample program using monkey language:
@@ -1127,6 +1128,90 @@ dateObj.getDateInfo()
 
 //Below code will raise an execution error! Because Day is a READONLY property.
 //dateObj.Day = 18
+```
+
+Monkey has limited support for class `indexer`(like c#). 
+An indexer is a member that enables an object to be indexed in the same way as an array.
+It only support one indexer for a class.
+
+You declare an Indexer using `property this[parameter]`.
+Monkey do not support multiple index parameters.
+
+```swift
+property this[index] {
+    get { xxx }
+    set { xxx }
+}
+```
+
+Please see the example code:
+
+```swift
+class IndexedNames
+{
+    let namelist = []
+    let size = 10
+    fn init()
+    {
+        let i = 0
+        for (i = 0; i < size; i++)
+        {
+            namelist[i] = "N. A."
+        }
+    }
+
+    fn getNameList() {
+        println(namelist)
+    }
+
+    property this[index]
+    {
+        get
+        {
+            let tmp;
+            if ( index >= 0 && index <= size - 1 )
+            {
+               tmp = namelist[index]
+            }
+            else
+            {
+               tmp = ""
+            }
+     
+            return tmp
+         }
+         set
+         {
+             if ( index >= 0 && index <= size-1 )
+             {
+                 namelist[index] = value
+             }
+         }
+    }
+}
+
+fn Main()
+{
+    namesObj = new IndexedNames()
+
+    //Below code will call Indexer's setter function
+    namesObj[0] = "Zara"
+    namesObj[1] = "Riz"
+    namesObj[2] = "Nuha"
+    namesObj[3] = "Asif"
+    namesObj[4] = "Davinder"
+    namesObj[5] = "Sunil"
+    namesObj[6] = "Rubic"
+
+    namesObj.getNameList()
+
+    for (i = 0; i < namesObj.size; i++)
+    {
+        println(namesObj[i]) //Calling Indexer's getter function
+    }
+}
+
+Main()
 ```
 
 ## Standard input/output/error
