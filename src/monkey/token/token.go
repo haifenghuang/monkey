@@ -119,6 +119,7 @@ const (
 	PUBLIC     //NOT IMPLEMENTED
 	PRIVATE    //NOT IMPLEMENTED
 	PROTECTED  //NOT IMPLEMENTED
+	STATIC
 )
 
 var keywords = map[string]TokenType{
@@ -167,6 +168,7 @@ var keywords = map[string]TokenType{
 	"public":   PUBLIC,
 	"private":  PRIVATE,
 	"protected":PROTECTED,
+	"static":   STATIC,
 }
 
 //for debug & testing
@@ -376,6 +378,8 @@ func (tt TokenType) String() string {
 		return "private"
 	case PROTECTED:
 		return "protected"
+	case STATIC:
+		return "static"
 	default:
 		return "unknown"
 	}

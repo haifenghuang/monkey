@@ -243,7 +243,7 @@ a, b, c = 1, "hello world", [1,2,3]
 * include
 * and or
 * enum
-* struct # 暂时没使用
+* struct # 保留,暂时没使用
 * do while for break continue where
 * grep map
 * case is in
@@ -252,6 +252,9 @@ a, b, c = 1, "hello world", [1,2,3]
 * spawn
 * yield #not used
 * qw
+* class new property set get static
+* interface public private protected #保留,暂时没使用
+
 
 ### 类型转换
 
@@ -888,7 +891,13 @@ println(revTuple) //结果: (9, 8, 7, 6, 4, 2, 5, 3, 1)
 
 ## 类
 
-Monkey支持简单的面向对象编程, 例如继承和多态。
+Monkey支持简单的面向对象编程, 下面列出了Mokey支持的特性：
+
+* 继承和多态
+* 操作符重载
+* 属性(getter和setter)
+* 静态变量/方法/属性
+* 索引器
 
 monkey解析器(parser)能够正确的处理关键字`public`, `private`, `protected`, 但是解释器(evaluator)会忽略这些。
 也就是说，monkey现在暂时不支持访问限定。
@@ -917,6 +926,8 @@ class Animal : object {
     }
 }
 ```
+
+### 继承和多态
 
 你使用`:`来表示继承关系:
 
@@ -1015,7 +1026,7 @@ generic noise
 oooooooo
 ```
 
-Monkey也支持简单的操作符重载:
+### 操作符重载
 
 ```swift
 class Vector {
@@ -1060,7 +1071,7 @@ fn Vectormain() {
 Vectormain()
 ```
 
-Monkey也支持简单的属性(类似C#) also support simple class `property`:
+### 属性(类似C#)
 
 ```swift
 class Date {
@@ -1205,6 +1216,28 @@ fn Main()
 
 Main()
 ```
+
+### 静态变量/方法/属性
+
+```swift
+class Test
+{
+   static let x = 0;
+   static let y = 5;
+
+   static fn Main()
+   {
+      println(Test.x);
+      println(Test.y);
+
+      Test.x = 99;
+      println(Test.x);
+   }
+}
+
+Test.Main()
+```
+
 
 ## 标准输入/输出/错误
 

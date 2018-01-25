@@ -1904,6 +1904,10 @@ func isClassStmtToken(t token.Token) bool {
 		return true
 	}
 
+	if tt == token.STATIC { //static
+		return true
+	}
+
 	return false
 }
 
@@ -2006,10 +2010,16 @@ func (p *Parser) parseClassStmt() ast.Statement {
 		}
 	}
 
-	return p.parseClassSubStmt(modifierLevel)
+	var staticFlag bool
+	if p.curToken.Type == token.STATIC { //static
+		p.nextToken() //skip the 'static' keyword
+		staticFlag = true
+	}
+
+	return p.parseClassSubStmt(modifierLevel, staticFlag)
 }
 
-func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel) ast.Statement {
+func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag bool) ast.Statement {
 	var r ast.Statement
 
 	switch p.curToken.Type {
@@ -2024,10 +2034,13 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel) ast.Statemen
 	switch o := r.(type) {
 	case *ast.LetStatement:
 		o.ModifierLevel = modifierLevel
+		o.StaticFlag = staticFlag
 	case *ast.PropertyDeclStmt:
 		o.ModifierLevel = modifierLevel
+		o.StaticFlag = staticFlag
 	case *ast.FunctionStatement:
 		o.FunctionLiteral.ModifierLevel = modifierLevel
+		o.FunctionLiteral.StaticFlag = staticFlag
 	}
 
 	return r

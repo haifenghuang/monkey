@@ -767,6 +767,7 @@ type FunctionLiteral struct {
 
 	Variadic bool
 
+	StaticFlag bool
 	ModifierLevel ModifierLevel //for 'class' use
 }
 
@@ -782,6 +783,11 @@ func (fl *FunctionLiteral) expressionNode()      {}
 func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
 func (fl *FunctionLiteral) String() string {
 	var out bytes.Buffer
+
+	out.WriteString(fl.ModifierLevel.String())
+	if fl.StaticFlag {
+		out.WriteString("static ")
+	}
 
 	out.WriteString(fl.TokenLiteral())
 	params := []string{}
@@ -1175,6 +1181,7 @@ type LetStatement struct {
 	Names  []*Identifier
 	Values []Expression
 
+	StaticFlag bool
 	ModifierLevel ModifierLevel //used in 'class'
 }
 
@@ -1197,6 +1204,9 @@ func (ls *LetStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ls.ModifierLevel.String())
+	if ls.StaticFlag {
+		out.WriteString("static ")
+	}
 
 	valuesLen := len(ls.Values)
 
@@ -2450,6 +2460,7 @@ type PropertyDeclStmt struct {
 	Getter        *GetterStmt      //getter
 	Setter        *SetterStmt      //setter
 	Index         *Identifier      //only used in class's indexer
+	StaticFlag    bool
 	ModifierLevel ModifierLevel   //property's modifier
 }
 
@@ -2471,6 +2482,9 @@ func (p *PropertyDeclStmt) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(p.ModifierLevel.String())
+	if p.StaticFlag {
+		out.WriteString("static ")
+	}
 
 	out.WriteString("property ")
 	out.WriteString(p.Name.String())

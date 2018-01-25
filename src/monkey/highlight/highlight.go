@@ -72,6 +72,11 @@ var keywords = map[string]int{
 	"property": 1,
 	"get":      1,
 	"set":      1,
+	"static":   1,
+	"public":   1,
+	"private":  1,
+	"protected":1,
+	"interface":1,
 }
 
 const (

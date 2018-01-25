@@ -349,7 +349,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(class|new|property|get|set|this|parent)\b</string>
+			<string>\b(class|new|property|get|set|this|parent|static|public|private|protected|interface)\b</string>
 			<key>name</key>
 			<string>keyword.control.class.my</string>
 		</dict>

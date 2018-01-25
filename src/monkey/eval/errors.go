@@ -45,7 +45,9 @@ const (
 	PROPERTYUSEERROR
 	INDEXERUSEERROR
 	INDEXERTYPEERROR
+	INDEXERSTATICERROR
 	INDEXNOTFOUNDERROR
+	CALLNONSTATICERROR
 	GENERICERROR
 )
 
@@ -90,7 +92,9 @@ var errorType = map[int]string{
 	PROPERTYUSEERROR:  "Invalid use of Property(%s) of class(%s)",
 	INDEXERUSEERROR:   "Invalid use of Indexer of class(%s)",
 	INDEXERTYPEERROR:  "Invalid use of Indexer of class(%s), Only interger type of Indexer is supported",
+	INDEXERSTATICERROR:"Invalid use of Indexer of class(%s), Indexer cannot declared as static",
 	INDEXNOTFOUNDERROR:"Indexer not found for class(%s)",
+	CALLNONSTATICERROR:"Could not call non-static members.",
 	GENERICERROR:      "%s",
 }
 

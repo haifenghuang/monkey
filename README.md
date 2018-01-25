@@ -243,7 +243,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * include
 * and or
 * enum
-* struct # not used
+* struct # reserved, not used
 * do while for break continue where
 * grep map
 * case is in
@@ -252,6 +252,8 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * spawn
 * yield #not used
 * qw
+* class new property set get static
+* interface public private protected # reserved, not used
 
 ### Type conversion
 
@@ -898,7 +900,13 @@ println(revTuple) //result: (9, 8, 7, 6, 4, 2, 5, 3, 1)
 
 ## class
 
-Monkey has limited support for the oop concept, like inheritance and polymorphism.
+Monkey has limited support for the oop concept, below is a list of features:
+
+* inheritance and polymorphism
+* operator overloading
+* property(with getter or setter or both)
+* static member/method/property
+* indexer
 
 The monkey parser could parse `public`, `private`, `protected`, but it has no effect in the evaluation phase.
 That means monkey do not support access modifiers at present.
@@ -927,6 +935,8 @@ class Animal : object {
     }
 }
 ```
+
+### inheritance and polymorphism
 
 You can inherit a class using `:`:
 
@@ -1025,7 +1035,7 @@ generic noise
 oooooooo
 ```
 
-Monkey also support simple operator overloading:
+### operator overloading
 
 ```swift
 class Vector {
@@ -1070,7 +1080,7 @@ fn Vectormain() {
 Vectormain()
 ```
 
-Monkey also support simple class `property` like c#:
+### property(like c#)
 
 ```swift
 class Date {
@@ -1129,6 +1139,8 @@ dateObj.getDateInfo()
 //Below code will raise an execution error! Because Day is a READONLY property.
 //dateObj.Day = 18
 ```
+
+### indexer
 
 Monkey has limited support for class `indexer`(like c#). 
 An indexer is a member that enables an object to be indexed in the same way as an array.
@@ -1213,6 +1225,28 @@ fn Main()
 
 Main()
 ```
+
+### static members/methods/properties
+
+```swift
+class Test
+{
+   static let x = 0;
+   static let y = 5;
+
+   static fn Main()
+   {
+      println(Test.x);
+      println(Test.y);
+
+      Test.x = 99;
+      println(Test.x);
+   }
+}
+
+Test.Main()
+```
+
 
 ## Standard input/output/error
 

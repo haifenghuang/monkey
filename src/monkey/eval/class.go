@@ -16,7 +16,7 @@ const (
 	ClassMemberKind ClassComponentKind = iota
 	ClassMethodKind
 	ClassPropertyKind
-	ClassIndexerKind    //not implemented
+//	ClassIndexerKind    //not implemented
 )
 
 
@@ -31,6 +31,7 @@ type Class struct {
 	Members    []*ast.LetStatement
 	Methods    map[string]ClassMethod //BuiltinMethod or Function object
 	Properties map[string]*ast.PropertyDeclStmt
+	Scope      *Scope
 }
 
 func (c *Class) Inspect() string { return "<class:" + c.Name + ">" }
@@ -61,6 +62,64 @@ func (c *Class) GetProperty(name string) *ast.PropertyDeclStmt {
 	return c.Parent.GetProperty(name)
 }
 
+func (c *Class) IsStatic(val string, kind ClassComponentKind) bool {
+	switch kind {
+	case ClassMemberKind:
+		return c.CheckMembers(val)
+	case ClassMethodKind:
+		return c.CheckMethods(val)
+	case ClassPropertyKind:
+		return c.CheckProperties(val)
+	}
+	return false
+}
+
+func (c *Class) CheckMembers(val string) bool {
+	result := false
+	for _, member := range c.Members {
+		for _, name := range member.Names {
+			if name.Value == val {
+				if member.StaticFlag {
+					result = true
+				}
+			}
+		}
+	}
+
+	if result == false {
+		if c.Parent != nil {
+			result = c.Parent.CheckMembers(val)
+		}
+	}
+	return result
+}
+
+func (c *Class) CheckMethods(val string) bool {
+	v := c.GetMethod(val)
+	if v == nil {
+		return false
+	}
+
+	switch o := v.(type) {
+	case *Function:
+		if o.Literal.StaticFlag {
+			return true
+		}
+	case *BuiltinMethod:
+		return false
+	}
+
+	return false
+}
+
+func (c *Class) CheckProperties(val string) bool {
+	v := c.GetProperty(val)
+	if v == nil {
+		return false
+	}
+
+	return v.StaticFlag
+}
 
 func (c *Class) GetModifierLevel(name string, kind ClassComponentKind) ast.ModifierLevel {
 	var ret ast.ModifierLevel
@@ -81,7 +140,6 @@ func (c *Class) GetModifierLevel(name string, kind ClassComponentKind) ast.Modif
 		}
 
 	case ClassPropertyKind:
-	case ClassIndexerKind: //not implemented
 	}
 
 	if ret == ast.ModifierPrivate || ret == ast.ModifierDefault {
@@ -99,6 +157,7 @@ func (oi *ObjectInstance) Inspect() string  { return "<Instance:" + oi.Class.Nam
 func (oi *ObjectInstance) Type() ObjectType { return INSTANCE_OBJ }
 func (oi *ObjectInstance) GetMethod(name string) ClassMethod { return oi.Class.GetMethod(name) }
 func (oi *ObjectInstance) GetProperty(name string) *ast.PropertyDeclStmt { return oi.Class.GetProperty(name) }
+func (oi *ObjectInstance) IsStatic(val string, kind ClassComponentKind) bool { return oi.Class.IsStatic(val, kind) }
 func (oi *ObjectInstance) CallMethod(line string, scope *Scope, method string, args ...Object) Object { 
 	panic(NewError(line, NOMETHODERROR, oi.Type(), method))
 }

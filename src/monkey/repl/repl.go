@@ -18,7 +18,7 @@ var monkeyKeywords = []string{
 	"break", "continue", "for", "in", "where", "grep", "map", "case",
 	"is", "try", "catch", "finally", "throw", "qw", "unless", "spawn",
 	"enum", "defer", "nil","class", "new", "this", "parent", "property", 
-	"get", "set",
+	"get", "set", "static", "public", "private", "protected", "interface",
 }
 
 //Note: we should put the longest operators first.

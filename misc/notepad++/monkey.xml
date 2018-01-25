@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">fn let if elsif elseif elif else unless return include and or struct do while break continue for in where grep map case is try catch finally throw defer spawn yield enum qw class new property get set this parent</Keywords>
+            <Keywords name="Keywords1">fn let if elsif elseif elif else unless return include and or struct do while break continue for in where grep map case is try catch finally throw defer spawn yield enum qw class new property get set this parent interface static public private protected</Keywords>
             <Keywords name="Keywords2">nil true false</Keywords>
             <Keywords name="Keywords3"></Keywords>
             <Keywords name="Keywords4"></Keywords>

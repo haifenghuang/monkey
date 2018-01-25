@@ -40,7 +40,7 @@ func Eval(node ast.Node, scope *Scope) Object {
 			switch r := r.(type) {
 			case *Error:
 				//if panic is a Error Object, print its contents
-				fmt.Println(r.Error())
+				fmt.Printf("\x1b[31m%s\x1b[0m\n", r.Error())
 				return
 			case runtime.Error:
 				const msgFmt = "%s:%d %s(): A panic occured, but was recovered; Details: %+v;\n\t*** Stack Trace ***\n\t%s*** End Stack Trace ***\n"
@@ -692,6 +692,12 @@ func evalStructAssignExpression(a *ast.AssignExpression, scope *Scope, val Objec
 //clsObj[index] = xxx
 func evalClassIndexerAssignExpression(a *ast.AssignExpression, obj Object, indexExpr *ast.IndexExpression, val Object, scope *Scope) Object {
 	instanceObj := obj.(*ObjectInstance)
+
+	//check if the Indexer is static
+	if instanceObj.IsStatic("this", ClassPropertyKind) {
+		panic(NewError(a.Pos().Sline(), INDEXERSTATICERROR, instanceObj.Class.Name))
+	}
+
 	p := instanceObj.GetProperty("this")
 	if p != nil {
 		//no setter or setter block is empty, e.g. 'property xxx { set; }'
@@ -776,9 +782,13 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			}
 			return
 		} else if aObj.Type() == CLASS_OBJ { //e.g. parent.var = xxxx
-			//clsObj := aObj.(*Class)
+			clsObj := aObj.(*Class)
+			if currentInstance != nil { //inside class body
 			currentInstance.Scope.Set(strArr[1], val)
 			//return evalFunctionCall(o, currentInstance.Scope) //should be Function's scope
+			} else { //outside class body
+				clsObj.Scope.Set(strArr[1], val)
+			}
 			return
 		}
 
@@ -1734,9 +1744,8 @@ func evalInstanceInfixExpression(node *ast.InfixExpression, left Object, right O
 					Scope:       NewScope(instanceObj.Scope),
 					Instance:   instanceObj,
 				}
-				if instanceObj.Class.Parent != nil {
+
 					fn.Scope.Set("parent", instanceObj.Class.Parent)
-				}
 
 				args := []Object{right}
 				return evalFunctionDirect(method, args, fn.Scope)
@@ -3120,6 +3129,17 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 	}
 
 	f := fn.(*Function)
+
+	//check if it's static function
+	if currentInstance == nil { //class static function or normal function:no instance is created
+		_, ok := scope.Get("this")
+		if ok {
+			if !f.Literal.StaticFlag { //class is not static
+				panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
+			}
+		}
+	}
+
 	newScope := NewScope(f.Scope)
 
 	//Register this function call in the call stack
@@ -3338,9 +3358,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 							Scope:       NewScope(instanceObj.Scope),
 							Instance:   instanceObj,
 						}
-						if instanceObj.Class.Parent != nil {
 							fn.Scope.Set("parent", instanceObj.Class.Parent)
-						}
 
 						args := evalArgs(o.Arguments, fn.Scope)
 						return evalFunctionDirect(method, args, fn.Scope)
@@ -3357,36 +3375,57 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 	case *Class:
 		clsObj := m
 		switch o := call.Call.(type) {
-		case *ast.Identifier: //e.g.: classObj.key1=10
-
+		case *ast.Identifier: //e.g.: classObj.key1
 //			//get methods's modifier level
 //			ml := currentInstance.GetModifierLevel(o.Value, ClassMemberKind) //ml:modifier level
 //			if currentInstance.Class.Name != clsObj.Name && ml == ast.ModifierPrivate {
 //				panic(NewError(call.Call.Pos().Sline(), CLSMEMBERPRIVATE, o.Value, clsObj.Name))
 //			}
 
-			val, ok := currentInstance.Scope.Get(o.Value)
+			var val Object
+			var ok bool
+			if currentInstance != nil {
+				val, ok = currentInstance.Scope.Get(o.Value)
+			} else {
+				//check if it is static
+				if clsObj.IsStatic(o.Value, ClassMemberKind) {
+					val, ok = clsObj.Scope.Get(o.Value)
+				} else if clsObj.IsStatic(o.Value, ClassPropertyKind) {
+					val, ok = clsObj.Scope.Get(o.Value)
+				} else {
+					//val, ok = NIL, false
+					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+				}
+			}
 			if ok {
 				return val
 			}
 			return NIL
 
 		case *ast.CallExpression: //e.g. classObj.method()
-			if !InstanceOf(clsObj.Name, currentInstance) {
-				return NIL
+			fname := o.Function.String() // get function name
+			isStatic := clsObj.IsStatic(fname, ClassMethodKind)
+			if currentInstance == nil { //outside class body
+				if !isStatic {
+					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+				}
+			} else {
+				if isStatic {
+					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+				}
 			}
 
-			fname := o.Function.String() // get function name
 			method := clsObj.GetMethod(fname)
 			if method != nil {
 				switch m := method.(type) {
 					case *Function:
-						if clsObj.Parent != nil {
-							currentInstance.Scope.Set("parent", clsObj.Parent)
-						}
-
 						args := evalArgs(o.Arguments, scope)
+						if currentInstance != nil { //inside class body call
+							currentInstance.Scope.Set("parent", clsObj.Parent) //needed ?
 						return evalFunctionDirect(m, args, currentInstance.Scope)
+						} else { //outside class body call
+							return evalFunctionDirect(m, args, clsObj.Scope)
+						}
 					case *BuiltinMethod:
 						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: currentInstance}
 						aScope := NewScope(currentInstance.Scope)
@@ -3951,6 +3990,26 @@ func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
 		Methods:    make(map[string]ClassMethod, len(c.Methods)),
 	}
 
+	tmpClass := clsObj
+	classChain := make([]*Class, 0, 3)
+	classChain = append(classChain, clsObj)
+	for tmpClass.Parent != nil {
+		classChain = append(classChain, tmpClass.Parent)
+		tmpClass = tmpClass.Parent
+	}
+
+	//create a new Class scope
+	newScope := NewScope(scope)
+	//evaluate the 'Members' fields of class with proper scope.
+	for idx := len(classChain) - 1; idx >= 0; idx-- {
+		for _, member := range classChain[idx].Members {
+			Eval(member, newScope) //evaluate the 'Members' fields of class
+		}
+		newScope = NewScope(newScope)
+	}
+	clsObj.Scope = newScope.parentScope
+	clsObj.Scope.Set("this", clsObj) //make 'this' refer to class object itself
+
 	for k, f := range c.Methods {
 		clsObj.Methods[k] = Eval(f, scope).(ClassMethod)
 	}
@@ -3990,10 +4049,7 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 
 	instance := &ObjectInstance{Class: clsObj, Scope: newScope.parentScope}
 	instance.Scope.Set("this", instance) //make 'this' refer to instance
-
-	if len(classChain) > 1 {
 		instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
-	}
 
 	//Is it has a constructor ?
 	init := clsObj.GetMethod("init")
@@ -4004,16 +4060,16 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 	classMux.Lock()
 	defer classMux.Unlock()
 
-	oldInstance := currentInstance
-	currentInstance = instance
 	args := evalArgs(n.Arguments, scope)
-
 	if len(args) == 1 && args[0].Type() == ERROR_OBJ {
 		return args[0]
 	}
 
+	oldInstance := currentInstance
+	currentInstance = instance
 	ret := evalFunctionDirect(init, args, instance.Scope); 
 	if ret.Type() == ERROR_OBJ {
+		currentInstance = oldInstance
 		return ret //return the error object
 	}
 	currentInstance = oldInstance

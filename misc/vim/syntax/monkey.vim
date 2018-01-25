@@ -18,7 +18,7 @@ syn keyword     monkeyException         try catch finally throw
 syn keyword     monkeyConditional       if else elseif elsif elif unless where and or case in is
 syn keyword     monkeyRepeat            do while for break continue grep map
 syn keyword     monkeyBranch            break continue
-syn keyword     monkeyClass             class new property get set this parent
+syn keyword     monkeyClass             class new property get set this parent static public private protected interface
 
 hi def link     monkeyStatement         Statement
 hi def link     monkeyClass             Statement
