@@ -1134,11 +1134,9 @@ dateObj.getDateInfo()
 Monkey还支持类似C#的索引器(`Indexer`)。
 索引器能够让你像访问数组一样访问对象。
 
-对于一个类， Monkey只支持一个索引器。
 索引器使用如下的方式声明：
 
 使用`property this[parameter]`方式来声明一个索引器。
-Monkey不支持多个索引参数。
 
 ```swift
 property this[index] {

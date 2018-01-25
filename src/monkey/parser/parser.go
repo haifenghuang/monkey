@@ -663,7 +663,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 	e := &ast.AssignExpression{Token: p.curToken}
-
 	if n, ok := name.(*ast.Identifier); ok {
 		e.Name = n
 	} else if call, ok := name.(*ast.MethodCallExpression); ok { //might be 'includeModule.a = xxx' or 'aHashObj.key = value'
@@ -1234,6 +1233,7 @@ func (p *Parser) parseSliceExpression(start ast.Expression) ast.Expression {
 
 func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 	var index ast.Expression
+	var parameters []ast.Expression
 	indexExp := &ast.IndexExpression{Token: p.curToken, Left: arr}
 	if p.peekTokenIs(token.COLON) {
 		indexTok := token.Token{Type: token.INT, Literal: "0"}
@@ -1242,11 +1242,25 @@ func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 		index = p.parseSliceExpression(prefix)
 	} else {
 		p.nextToken()
+		oldToken := p.curToken
 		index = p.parseExpression(LOWEST)
+		if p.peekTokenIs(token.COMMA) { //class's index parameter. e.g. 'animalObj[x,y]'
+			parameters = append(parameters, index)
+			for p.peekTokenIs(token.COMMA) {
+				p.nextToken()
+				p.nextToken()
+				parameters = append(parameters, p.parseExpression(LOWEST))
+			}
+			index = &ast.ClassIndexerExpression{Token:oldToken, Parameters:parameters} 
+		}
 	}
 	indexExp.Index = index
 	if p.peekTokenIs(token.RBRACKET) {
 		p.nextToken()
+	} else {
+		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ']', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
 	}
 
 	return indexExp
@@ -2053,10 +2067,12 @@ func(p *Parser) parsePropertyDeclStmt() *ast.PropertyDeclStmt {
 		return nil
 	}
 
-	//get property name
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
+	foundIndexer := false
+	thisToken := p.curToken //save the current token for later use
 	if p.curToken.Literal == "this" { //assume it is a indexer declaration
+		foundIndexer = true
 		if !p.expectPeek(token.LBRACKET) { //e.g. 'property this[index]'
 			return nil
 		}
@@ -2064,11 +2080,27 @@ func(p *Parser) parsePropertyDeclStmt() *ast.PropertyDeclStmt {
 		if !p.expectPeek(token.IDENT) {  //must be an identifier, it's the index
 			return nil
 		}
-		stmt.Index = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		stmt.Indexes = append(stmt.Indexes, &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal})
+
+		if p.peekTokenIs(token.COMMA) {
+			for p.peekTokenIs(token.COMMA) {
+				p.nextToken()
+				p.nextToken()
+				stmt.Indexes = append(stmt.Indexes, &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal})
+			}
+		}
 
 		if !p.expectPeek(token.RBRACKET) {
 			return nil
 		}
+	}
+
+	if foundIndexer {
+		//get property name, Note HERE, because we support multiple indexers:
+		//    property this[x]   { get {xxx} set {xxx} }
+		//    property this[x,y] { get {xxx} set {xxx} }
+		//so we need to change the first 'this' to 'this1', and the second to 'this2'
+		stmt.Name = &ast.Identifier{Token: thisToken, Value: fmt.Sprintf("this%d", len(stmt.Indexes))}
 	}
 
 	if !p.expectPeek(token.LBRACE) {

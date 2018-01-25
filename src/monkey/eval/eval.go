@@ -689,33 +689,51 @@ func evalStructAssignExpression(a *ast.AssignExpression, scope *Scope, val Objec
 	panic(NewError(a.Pos().Sline(), INFIXOP, aVal.Type(), a.Token.Literal, val.Type()))
 }
 
-//clsObj[index] = xxx
+//instanceObj[x] = xxx
+//instanceObj[x,y] = xxx
 func evalClassIndexerAssignExpression(a *ast.AssignExpression, obj Object, indexExpr *ast.IndexExpression, val Object, scope *Scope) Object {
 	instanceObj := obj.(*ObjectInstance)
 
+	var num int
+	switch o := indexExpr.Index.(type) {
+	case *ast.ClassIndexerExpression:
+		num = len(o.Parameters)
+	default:
+		num = 1
+	}
+
+	propName := "this" + fmt.Sprintf("%d", num)
+
 	//check if the Indexer is static
-	if instanceObj.IsStatic("this", ClassPropertyKind) {
+	if instanceObj.IsStatic(propName, ClassPropertyKind) {
 		panic(NewError(a.Pos().Sline(), INDEXERSTATICERROR, instanceObj.Class.Name))
 	}
 
-	p := instanceObj.GetProperty("this")
+	p := instanceObj.GetProperty(propName)
 	if p != nil {
 		//no setter or setter block is empty, e.g. 'property xxx { set; }'
 		if p.Setter == nil || len(p.Setter.Body.Statements) == 0 {
 			panic(NewError(a.Pos().Sline(), INDEXERUSEERROR, instanceObj.Class.Name))
 		} else {
-			index := Eval(indexExpr.Index, scope)
-
 			newScope := NewScope(instanceObj.Scope)
 			newScope.Set("value", val)
-			newScope.Set(p.Index.Value, index)
+
+			switch o := indexExpr.Index.(type) {
+			case *ast.ClassIndexerExpression:
+				for i, v := range o.Parameters {
+					index := Eval(v, scope)
+					newScope.Set(p.Indexes[i].Value, index)
+				}
+			default:
+				index := Eval(indexExpr.Index, scope)
+				newScope.Set(p.Indexes[0].Value, index)
+			}
 
 			results := Eval(p.Setter.Body, newScope)
 			if results.Type() == RETURN_VALUE_OBJ {
 				return results.(*ReturnValue).Value
-			} else {
-				return results
 			}
+			return results
 		}
 	} else {
 		panic(NewError(a.Pos().Sline(), INDEXNOTFOUNDERROR, instanceObj.Class.Name))
@@ -3480,16 +3498,33 @@ func evalIndexExpression(ie *ast.IndexExpression, scope *Scope) Object {
 }
 
 func evalClassInstanceIndex(instanceObj *ObjectInstance, ie *ast.IndexExpression, scope *Scope) Object {
-	p := instanceObj.GetProperty("this")
+	var num int
+	switch o := ie.Index.(type) {
+	case *ast.ClassIndexerExpression:
+		num = len(o.Parameters)
+	default:
+		num = 1
+	}
+
+	propName := "this" + fmt.Sprintf("%d", num)
+	p := instanceObj.GetProperty(propName)
 	if p != nil {
 		//no getter or getter block is empty, e.g. 'property xxx { get; }'
 		if p.Getter == nil || len(p.Getter.Body.Statements) == 0 {
 			panic(NewError(ie.Pos().Sline(), INDEXERUSEERROR, instanceObj.Class.Name))
 		} else {
-			index := Eval(ie.Index, scope)
-
 			newScope := NewScope(instanceObj.Scope)
-			newScope.Set(p.Index.Value, index)
+
+			switch o := ie.Index.(type) {
+			case *ast.ClassIndexerExpression:
+				for i, v := range o.Parameters {
+					index := Eval(v, scope)
+					newScope.Set(p.Indexes[i].Value, index)
+				}
+			default:
+				index := Eval(ie.Index, scope)
+				newScope.Set(p.Indexes[0].Value, index)
+			}
 
 			results := Eval(p.Getter.Body, newScope)
 			if results.Type() == RETURN_VALUE_OBJ {

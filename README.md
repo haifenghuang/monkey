@@ -1142,12 +1142,10 @@ dateObj.getDateInfo()
 
 ### indexer
 
-Monkey has limited support for class `indexer`(like c#). 
+Monkey has support for class `indexer`(like c#). 
 An indexer is a member that enables an object to be indexed in the same way as an array.
-It only support one indexer for a class.
 
 You declare an Indexer using `property this[parameter]`.
-Monkey do not support multiple index parameters.
 
 ```swift
 property this[index] {

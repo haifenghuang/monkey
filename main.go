@@ -25,7 +25,9 @@ func runProgram(filename string) {
 	p := parser.New(l, wd)
 	program := p.ParseProgram()
 	if len(p.Errors()) != 0 {
-		fmt.Println(p.Errors()[0])
+		for _, err := range p.Errors() {
+			fmt.Println(err)
+		}
 		os.Exit(1)
 	}
 	scope := eval.NewScope(nil)

@@ -1,66 +1,167 @@
-//This file demonstrate some common class operation
-class IndexedNames
+//This file demonstrate class indexers
+//////////////////////////////////////////////////////////////////////////////////
+//                                       First
+//////////////////////////////////////////////////////////////////////////////////
+//class IndexedNames
+//{
+//    let namelist = []
+//    let size = 10
+//    fn init()
+//    {
+//        let i = 0
+//        for (i = 0; i < size; i++)
+//        {
+//            namelist[i] = "N. A."
+//        }
+//    }
+//
+//    fn getNameList() {
+//        println(namelist)
+//    }
+//
+//    property this[index]
+//    {
+//        get
+//        {
+//            let tmp;
+//            if ( index >= 0 && index <= size - 1 )
+//            {
+//               tmp = namelist[index]
+//            }
+//            else
+//            {
+//               tmp = ""
+//            }
+//     
+//            return tmp
+//         }
+//         set
+//         {
+//             if ( index >= 0 && index <= size-1 )
+//             {
+//                 namelist[index] = value
+//             }
+//         }
+//    }
+//}
+//
+//fn Main()
+//{
+//    namesObj = new IndexedNames()
+//
+//    //Calling Indexer's set function
+//    namesObj[0] = "Zara"
+//    namesObj[1] = "Riz"
+//    namesObj[2] = "Nuha"
+//    namesObj[3] = "Asif"
+//    namesObj[4] = "Davinder"
+//    namesObj[5] = "Sunil"
+//    namesObj[6] = "Rubic"
+//
+//    namesObj.getNameList()
+//
+//    for (i = 0; i < namesObj.size; i++)
+//    {
+//        println(namesObj[i]) //Calling Indexer's get function
+//    }
+//}
+//
+//Main()
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//                                       Second
+//////////////////////////////////////////////////////////////////////////////////
+class CourseScore
 {
-    let namelist = []
-    let size = 10
-    fn init()
+    let name;
+    let courseID;
+    let score;
+
+    fn init(name, courseID, score)
+    {  
+        this.name = name;
+        this.courseID = courseID;
+        this.score = score;
+    }
+
+    property Name
     {
-        let i = 0
-        for (i = 0; i < size; i++)
-        {
-            namelist[i] = "N. A."
-        }
+        get { return name; }
+        set { name = value; }
     }
 
-    fn getNameList() {
-        println(namelist)
+    property CourseID
+    {
+        get { return courseID; }
+        set { courseID = value; }
     }
 
-    property this[index]
+    property Score
+    {
+        get { return score; }
+        set { score = value; }
+    }
+}
+
+class CourseScoreIndexer
+{
+    let arrCourseScore = [];
+
+    property this[name, courseID]
     {
         get
         {
-            let tmp;
-            if ( index >= 0 && index <= size - 1 )
+            for cs in arrCourseScore
             {
-               tmp = namelist[index]
+                if (cs.Name == name && cs.CourseID == courseID) {
+                    return cs.Score;
+                }
             }
-            else
-            {
-               tmp = ""
-            }
-     
-            return tmp
-         }
-         set
-         {
-             if ( index >= 0 && index <= size-1 )
-             {
-                 namelist[index] = value
-             }
-         }
+            return -1;
+        }
+        set
+        {
+            arrCourseScore.push(new CourseScore(name, courseID, value));
+        }
     }
-}
 
-fn Main()
-{
-    namesObj = new IndexedNames()
-
-    //Calling Indexer's set function
-    namesObj[0] = "Zara"
-    namesObj[1] = "Riz"
-    namesObj[2] = "Nuha"
-    namesObj[3] = "Asif"
-    namesObj[4] = "Davinder"
-    namesObj[5] = "Sunil"
-    namesObj[6] = "Rubic"
-
-    namesObj.getNameList()
-
-    for (i = 0; i < namesObj.size; i++)
+    property this[name]
     {
-        println(namesObj[i]) //Calling Indexer's get function
+        get
+        {
+            let tempArray = [];
+            for cs in arrCourseScore
+            {
+                if (cs.Name == name) {
+                    tempArray.push(cs);
+                }
+            }
+            return tempArray;
+        }
     }
 }
 
-Main()
+class Test
+{  
+    static fn Main()
+    {
+        let csi = new CourseScoreIndexer();
+        csi["Mike", 1] = 90;
+        csi["Mike", 2] = 70;
+        csi["Mike", 3] = 85;
+        csi["Vicky", 1] = 80;
+
+        println(csi["Mike", 2]); //output : 70
+        println("\n<<<<<<<<Mike's all course>>>>>>>>");
+
+        let tempArray = []
+        tempArray = csi["Mike"];
+        for cs in tempArray
+        {
+            printf("Name: %v,   CourseID: %v,   Score: %v\n", cs.Name, cs.CourseID, cs.Score);
+        }
+    }
+}
+
+Test.Main()

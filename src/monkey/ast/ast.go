@@ -2310,7 +2310,7 @@ func (t *TupleLiteral) String() string {
 
 
 //class's method modifier
-type ModifierLevel int8
+type ModifierLevel int
 const (
 	ModifierDefault ModifierLevel = iota
 	ModifierPrivate
@@ -2320,13 +2320,12 @@ const (
 
 //for debug purpose
 func (m ModifierLevel) String() string {
-	switch {
-	//note the last space.
-	case m == ModifierPrivate:
+	switch m {
+	case ModifierPrivate:
 		return "private "
-	case m == ModifierProtected:
+	case ModifierProtected:
 		return "protected "
-	case m == ModifierPublic:
+	case ModifierPublic:
 		return "public "
 	}
 
@@ -2459,7 +2458,7 @@ type PropertyDeclStmt struct {
 	Name          *Identifier      //property name
 	Getter        *GetterStmt      //getter
 	Setter        *SetterStmt      //setter
-	Index         *Identifier      //only used in class's indexer
+	Indexes       []*Identifier    //only used in class's indexer
 	StaticFlag    bool
 	ModifierLevel ModifierLevel   //property's modifier
 }
@@ -2489,9 +2488,14 @@ func (p *PropertyDeclStmt) String() string {
 	out.WriteString("property ")
 	out.WriteString(p.Name.String())
 
-	if p.Index != nil {
+	if p.Indexes != nil {
+		parameters := []string{}
+		for _, idx := range p.Indexes {
+			parameters = append(parameters, idx.String())
+		}
+
 		out.WriteString("[")
-		out.WriteString(p.Index.String())
+		out.WriteString(strings.Join(parameters, ", "))
 		out.WriteString("]")
 	} else {
 	}
@@ -2571,6 +2575,43 @@ func (s *SetterStmt) String() string {
 		out.WriteString(s.Body.String())
 		out.WriteString("} ")
 	}
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//                     CLASS/INDEXER                     //
+///////////////////////////////////////////////////////////
+type ClassIndexerExpression struct {
+	Token      token.Token
+	Parameters []Expression //indexer's parameters
+}
+
+func (ci *ClassIndexerExpression) Pos() token.Position {
+	return ci.Token.Pos
+}
+
+func (ci *ClassIndexerExpression) End() token.Position {
+	aLen := len(ci.Parameters)
+	if aLen > 0 {
+		return ci.Parameters[aLen-1].End()
+	}
+	return ci.Token.Pos
+}
+
+func (ci *ClassIndexerExpression) expressionNode()      {}
+func (ci *ClassIndexerExpression) TokenLiteral() string { return ci.Token.Literal }
+func (ci *ClassIndexerExpression) String() string {
+	var out bytes.Buffer
+
+	parameters := []string{}
+	for _, p := range ci.Parameters {
+		parameters = append(parameters, p.String())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(parameters, ", "))
+	out.WriteString("]")
 
 	return out.String()
 }
