@@ -12,3 +12,8 @@ println(arr1)
 for i in arr1 where /^\d+/.match(i) {
     println(i)
 }
+
+//create an array with 10 elements(default is nil)
+let arr2=[]10
+arr2[5] = 12
+println(arr2)

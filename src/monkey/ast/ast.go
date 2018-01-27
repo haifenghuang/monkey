@@ -699,8 +699,9 @@ func (rel *RegExLiteral) String() string       { return rel.Value }
 //                      ARRAY LITERAL                    //
 ///////////////////////////////////////////////////////////
 type ArrayLiteral struct {
-	Token   token.Token
-	Members []Expression
+	Token         token.Token
+	Members       []Expression
+	CreationCount *IntegerLiteral
 }
 
 func (a *ArrayLiteral) Pos() token.Position {
@@ -728,6 +729,9 @@ func (a *ArrayLiteral) String() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(members, ", "))
 	out.WriteString("]")
+	if a.CreationCount != nil {
+		out.WriteString(a.CreationCount.String())
+	}
 	return out.String()
 }
 

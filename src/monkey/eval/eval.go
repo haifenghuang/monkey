@@ -950,7 +950,17 @@ func evalInterpolatedString(is *ast.InterpolatedString, scope *Scope) Object {
 }
 
 func evalArrayLiteral(a *ast.ArrayLiteral, scope *Scope) Object {
-	return &Array{Members: evalArgs(a.Members, scope)}
+	if a.CreationCount == nil {
+		return &Array{Members: evalArgs(a.Members, scope)}
+	}
+
+	var i int64
+	ret := &Array{}
+	for i = 0; i < a.CreationCount.Value; i++ {
+		ret.Members = append(ret.Members, NIL)
+	}
+
+	return ret
 }
 
 func evalTupleLiteral(t *ast.TupleLiteral, scope *Scope) Object {
