@@ -1152,6 +1152,8 @@ dateObj.getDateInfo()
 //dateObj.Day = 18
 ```
 
+### 索引器
+
 Monkey还支持类似C#的索引器(`Indexer`)。
 索引器能够让你像访问数组一样访问对象。
 
@@ -1257,6 +1259,31 @@ class Test
 Test.Main()
 ```
 
+### 类类别(class category)
+
+Monkey支持类似objective-c的类别（类似于C#的extension methods）。
+
+```swift
+class Animal {
+	fn Walk() {
+		println("Animal Walk!")
+	}
+}
+
+//类类别 like objective-c
+class Animal (Run) { //建立一个Animal的Run类别.
+	fn Run() {
+		println("Animal Run!")
+		this.Walk() //可以调用Animal类的Walk()方法.
+	}
+}
+
+animal = new Animal()
+animal.Walk()
+
+println()
+animal.Run()
+```
 
 ## 标准输入/输出/错误
 
