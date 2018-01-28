@@ -23,3 +23,8 @@ println(arr2)
 let arr3 = newArray(len(arr))
 println(arr3)
 
+let arr4 = newArray(6,arr1, 10, 11, 12)
+println(arr4)
+
+let arr5 = newArray(20,arr1, 10, 11, 12)
+println(arr5)

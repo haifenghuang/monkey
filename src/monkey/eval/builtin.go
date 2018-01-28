@@ -843,8 +843,8 @@ func iffBuiltin() *Builtin {
 func newArrayBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
-			if len(args) != 1 {
-				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			if len(args) < 0 {
+				panic(NewError(line, ARGUMENTERROR, ">0", len(args)))
 			}
 
 			var count int64
@@ -861,12 +861,35 @@ func newArrayBuiltin() *Builtin {
 				panic(NewError(line, GENERICERROR, "Parameter of 'newArry' is less than zero."))
 			}
 
-			var i int64
-			ret := &Array{}
-			for i = 0; i < count; i++ {
-				ret.Members = append(ret.Members, NIL)
+			remainingArgs := args[1:]
+			remainingLen := len(remainingArgs)
+
+			var newLen int64 = 0
+			for i := 0 ; i < remainingLen; i++ {
+				if remainingArgs[i].Type() == ARRAY_OBJ {
+					newLen += int64(len(remainingArgs[i].(*Array).Members))
+				} else {
+					newLen += 1
+				}
 			}
 
+			ret := &Array{}
+			for i := 0; i < remainingLen; i++ {
+				if remainingArgs[i].Type() == ARRAY_OBJ {
+					ret.Members = append(ret.Members, remainingArgs[i].(*Array).Members...)
+				} else {
+					ret.Members = append(ret.Members, remainingArgs[i])
+				}
+			}
+
+			if (count <= newLen) {
+				return ret
+			}
+
+			//count > newLen
+			for i := newLen; i < count; i++ {
+				ret.Members = append(ret.Members, NIL)
+			}
 			return ret
 		},
 	}

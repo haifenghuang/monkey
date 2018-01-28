@@ -103,10 +103,6 @@ Monkey programming language REPL
 >>
 ```
 
-Below is a snapshot of the console:
-
-![REPL](REPL.gif)
-
 or, to run a program:
 
 ```sh
@@ -577,6 +573,26 @@ In monkey, you could use [] to initialize an empty array:
 emptyArr = []
 emptyArr[3] = 3 //will auto expand the array
 println(emptyArr)
+```
+
+You can create an array with the given size(or length) using below two ways:
+
+```swift
+//create an array with 10 elements initialized to nil.
+//Note: this only support integer literal.
+let arr = []10
+println(arr)
+
+//use the builtin 'newArray' method.
+let anotherArr = newArray(len(arr))
+println(anotherArr) //result: [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
+
+let arr1 = ["1","a5","5", "5b","4","cc", "7", "dd", "9"]
+let arr2 = newArray(6, arr1, 10, 11, 12) //first parameter is the size
+println(arr2) //result: ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12]
+
+let arr3 = newArray(20, arr1, 10, 11, 12)
+println(arr3) //result : ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12, nil, nil, nil, nil, nil, nil, nil, nil]
 ```
 
 Array could contain any number of different data types.
