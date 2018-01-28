@@ -840,6 +840,39 @@ func iffBuiltin() *Builtin {
 	}
 }
 
+func newArrayBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) != 1 {
+				panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+			}
+
+			var count int64
+			switch o := args[0].(type) {
+			case *Integer:
+				count = o.Int64
+			case *UInteger:
+				count = int64(o.UInt64)
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "newArray", "*Integer|*UInteger", args[0].Type()))
+			}
+
+			if count < 0 {
+				panic(NewError(line, GENERICERROR, "Parameter of 'newArry' is less than zero."))
+			}
+
+			var i int64
+			ret := &Array{}
+			for i = 0; i < count; i++ {
+				ret.Members = append(ret.Members, NIL)
+			}
+
+			return ret
+		},
+	}
+}
+
+
 func dialTCPBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
@@ -1362,6 +1395,7 @@ func init() {
 		"assert":  assertBuiltin(),
 		"reverse": reverseBuiltin(),
 		"iff":     iffBuiltin(),
+		"newArray":newArrayBuiltin(),
 
 		//net
 		"dialTCP":    dialTCPBuiltin(),
