@@ -277,6 +277,8 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 //class classname : parentClass { block }
+//class classname (categoryname) { block }  //has category name
+//class classname () { block }              //no category name
 func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	stmt := &ast.ClassStatement{Token: p.curToken}
 
@@ -286,6 +288,23 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 		return nil
 	}
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken()
+		if p.peekTokenIs(token.RPAREN) { //the category name is empty
+			//create a dummy category name
+			tok := token.Token{Type: token.ILLEGAL, Literal: ""}
+			stmt.CategoryName = &ast.Identifier{Token: tok, Value: ""}
+			p.nextToken() //skip current token
+		} else if p.peekTokenIs(token.IDENT) {
+			p.nextToken() //skip current token
+			stmt.CategoryName = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+			p.nextToken()
+		} else {
+			panic(fmt.Errorf("Class's category should be followed by an identifier or a '}'."))
+		}
+	}
+
 	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
 	stmt.ClassLiteral.Name = stmt.Name.Value
 

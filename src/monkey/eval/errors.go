@@ -48,6 +48,7 @@ const (
 	INDEXERSTATICERROR
 	INDEXNOTFOUNDERROR
 	CALLNONSTATICERROR
+	CLASSCATEGORYERROR
 	GENERICERROR
 )
 
@@ -95,6 +96,7 @@ var errorType = map[int]string{
 	INDEXERSTATICERROR:"Invalid use of Indexer of class(%s), Indexer cannot declared as static",
 	INDEXNOTFOUNDERROR:"Indexer not found for class(%s)",
 	CALLNONSTATICERROR:"Could not call non-static members.",
+	CLASSCATEGORYERROR:"No class(%s) found for category(%s).",
 	GENERICERROR:      "%s",
 }
 
