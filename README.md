@@ -52,6 +52,7 @@ Below is the REPL with real time syntax highlight:
 
 This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:
 
+* Added simple class support(Indexer, operator overloading, property, static method/property/field)
 * Modified string module(which can correctly handle utf8 character encoding)
 * Added file module(with some new methods).
 * Added math module
@@ -84,7 +85,6 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * pipe operator support(see demo for help)
 * function with default value and variadic parameters
 * list comprehension and hash comprehension support
-* simple oop support
 
 There are a number of tasks to complete, as well as a number of bugs. The purpose of this project was to dive deeper into Go, as well as get a better understanding of how programming languages work. It has been successful in those goals. There may or may not be continued work - I do plan on untangling a few messy spots, and there are a few features I'd like to see implemented. This will happen as time and interest allows.
 
@@ -102,10 +102,6 @@ Monkey programming language REPL
 
 >>
 ```
-
-Below is a snapshot of the console:
-
-![REPL](REPL.gif)
 
 or, to run a program:
 

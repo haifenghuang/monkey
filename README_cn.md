@@ -53,7 +53,7 @@ printf("2 - age  = %v\n", p.getAge())
 ## 总览
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
-
+* 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法)
 * 更改了`string`模块(能够正确处理utf8字符编码)
 * 修改了`file`模块(包含一些新方法).
 * 增加了`math`模块
@@ -85,7 +85,6 @@ printf("2 - age  = %v\n", p.getAge())
 * pipe操作符支持
 * 支持可变参数和缺省参数的函数
 * 支持列表推导(list comprehension)和哈希推导(hash comprehension)
-* 简单面向对象（oop)支持
 
 这个项目的目的主要有以下几点：
 
