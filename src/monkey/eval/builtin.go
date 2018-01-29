@@ -840,6 +840,62 @@ func iffBuiltin() *Builtin {
 	}
 }
 
+func newArrayBuiltin() *Builtin {
+	return &Builtin{
+		Fn: func(line string, args ...Object) Object {
+			if len(args) < 0 {
+				panic(NewError(line, ARGUMENTERROR, ">0", len(args)))
+			}
+
+			var count int64
+			switch o := args[0].(type) {
+			case *Integer:
+				count = o.Int64
+			case *UInteger:
+				count = int64(o.UInt64)
+			default:
+				panic(NewError(line, PARAMTYPEERROR, "first", "newArray", "*Integer|*UInteger", args[0].Type()))
+			}
+
+			if count < 0 {
+				panic(NewError(line, GENERICERROR, "Parameter of 'newArry' is less than zero."))
+			}
+
+			remainingArgs := args[1:]
+			remainingLen := len(remainingArgs)
+
+			var newLen int64 = 0
+			for i := 0 ; i < remainingLen; i++ {
+				if remainingArgs[i].Type() == ARRAY_OBJ {
+					newLen += int64(len(remainingArgs[i].(*Array).Members))
+				} else {
+					newLen += 1
+				}
+			}
+
+			ret := &Array{}
+			for i := 0; i < remainingLen; i++ {
+				if remainingArgs[i].Type() == ARRAY_OBJ {
+					ret.Members = append(ret.Members, remainingArgs[i].(*Array).Members...)
+				} else {
+					ret.Members = append(ret.Members, remainingArgs[i])
+				}
+			}
+
+			if (count <= newLen) {
+				return ret
+			}
+
+			//count > newLen
+			for i := newLen; i < count; i++ {
+				ret.Members = append(ret.Members, NIL)
+			}
+			return ret
+		},
+	}
+}
+
+
 func dialTCPBuiltin() *Builtin {
 	return &Builtin{
 		Fn: func(line string, args ...Object) Object {
@@ -1362,6 +1418,7 @@ func init() {
 		"assert":  assertBuiltin(),
 		"reverse": reverseBuiltin(),
 		"iff":     iffBuiltin(),
+		"newArray":newArrayBuiltin(),
 
 		//net
 		"dialTCP":    dialTCPBuiltin(),

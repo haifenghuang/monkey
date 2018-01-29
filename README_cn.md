@@ -575,6 +575,27 @@ emptyArr = []
 emptyArr[3] = 3 //将会自动扩容
 println(emptyArr)
 ```
+你可以使用两种方式来创建一个给定长度的数组:
+
+```swift
+//创建一个有10个元素的数组(默认值为nil)
+//Note: this only support integer literal.
+let arr = []10
+println(arr)
+
+//使用内置'newArray'方法.
+let anotherArr = newArray(len(arr))
+println(anotherArr)
+
+println(anotherArr) //结果: [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
+
+let arr1 = ["1","a5","5", "5b","4","cc", "7", "dd", "9"]
+let arr2 = newArray(6, arr1, 10, 11, 12) //第一个参数为数组size
+println(arr2) //结果: ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12]
+
+let arr3 = newArray(20, arr1, 10, 11, 12)
+println(arr3) //结果 : ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12, nil, nil, nil, nil, nil, nil, nil, nil]
+```
 
 数组可以包含任意数据类型的元素。
 
@@ -1130,6 +1151,8 @@ dateObj.getDateInfo()
 //dateObj.Day = 18
 ```
 
+### 索引器
+
 Monkey还支持类似C#的索引器(`Indexer`)。
 索引器能够让你像访问数组一样访问对象。
 
@@ -1235,6 +1258,31 @@ class Test
 Test.Main()
 ```
 
+### 类类别(class category)
+
+Monkey支持类似objective-c的类别（类似于C#的extension methods）。
+
+```swift
+class Animal {
+	fn Walk() {
+		println("Animal Walk!")
+	}
+}
+
+//类类别 like objective-c
+class Animal (Run) { //建立一个Animal的Run类别.
+	fn Run() {
+		println("Animal Run!")
+		this.Walk() //可以调用Animal类的Walk()方法.
+	}
+}
+
+animal = new Animal()
+animal.Walk()
+
+println()
+animal.Run()
+```
 
 ## 标准输入/输出/错误
 

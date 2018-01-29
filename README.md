@@ -575,6 +575,26 @@ emptyArr[3] = 3 //will auto expand the array
 println(emptyArr)
 ```
 
+You can create an array with the given size(or length) using below two ways:
+
+```swift
+//create an array with 10 elements initialized to nil.
+//Note: this only support integer literal.
+let arr = []10
+println(arr)
+
+//use the builtin 'newArray' method.
+let anotherArr = newArray(len(arr))
+println(anotherArr) //result: [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
+
+let arr1 = ["1","a5","5", "5b","4","cc", "7", "dd", "9"]
+let arr2 = newArray(6, arr1, 10, 11, 12) //first parameter is the size
+println(arr2) //result: ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12]
+
+let arr3 = newArray(20, arr1, 10, 11, 12)
+println(arr3) //result : ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 11, 12, nil, nil, nil, nil, nil, nil, nil, nil]
+```
+
 Array could contain any number of different data types.
 Note: the last comma before the closing ']' is optional.
 
@@ -1239,6 +1259,32 @@ class Test
 }
 
 Test.Main()
+```
+
+### Class Category
+
+Monkey also support class Category like objective-c（C#'s extension methods）.
+
+```swift
+class Animal {
+	fn Walk() {
+		println("Animal Walk!")
+	}
+}
+
+//Class category like objective-c
+class Animal (Run) { //Create an 'Run' category of Animal class.
+	fn Run() {
+		println("Animal Run!")
+		this.Walk() //can call Walk() method of Animal class.
+	}
+}
+
+animal = new Animal()
+animal.Walk()
+
+println()
+animal.Run()
 ```
 
 

@@ -950,7 +950,17 @@ func evalInterpolatedString(is *ast.InterpolatedString, scope *Scope) Object {
 }
 
 func evalArrayLiteral(a *ast.ArrayLiteral, scope *Scope) Object {
-	return &Array{Members: evalArgs(a.Members, scope)}
+	if a.CreationCount == nil {
+		return &Array{Members: evalArgs(a.Members, scope)}
+	}
+
+	var i int64
+	ret := &Array{}
+	for i = 0; i < a.CreationCount.Value; i++ {
+		ret.Members = append(ret.Members, NIL)
+	}
+
+	return ret
 }
 
 func evalTupleLiteral(t *ast.TupleLiteral, scope *Scope) Object {
@@ -3994,7 +4004,26 @@ func evalPipeExpression(p *ast.Pipe, scope *Scope) Object {
 }
 
 //class name : parent { block }
+//class name (categoryname) { block }
 func evalClassStatement(c *ast.ClassStatement, scope *Scope) Object {
+	if c.CategoryName != nil { //it's a class literal
+		clsObj, ok := scope.Get(c.Name.Value)
+		if !ok {
+			panic(NewError(c.Pos().Sline(), CLASSCATEGORYERROR, c.Name, c.CategoryName))
+		}
+
+		//category only support methods and properties
+		cls := clsObj.(*Class)
+		for k, f := range c.ClassLiteral.Methods { //f :function
+			cls.Methods[k] = Eval(f, scope).(ClassMethod)
+		}
+		for k, p := range c.ClassLiteral.Properties { //p :property
+			cls.Properties[k] = p
+		}
+
+		return NIL
+	}
+
 	clsObj := evalClassLiteral(c.ClassLiteral, scope)
 	scope.Set(c.Name.Value, clsObj) //save to scope
 

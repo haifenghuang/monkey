@@ -699,8 +699,9 @@ func (rel *RegExLiteral) String() string       { return rel.Value }
 //                      ARRAY LITERAL                    //
 ///////////////////////////////////////////////////////////
 type ArrayLiteral struct {
-	Token   token.Token
-	Members []Expression
+	Token         token.Token
+	Members       []Expression
+	CreationCount *IntegerLiteral
 }
 
 func (a *ArrayLiteral) Pos() token.Position {
@@ -728,6 +729,9 @@ func (a *ArrayLiteral) String() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(members, ", "))
 	out.WriteString("]")
+	if a.CreationCount != nil {
+		out.WriteString(a.CreationCount.String())
+	}
 	return out.String()
 }
 
@@ -2381,6 +2385,7 @@ func (c *ClassLiteral) String() string {
 type ClassStatement struct {
 	Token           token.Token
 	Name            *Identifier //Class name
+	CategoryName    *Identifier
 	ClassLiteral    *ClassLiteral
 }
 
@@ -2400,8 +2405,14 @@ func (c *ClassStatement) String() string {
 	out.WriteString(c.Token.Literal + " ")
 	out.WriteString(c.Name.String())
 
-	if len(c.ClassLiteral.Parent) > 0 {
-		out.WriteString(" : " + c.ClassLiteral.Parent)
+	if c.CategoryName != nil {
+		out.WriteString("(")
+		out.WriteString(c.CategoryName.String())
+		out.WriteString(") ")
+	} else {
+		if len(c.ClassLiteral.Parent) > 0 {
+			out.WriteString(" : " + c.ClassLiteral.Parent)
+		}
 	}
 
 	out.WriteString("{ ")

@@ -12,3 +12,19 @@ println(arr1)
 for i in arr1 where /^\d+/.match(i) {
     println(i)
 }
+
+//create an array with 10 elements(default is nil)
+//Note: only support integer literal.
+let arr2=[]10
+arr2[5] = 12
+println(arr2)
+
+//use the builtin method 'newArray'
+let arr3 = newArray(len(arr))
+println(arr3)
+
+let arr4 = newArray(6,arr1, 10, 11, 12)
+println(arr4)
+
+let arr5 = newArray(20,arr1, 10, 11, 12)
+println(arr5)

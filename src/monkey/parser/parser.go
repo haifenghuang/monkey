@@ -277,6 +277,8 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 //class classname : parentClass { block }
+//class classname (categoryname) { block }  //has category name
+//class classname () { block }              //no category name
 func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	stmt := &ast.ClassStatement{Token: p.curToken}
 
@@ -286,6 +288,23 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 		return nil
 	}
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken()
+		if p.peekTokenIs(token.RPAREN) { //the category name is empty
+			//create a dummy category name
+			tok := token.Token{Type: token.ILLEGAL, Literal: ""}
+			stmt.CategoryName = &ast.Identifier{Token: tok, Value: ""}
+			p.nextToken() //skip current token
+		} else if p.peekTokenIs(token.IDENT) {
+			p.nextToken() //skip current token
+			stmt.CategoryName = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+			p.nextToken()
+		} else {
+			panic(fmt.Errorf("Class's category should be followed by an identifier or a '}'."))
+		}
+	}
+
 	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
 	stmt.ClassLiteral.Name = stmt.Name.Value
 
@@ -1444,7 +1463,7 @@ func (p *Parser) parseStructExpression() ast.Expression {
 
 func (p *Parser) parseArrayExpression() ast.Expression {
 	curToken := p.curToken
-	temp, b := p.parseExpressionArrayEx([]ast.Expression{}, token.RBRACKET)
+	temp, b, creationCount := p.parseExpressionArrayEx([]ast.Expression{}, token.RBRACKET)
 	if b { //list comprehension or map comprehension
 		p.nextToken() //skip 'for'
 		if !p.expectPeek(token.IDENT) {  //must be an identifier
@@ -1461,7 +1480,7 @@ func (p *Parser) parseArrayExpression() ast.Expression {
 		return p.parseListComprehension(curToken, temp[0], variable, token.RBRACKET)
 	}
 
-	array := &ast.ArrayLiteral{Token: curToken}
+	array := &ast.ArrayLiteral{Token: curToken, CreationCount: creationCount}
 	array.Members = temp
 	return array
 }
@@ -1538,10 +1557,15 @@ func (p *Parser) parseListMapComprehension(curToken token.Token, expr ast.Expres
 	return result
 }
 
-func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenType) ([]ast.Expression, bool) {
+func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenType) ([]ast.Expression, bool, *ast.IntegerLiteral) {
 	if p.peekTokenIs(closure) {
 		p.nextToken()
-		return a, false
+		if p.peekTokenIs(token.INT) {
+			p.nextToken()
+			creationCount := p.parseIntegerLiteral()
+			return a, false, creationCount.(*ast.IntegerLiteral)
+		}
+		return a, false, nil
 	}
 
 	p.nextToken()
@@ -1549,7 +1573,7 @@ func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenT
 
 	a = append(a, v)
 	if p.peekTokenIs(token.FOR) { //list comprehension
-		return a, true
+		return a, true, nil
 	}
 
 	for p.peekTokenIs(token.COMMA) {
@@ -1562,10 +1586,10 @@ func (p *Parser) parseExpressionArrayEx(a []ast.Expression, closure token.TokenT
 	}
 
 	if !p.expectPeek(closure) {
-		return nil, false
+		return nil, false, nil
 	}
 
-	return a, false
+	return a, false, nil
 }
 // case expr in {
 //    expr,expr { expr }
