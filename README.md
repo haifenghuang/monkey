@@ -52,7 +52,7 @@ Below is the REPL with real time syntax highlight:
 
 This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:
 
-* Added simple class support(Indexer, operator overloading, property, static method/property/field)
+* Added simple class support(Indexer, operator overloading, property, static method/property/field and class annotation)
 * Modified string module(which can correctly handle utf8 character encoding)
 * Added file module(with some new methods).
 * Added math module
@@ -923,6 +923,8 @@ Monkey has limited support for the oop concept, below is a list of features:
 * property(with getter or setter or both)
 * static member/method/property
 * indexer
+* class category
+* class annotations(limited support)
 
 The monkey parser could parse `public`, `private`, `protected`, but it has no effect in the evaluation phase.
 That means monkey do not support access modifiers at present.
@@ -1263,7 +1265,7 @@ Test.Main()
 
 ### Class Category
 
-Monkey also support class Category like objective-c（C#'s extension methods）.
+Monkey also support class Category like objective-c（C# is called 'extension methods'）.
 
 ```swift
 class Animal {
@@ -1285,6 +1287,84 @@ animal.Walk()
 
 println()
 animal.Run()
+```
+
+### 注解
+
+Monkey also has very simple annotation support like java：
+
+* Only mehotd and property of class can have annotations(not class itself, or other simple functions)
+* In the body of `Annotation` class, only support property, do not support methods.
+* When use annotations, you must create an object.
+
+
+You could use `class @annotationName {}` to declare an annotation class
+
+Please see below example：
+
+```swift
+
+//Declare annotation class
+//Note: In the body, you must use property, not method.
+class @MinMaxValidator {
+  property MinLength { get; set; }
+  property MaxLength { get; set; }
+}
+
+//This is a marker annotation
+class @NoSpaceValidator {}
+
+//The 'Request' class
+class Request {
+  @MinMaxValidator(MinLength=1, MaxLength=10)
+  property FirstName { get; set; }
+
+  @NoSpaceValidator
+  property LastName { get; set; }
+}
+
+//This class is responsible for processing the annotation.
+class RequestHandler {
+  static fn handle(o) {
+    props = o.getProperties()
+    for p in props {
+      annos = p.getAnnotations()
+      for anno in annos {
+        if anno.instanceOf(MinMaxValidator) {
+          //p.value is the property real value.
+          if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
+            printf("Property '%s' not valid!\n", p.name)
+          }
+        } elseif anno.instanceOf(NoSpaceValidator) {
+          for c in p.value {
+            if c == " " || c == "\t" {
+              printf("Property '%s' not valid!\n", p.name)
+              break
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+class RequestMain {
+  static fn main() {
+    request = new Request()
+    request.FirstName = "Haifeng123456789"
+    request.LastName = "Huang     "
+    RequestHandler.handle(request)
+  }
+}
+
+RequestMain.main()
+```
+
+下面是处理结果：
+
+```
+Property 'FirstName' not valid!
+Property 'LastName' not valid!
 ```
 
 

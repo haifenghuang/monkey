@@ -64,7 +64,7 @@ func (t *Tuple) CallMethod(line string, scope *Scope, method string, args ...Obj
 	case "tail","rest":
 		return t.Tail(line, args...)
 	}
-	panic(NewError(line, NOMETHODERROR, t.Type(), method))
+	panic(NewError(line, NOMETHODERROR, method, t.Type()))
 }
 
 func (t *Tuple) Len(line string, args ...Object) Object {

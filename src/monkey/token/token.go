@@ -66,6 +66,8 @@ const (
 	CONDAND // &&
 	CONDOR  // ||
 
+	AT      //@
+
 	FUNCTION
 	LET
 	TRUE
@@ -280,6 +282,8 @@ func (tt TokenType) String() string {
 		return "&&"
 	case CONDOR:
 		return "||"
+	case AT:
+		return "@"
 	case FUNCTION:
 		return "FUNCTION"
 	case LET:

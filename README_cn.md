@@ -53,7 +53,7 @@ printf("2 - age  = %v\n", p.getAge())
 ## 总览
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
-* 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法)
+* 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法,注解)
 * 更改了`string`模块(能够正确处理utf8字符编码)
 * 修改了`file`模块(包含一些新方法).
 * 增加了`math`模块
@@ -918,6 +918,8 @@ Monkey支持简单的面向对象编程, 下面列出了Mokey支持的特性：
 * 属性(getter和setter)
 * 静态变量/方法/属性
 * 索引器
+* 类类别(类似Objective-c的Category)
+* 注解（类似java的annotation）
 
 monkey解析器(parser)能够正确的处理关键字`public`, `private`, `protected`, 但是解释器(evaluator)会忽略这些。
 也就是说，monkey现在暂时不支持访问限定。
@@ -1260,7 +1262,7 @@ Test.Main()
 
 ### 类类别(class category)
 
-Monkey支持类似objective-c的类别（类似于C#的extension methods）。
+Monkey支持类似objective-c的类别（C#中称为extension methods）。
 
 ```swift
 class Animal {
@@ -1283,6 +1285,84 @@ animal.Walk()
 println()
 animal.Run()
 ```
+
+### 注解
+
+Monkey也支持非常简单的“注解”：
+
+* 仅支持类的属性和方法的注解(不支持类自身的注解，也不支持普通方法的注解)
+* 注解类的声明中，仅支持属性，不支持方法
+* 使用注解时，你必须创建一个相应的对象
+
+
+使用`class @annotationName {}`的方式来声明一个注解。
+
+请看下面的例子：
+
+```swift
+
+//声明注解，注解的body中必须是属性，不能是方法
+class @MinMaxValidator {
+  property MinLength { get; set; }
+  property MaxLength { get; set; }
+}
+
+//Marker annotation
+class @NoSpaceValidator {}
+
+//这个是请求类，我们对这个类使用注解
+class Request {
+  @MinMaxValidator(MinLength=1, MaxLength=10)
+  property FirstName { get; set; }
+
+  @NoSpaceValidator
+  property LastName { get; set; }
+}
+
+//处理注解的类
+class RequestHandler {
+  static fn handle(o) {
+    props = o.getProperties()
+    for p in props {
+      annos = p.getAnnotations()
+      for anno in annos {
+        if anno.instanceOf(MinMaxValidator) {
+          //p.value表示属性的值
+          if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
+            printf("Property '%s' not valid!\n", p.name)
+          }
+        } elseif anno.instanceOf(NoSpaceValidator) {
+          for c in p.value {
+            if c == " " || c == "\t" {
+              printf("Property '%s' not valid!\n", p.name)
+              break
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+class RequestMain {
+  static fn main() {
+    request = new Request();
+    request.FirstName = "Haifeng123456789"
+    request.LastName = "Huang     "
+    RequestHandler.handle(request);
+  }
+}
+
+RequestMain.main()
+```
+
+下面是处理结果：
+
+```
+Property 'FirstName' not valid!
+Property 'LastName' not valid!
+```
+
 
 ## 标准输入/输出/错误
 

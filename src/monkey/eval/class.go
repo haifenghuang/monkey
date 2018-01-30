@@ -6,8 +6,10 @@ import (
 )
 
 const (
-	CLASS_OBJ = "CLASS_OBJ"
-	INSTANCE_OBJ = "INSTANCE_OBJ"
+	CLASS_OBJ        = "CLASS_OBJ"
+	INSTANCE_OBJ     = "INSTANCE_OBJ"
+	METHODINFO_OBJ   = "METHODINFO_OBJ"
+	PROPERTYINFO_OBJ = "PROPERTYINFO_OBJ"
 )
 
 
@@ -39,7 +41,22 @@ func (c *Class) Inspect() string { return "<class:" + c.Name + ">" }
 func (c *Class) Type() ObjectType { return CLASS_OBJ }
 
 func (c *Class) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
-	panic(NewError(line, NOMETHODERROR, c.Type(), method))
+	switch method {
+	case "isAnnotationPresent":
+		return c.IsAnnotationPresent(line, args...)
+	}
+	panic(NewError(line, NOMETHODERROR, method, c.Type()))
+}
+
+func (c *Class) IsAnnotationPresent(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+//	if c.HasAnnotation {
+//		return TRUE
+//	}
+	return FALSE
 }
 
 func (c *Class) GetMethod(name string) ClassMethod {
@@ -158,8 +175,8 @@ func (oi *ObjectInstance) Type() ObjectType { return INSTANCE_OBJ }
 func (oi *ObjectInstance) GetMethod(name string) ClassMethod { return oi.Class.GetMethod(name) }
 func (oi *ObjectInstance) GetProperty(name string) *ast.PropertyDeclStmt { return oi.Class.GetProperty(name) }
 func (oi *ObjectInstance) IsStatic(val string, kind ClassComponentKind) bool { return oi.Class.IsStatic(val, kind) }
-func (oi *ObjectInstance) CallMethod(line string, scope *Scope, method string, args ...Object) Object { 
-	panic(NewError(line, NOMETHODERROR, oi.Type(), method))
+func (oi *ObjectInstance) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+	panic(NewError(line, NOMETHODERROR, method, oi.Type()))
 }
 
 func (oi *ObjectInstance) GetModifierLevel(name string, kind ClassComponentKind) ast.ModifierLevel {
@@ -190,7 +207,7 @@ func initRootObject() bool {
 				return NewString(self.Class.Inspect())
 			},
 		},
-		"instanceOf": 
+		"instanceOf":
 			&BuiltinMethod{
 				Fn:func(line string, self *ObjectInstance, scope *Scope, args ...Object) Object {
 					argLen := len(args)
@@ -212,7 +229,7 @@ func initRootObject() bool {
 					panic(NewError(line, GENERICERROR, "is_a/instanceOf expected a class or string for its argument"))
 				},
 		},
-		"classOf": 
+		"classOf":
 			&BuiltinMethod{
 				Fn:func(line string, self *ObjectInstance, scope *Scope, args ...Object) Object {
 					argLen := len(args)
@@ -246,6 +263,43 @@ func initRootObject() bool {
 				return NewUInteger(v)
 			},
 		},
+		"getMethods":&BuiltinMethod{
+			Fn:func(line string, self *ObjectInstance, scope *Scope, args ...Object) Object {
+				argLen := len(args)
+				if argLen != 0 {
+					panic(NewError(line, ARGUMENTERROR, "0", argLen))
+				}
+
+				ret := &Array{}
+				if self != nil {
+					for name, _ := range self.Class.Methods {
+						//m := &MethodInfo{Name: name, instance: self, Method:self.GetMethod(name), Scope: scope}
+						m := &MethodInfo{Name: name, Instance: self, Scope: scope}
+						ret.Members = append(ret.Members, m)
+					}
+				}
+
+				return ret
+			},
+		},
+		"getProperties":&BuiltinMethod{
+			Fn:func(line string, self *ObjectInstance, scope *Scope, args ...Object) Object {
+				argLen := len(args)
+				if argLen != 0 {
+					panic(NewError(line, ARGUMENTERROR, "0", argLen))
+				}
+
+				ret := &Array{}
+				if self != nil {
+					for name, _ := range self.Class.Properties {
+						m := &PropertyInfo{Name: name, Instance: self, Scope: scope}
+						ret.Members = append(ret.Members, m)
+					}
+				}
+
+				return ret
+			},
+		},
 	}
 
 	BASE_CLASS.Methods["is_a"] = BASE_CLASS.Methods["instanceOf"]
@@ -253,9 +307,236 @@ func initRootObject() bool {
 	return true
 }
 
+//MethodInfo object
+type MethodInfo struct {
+	Name     string          //Method name
+	Instance *ObjectInstance //instance
+	Scope    *Scope          //Method's scope
+}
+
+func (m *MethodInfo) Inspect() string { return "<method:" + m.Name + ">" }
+func (m *MethodInfo) Type() ObjectType { return METHODINFO_OBJ }
+
+func (m *MethodInfo) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+	switch method {
+	case "name", "getName":
+		return m.GetName(line, args...)
+	case "invoke":
+		return m.Invoke(line, scope, args...)
+	case "getAnnotations":
+		return m.GetAnnotations(line, args...)
+	case "getAnnotation":
+		return m.GetAnnotation(line, args...)
+	}
+	panic(NewError(line, NOMETHODERROR, method, m.Type()))
+}
+
+func (m *MethodInfo) GetName(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	return NewString(m.Name)
+}
+
+func (m *MethodInfo) Invoke(line string, scope *Scope, args ...Object) Object {
+	method := m.Instance.GetMethod(m.Name)
+	if method != nil {
+		switch meth := method.(type) {
+			case *Function:
+				newScope := NewScope(m.Instance.Scope)
+				newScope.Set("parent", m.Instance.Class.Parent)
+				return evalFunctionDirect(method, args, newScope)
+			case *BuiltinMethod:
+				builtinMethod :=&BuiltinMethod{Fn: meth.Fn, Instance: m.Instance}
+				aScope := NewScope(m.Instance.Scope)
+				return evalFunctionDirect(builtinMethod, args, aScope)
+		}
+	}
+
+	return NIL
+}
+
+func (m *MethodInfo) GetAnnotations(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	method := m.Instance.GetMethod(m.Name)
+	ret := &Array{}
+	
+	switch o := method.(type) {
+	case *Function:
+		for _, anno := range o.Annotations {
+			ret.Members = append(ret.Members, anno)
+		}
+		return ret
+	}
+	return ret
+}
+
+func (m *MethodInfo) GetAnnotation(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	annoCls, ok := args[0].(*Class)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "getAnnotation", "*Class", args[0].Type()))
+	}
+
+	method := m.Instance.GetMethod(m.Name)
+	
+	switch o := method.(type) {
+	case *Function:
+		for _, anno := range o.Annotations {
+			if anno.Class.Name == annoCls.Name {
+				return anno
+			}
+		}
+	}
+	return NIL
+}
+
+
+//PropertyInfo object
+type PropertyInfo struct {
+	Name     string          //Property name
+	Instance *ObjectInstance //instance
+	Scope    *Scope          //Property's scope
+}
+
+func (p *PropertyInfo) Inspect() string { return "<property:" + p.Name + ">" }
+func (p *PropertyInfo) Type() ObjectType { return PROPERTYINFO_OBJ }
+
+func (p *PropertyInfo) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
+	switch method {
+	case "name", "getName":
+		return p.GetName(line, args...)
+	case "getAnnotations":
+		return p.GetAnnotations(line, scope, args...)
+	case "value":
+		return p.Value(line, args...)
+//	case "getAnnotation":
+//		return p.GetAnnotation(line, args...)
+	}
+	panic(NewError(line, NOMETHODERROR, method, p.Type()))
+}
+
+func (p *PropertyInfo) GetName(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	return NewString(p.Name)
+}
+
+func (p *PropertyInfo) Value(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	prop := p.Instance.GetProperty(p.Name)
+	if prop != nil {
+		if prop.Getter == nil { //property xxx { set; }
+			panic(NewError(line, PROPERTYUSEERROR, p.Name, p.Instance.Class.Name))
+		} else {
+			if len(prop.Getter.Body.Statements) == 0 { //property xxx { get; }
+				v, _ := p.Instance.Scope.Get("_" + p.Name)
+				return v
+			} else {
+				results := Eval(prop.Getter.Body, p.Instance.Scope)
+				if results.Type() == RETURN_VALUE_OBJ {
+					return results.(*ReturnValue).Value
+				}
+			}
+		}
+	}
+	panic(NewError(line, UNKNOWNIDENT, p.Name))
+}
+
+func (p *PropertyInfo) GetAnnotations(line string, scope *Scope, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	ret := &Array{}
+	propStmt := p.Instance.GetProperty(p.Name)
+	for _, anno := range propStmt.Annotations { //for each annotation
+		annoClass, ok := scope.Get(anno.Name.Value)
+		if !ok {
+			panic(NewError(line, CLSNOTDEFINE, anno.Name.Value))
+		}
+
+		annoClsObj := annoClass.(*Class)
+		annoObj := evalNewExpressionAnno(annoClsObj, scope) //create a new instance for the annotation
+		annoInstanceObj := annoObj.(*ObjectInstance)
+		ret.Members = append(ret.Members, annoInstanceObj)
+
+		//set the annotation object's property values.
+		for k, v := range anno.Attributes { //for each annotation attribute
+			val := Eval(v, annoInstanceObj.Scope)
+			prop := annoClsObj.GetProperty(k)
+			if prop == nil { //not property, return value from scope
+				annoInstanceObj.Scope.Set(k, val)
+			} else {
+				if prop.Setter == nil { //property xxx { get; }
+					_, ok := annoInstanceObj.Scope.Get(k)
+					if !ok { //it's the first time assignment
+						if currentInstance != nil { //inside class body assignment
+							annoInstanceObj.Scope.Set(k, val)
+						} else {  //outside class body assignment
+							panic(NewError(line, PROPERTYUSEERROR, k, p.Name))
+						}
+					} else {
+						panic(NewError(line, PROPERTYUSEERROR, k, p.Name))
+					}
+				} else {
+					if len(prop.Setter.Body.Statements) == 0 { // property xxx { set; }
+						annoInstanceObj.Scope.Set("_" + k, val)
+					} else {
+						newScope := NewScope(annoInstanceObj.Scope)
+						newScope.Set("value", val)
+						results := Eval(prop.Setter.Body, newScope)
+						if results.Type() == RETURN_VALUE_OBJ {
+							return results.(*ReturnValue).Value
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	return ret
+}
+
+//func (p *PropertyInfo) GetAnnotation(line string, args ...Object) Object {
+//	if len(args) != 1 {
+//		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+//	}
+//
+//	annoCls, ok := args[0].(*Class)
+//	if !ok {
+//		panic(NewError(line, PARAMTYPEERROR, "first", "getAnnotation", "*Class", args[0].Type()))
+//	}
+//
+//	propStmt := p.Instance.GetProperty(m.Name)
+//	
+//	switch o := method.(type) {
+//	case *Function:
+//		for _, anno := range o.Annotations {
+//			if anno.Class.Name == annoCls.Name {
+//				return anno
+//			}
+//		}
+//	}
+//	return NIL
+//}
+
+
+
 var _ = initRootObject()
-
-
 
 func InstanceOf(className string, oi *ObjectInstance) bool {
 	if oi == nil {

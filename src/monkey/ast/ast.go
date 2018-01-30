@@ -820,6 +820,7 @@ type FunctionStatement struct {
 	Token           token.Token
 	Name            *Identifier
 	FunctionLiteral *FunctionLiteral
+	Annotations     []*AnnotationStmt
 }
 
 func (f *FunctionStatement) Pos() token.Position {
@@ -1187,6 +1188,7 @@ type LetStatement struct {
 
 	StaticFlag bool
 	ModifierLevel ModifierLevel //used in 'class'
+	Annotations []*AnnotationStmt
 }
 
 func (ls *LetStatement) Pos() token.Position {
@@ -1994,6 +1996,38 @@ func (e *EnumLiteral) String() string {
 }
 
 ///////////////////////////////////////////////////////////
+//                     ENUM STATEMENT                    //
+///////////////////////////////////////////////////////////
+type EnumStatement struct {
+	Token token.Token
+	Name  *Identifier
+	EnumLiteral *EnumLiteral
+}
+
+func (e *EnumStatement) Pos() token.Position {
+	return e.Token.Pos
+}
+
+func (e *EnumStatement) End() token.Position {
+	return e.EnumLiteral.End()
+}
+
+func (e *EnumStatement) statementNode() {}
+func (e *EnumStatement) TokenLiteral() string { return e.Token.Literal }
+
+func (e *EnumStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("enum ")
+	out.WriteString(e.Name.String())
+	out.WriteString("{")
+	out.WriteString(e.EnumLiteral.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
 //        List Comprehension(for array & string)         //
 ///////////////////////////////////////////////////////////
 // [ Expr for Var in Value <where Cond> ] ---> Value could be array or string
@@ -2349,6 +2383,7 @@ type ClassLiteral struct {
 	Methods    map[string]*FunctionStatement //class's methods
 	Block      *BlockStatement //mainly used for debugging purpose
 	Modifier   ModifierLevel  //NOT IMPLEMENTED
+	HasAnnotation bool
 }
 
 func (c *ClassLiteral) Pos() token.Position {
@@ -2379,6 +2414,7 @@ func (c *ClassLiteral) String() string {
 }
 
 //class classname : parentClass { block }
+//class @classname: parentClass { block } //Annotation
 ///////////////////////////////////////////////////////////
 //                     CLASS STATEMENT                   //
 ///////////////////////////////////////////////////////////
@@ -2387,6 +2423,7 @@ type ClassStatement struct {
 	Name            *Identifier //Class name
 	CategoryName    *Identifier
 	ClassLiteral    *ClassLiteral
+	IsAnnotation    bool
 }
 
 func (c *ClassStatement) Pos() token.Position {
@@ -2403,6 +2440,9 @@ func (c *ClassStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(c.Token.Literal + " ")
+	if c.IsAnnotation {
+		out.WriteString("@")
+	}
 	out.WriteString(c.Name.String())
 
 	if c.CategoryName != nil {
@@ -2472,6 +2512,7 @@ type PropertyDeclStmt struct {
 	Indexes       []*Identifier    //only used in class's indexer
 	StaticFlag    bool
 	ModifierLevel ModifierLevel   //property's modifier
+	Annotations   []*AnnotationStmt
 }
 
 func (p *PropertyDeclStmt) Pos() token.Position {
@@ -2623,6 +2664,42 @@ func (ci *ClassIndexerExpression) String() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(parameters, ", "))
 	out.WriteString("]")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
+//                      ANNOTATIONS                      //
+///////////////////////////////////////////////////////////
+type AnnotationStmt struct {
+	Token      token.Token
+	Name       *Identifier
+	Attributes map[string]Expression
+}
+
+func (anno *AnnotationStmt) Pos() token.Position {
+	return anno.Token.Pos
+}
+
+func (anno *AnnotationStmt) End() token.Position {
+	return anno.Token.Pos
+}
+
+func (anno *AnnotationStmt) statementNode()       {}
+func (anno *AnnotationStmt) TokenLiteral() string { return anno.Token.Literal }
+func (anno *AnnotationStmt) String() string {
+	var out bytes.Buffer
+
+	Attrs := []string{}
+	for _, attr := range anno.Attributes {
+		Attrs = append(Attrs, attr.String())
+	}
+
+	out.WriteString("@")
+	out.WriteString(anno.Name.String())
+	out.WriteString("{")
+	out.WriteString(strings.Join(Attrs, ", "))
+	out.WriteString("}")
 
 	return out.String()
 }

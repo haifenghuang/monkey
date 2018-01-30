@@ -260,6 +260,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseFunctionStatement()
 	case token.CLASS:
 		return p.parseClassStatement()
+	case token.ENUM:
+		return p.parseEnumStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -279,8 +281,14 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 //class classname : parentClass { block }
 //class classname (categoryname) { block }  //has category name
 //class classname () { block }              //no category name
+//class @classname : parentClass { block }  //annotation
 func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	stmt := &ast.ClassStatement{Token: p.curToken}
+
+	if p.peekTokenIs(token.AT) { //declare an annotion.
+		p.nextToken()
+		stmt.IsAnnotation = true
+	}
 
 	if !p.expectPeek(token.IDENT) { //classname
 		msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
@@ -308,6 +316,9 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
 	stmt.ClassLiteral.Name = stmt.Name.Value
 
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 	return stmt
 }
 
@@ -1677,6 +1688,10 @@ func (p *Parser) parseFunctionStatement() ast.Statement {
 
 	FnStmt.FunctionLiteral = p.parseFunctionLiteral().(*ast.FunctionLiteral)
 
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
 	return FnStmt
 }
 
@@ -1854,6 +1869,23 @@ func (p *Parser) parseNilExpression() ast.Expression {
 	return &ast.NilLiteral{Token: p.curToken}
 }
 
+func (p *Parser) parseEnumStatement() ast.Statement {
+	oldToken := p.curToken
+	enumStmt := &ast.EnumStatement{Token: p.curToken}
+
+	p.nextToken()
+	enumStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	enumStmt.EnumLiteral = p.parseEnumExpression().(*ast.EnumLiteral)
+	enumStmt.EnumLiteral.Token = oldToken
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return enumStmt
+}
+
 func (p *Parser) parseEnumExpression() ast.Expression {
 	var autoInt int64 = 0 //autoIncrement
 
@@ -1978,8 +2010,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	//why not calling parseBlockStatement()?
 	//Because we need to parse 'public', 'private' modifiers, also 'get' and 'set'.
 	//parseBlockStatement() function do not handling these.
-	//cls.Block = p.parseBlockStatement() 
-
+	//cls.Block = p.parseBlockStatement()
 	cls.Block = p.parseClassBody()
 	for _, statement := range cls.Block.Statements {
 		//fmt.Printf("In parseClassLiteral, stmt=%s\n", statement.String()) //debugging purpose
@@ -2006,10 +2037,6 @@ func (p *Parser) parseClassBody() *ast.BlockStatement {
 
 	p.nextToken() //skip '{'
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
-		if !isClassStmtToken(p.curToken) {
-			break
-		}
-
 		stmt := p.parseClassStmt()
 		if stmt != nil {
 			stmts.Statements = append(stmts.Statements, stmt)
@@ -2027,6 +2054,66 @@ func (p *Parser) parseClassBody() *ast.BlockStatement {
 }
 
 func (p *Parser) parseClassStmt() ast.Statement {
+	//check if it has any annotions.
+	var annos []*ast.AnnotationStmt
+
+LABEL:
+	//parse Annotation
+	for p.curTokenIs(token.AT) {
+		var tokenIsLParen bool
+		anno := &ast.AnnotationStmt{Token:p.curToken, Attributes:map[string]ast.Expression{}}
+
+		if !p.expectPeek(token.IDENT) {
+			return nil
+		}
+		anno.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+		if p.peekTokenIs(token.LPAREN) {
+			tokenIsLParen = true
+			p.nextToken()
+		} else if p.peekTokenIs(token.LBRACE) {
+			tokenIsLParen = false
+			p.nextToken()
+		} else { //marker annotation, e.g. @Demo
+			tokenIsLParen = false
+			p.nextToken()
+			annos = append(annos, anno)
+			goto LABEL
+			//msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '{' or '(', got '%s' instead", p.peekToken.Pos, p.peekToken.Type)
+			//panic(msg)
+		}
+
+		for {
+			if !p.expectPeek(token.IDENT) {
+				return nil
+			}
+			key := p.curToken.Literal
+
+			if !p.expectPeek(token.ASSIGN) {
+				return nil
+			}
+			p.nextToken()
+			value := p.parseExpression(LOWEST)
+			anno.Attributes[key] = value
+			p.nextToken()
+			if !p.curTokenIs(token.COMMA) {
+				break
+			}
+		}
+
+		if tokenIsLParen {
+			if !p.curTokenIs(token.RPAREN) {
+				msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ')', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+				panic(msg)
+			}
+		} else if !p.curTokenIs(token.RBRACE) {
+			msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+			panic(msg)
+		}
+		p.nextToken()
+		annos = append(annos, anno)
+	} //end for
+
 	if !isClassStmtToken(p.curToken) {
 		msg := fmt.Sprintf("Syntax Error: %v - expected statements.", p.peekToken.Pos)
 		p.errors = append(p.errors, msg)
@@ -2054,10 +2141,10 @@ func (p *Parser) parseClassStmt() ast.Statement {
 		staticFlag = true
 	}
 
-	return p.parseClassSubStmt(modifierLevel, staticFlag)
+	return p.parseClassSubStmt(modifierLevel, staticFlag, annos)
 }
 
-func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag bool) ast.Statement {
+func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag bool, annos []*ast.AnnotationStmt) ast.Statement {
 	var r ast.Statement
 
 	switch p.curToken.Type {
@@ -2073,12 +2160,15 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag b
 	case *ast.LetStatement:
 		o.ModifierLevel = modifierLevel
 		o.StaticFlag = staticFlag
+		o.Annotations = annos
 	case *ast.PropertyDeclStmt:
 		o.ModifierLevel = modifierLevel
 		o.StaticFlag = staticFlag
+		o.Annotations = annos
 	case *ast.FunctionStatement:
 		o.FunctionLiteral.ModifierLevel = modifierLevel
 		o.FunctionLiteral.StaticFlag = staticFlag
+		o.Annotations = annos
 	}
 
 	return r

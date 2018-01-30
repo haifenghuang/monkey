@@ -221,6 +221,7 @@ type Function struct {
 	Variadic bool
 	Scope    *Scope
 	Instance *ObjectInstance //For use with class functions
+	Annotations []*ObjectInstance
 }
 
 func (f *Function) Inspect() string  { return f.Literal.String() }

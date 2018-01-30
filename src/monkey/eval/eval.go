@@ -101,6 +101,8 @@ func Eval(node ast.Node, scope *Scope) Object {
 		return evalStructLiteral(node, scope)
 	case *ast.EnumLiteral:
 		return evalEnumLiteral(node, scope)
+	case *ast.EnumStatement:
+		return evalEnumStatement(node, scope)
 	case *ast.FunctionLiteral:
 		return evalFunctionLiteral(node, scope)
 	case *ast.PrefixExpression:
@@ -1033,6 +1035,12 @@ func evalStructLiteral(s *ast.StructLiteral, scope *Scope) Object {
 	return &Struct{Scope: structScope, methods: make(map[string]*Function)}
 }
 
+func evalEnumStatement(enumStmt *ast.EnumStatement, scope *Scope) Object {
+	enumLiteral := evalEnumLiteral(enumStmt.EnumLiteral, scope)
+	scope.Set(enumStmt.Name.String(), enumLiteral) //save to scope
+	return enumLiteral
+}
+
 func evalEnumLiteral(e *ast.EnumLiteral, scope *Scope) Object {
 	enumScope := NewScope(nil)
 	for key, value := range e.Pairs {
@@ -1048,6 +1056,61 @@ func evalEnumLiteral(e *ast.EnumLiteral, scope *Scope) Object {
 
 func evalFunctionStatement(FnStmt *ast.FunctionStatement, scope *Scope) Object {
 	fnObj := evalFunctionLiteral(FnStmt.FunctionLiteral, scope)
+	fn := fnObj.(*Function)
+	//annotation
+	//for _, anno := range FnStmt.Annotations {
+	//	newAnno := &Annotation{Name: anno.Name.Value, Attributes:make(map[string]Object)}
+	//
+	//	for name, expr := range anno.Attributes {
+	//		newAnno.Attributes[name] = Eval(expr, scope)
+	//	}
+	//	fn.Annotations = append(fn.Annotations, newAnno)
+	//}
+	for _, anno := range FnStmt.Annotations {  //for each annotation
+		annoClass, ok := scope.Get(anno.Name.Value)
+		if !ok {
+			panic(NewError(FnStmt.Pos().Sline(), CLSNOTDEFINE, anno.Name.Value))
+		}
+
+		annoClsObj := annoClass.(*Class)
+		annoObj := evalNewExpressionAnno(annoClsObj, scope)
+		annoInstanceObj := annoObj.(*ObjectInstance)
+		fn.Annotations = append(fn.Annotations, annoInstanceObj)
+
+
+		for k, v := range anno.Attributes { //for each annotation attribute
+			val := Eval(v, annoInstanceObj.Scope)
+			p := annoClsObj.GetProperty(k)
+			if p == nil { //not property, return value from scope
+				annoInstanceObj.Scope.Set(k, val)
+			} else {
+					if p.Setter == nil { //property xxx { get; }
+						_, ok := annoInstanceObj.Scope.Get(k)
+						if !ok { //it's the first time assignment
+							if currentInstance != nil { //inside class body assignment
+								annoInstanceObj.Scope.Set(k, val)
+							} else {  //outside class body assignment
+								panic(NewError(FnStmt.Pos().Sline(), PROPERTYUSEERROR, k, annoInstanceObj.Class.Name))
+							}
+						} else {
+							panic(NewError(FnStmt.Pos().Sline(), PROPERTYUSEERROR, k, annoInstanceObj.Class.Name))
+						}
+				} else {
+					if len(p.Setter.Body.Statements) == 0 { // property xxx { set; }
+						annoInstanceObj.Scope.Set("_" + k, val)
+					} else {
+						newScope := NewScope(annoInstanceObj.Scope)
+						newScope.Set("value", val)
+						results := Eval(p.Setter.Body, newScope)
+						if results.Type() == RETURN_VALUE_OBJ {
+							return results.(*ReturnValue).Value
+						}
+					}
+				}
+			}
+		}
+	}
+
 	scope.Set(FnStmt.Name.String(), fnObj) //save to scope
 
 	return fnObj
@@ -1757,6 +1820,26 @@ func compareHashObj(left, right map[HashKey]HashPair) bool {
 func evalInstanceInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
 	instanceObj := left.(*ObjectInstance)
 
+	switch node.Operator {
+	case "==":
+		if left.Type() != right.Type() {
+			return FALSE
+		}
+
+		if left == right {
+			return TRUE
+		}
+		return FALSE
+	case "!=":
+		if left.Type() != right.Type() {
+			return TRUE
+		}
+
+		if left != right {
+			return TRUE
+		}
+		return FALSE
+	}
 	//get methods's modifier level
 //	ml := instanceObj.GetModifierLevel(node.Operator, ClassMethodKind) //ml:modifier level
 //	if ml == ast.ModifierPrivate {
@@ -1773,7 +1856,7 @@ func evalInstanceInfixExpression(node *ast.InfixExpression, left Object, right O
 					Instance:   instanceObj,
 				}
 
-					fn.Scope.Set("parent", instanceObj.Class.Parent)
+				fn.Scope.Set("parent", instanceObj.Class.Parent)
 
 				args := []Object{right}
 				return evalFunctionDirect(method, args, fn.Scope)
@@ -3386,7 +3469,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 							Scope:       NewScope(instanceObj.Scope),
 							Instance:   instanceObj,
 						}
-							fn.Scope.Set("parent", instanceObj.Class.Parent)
+						fn.Scope.Set("parent", instanceObj.Class.Parent)
 
 						args := evalArgs(o.Arguments, fn.Scope)
 						return evalFunctionDirect(method, args, fn.Scope)
@@ -3461,6 +3544,9 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 						return evalFunctionDirect(builtinMethod, args, aScope)
 					
 				}
+			} else {
+				args := evalArgs(o.Arguments, scope)
+				return clsObj.CallMethod(call.Call.Pos().Sline(), scope, fname, args...)
 			}
 		}
 
@@ -4032,7 +4118,7 @@ func evalClassStatement(c *ast.ClassStatement, scope *Scope) Object {
 
 //let name = class : parent { block }
 func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
-	var parentClass = BASE_CLASS
+	var parentClass = BASE_CLASS //base class is the root of all classes in monkey
 	if c.Parent != "" {
 
 		parent, ok := scope.Get(c.Parent)
@@ -4132,6 +4218,49 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 	oldInstance := currentInstance
 	currentInstance = instance
 	ret := evalFunctionDirect(init, args, instance.Scope); 
+	if ret.Type() == ERROR_OBJ {
+		currentInstance = oldInstance
+		return ret //return the error object
+	}
+	currentInstance = oldInstance
+	return instance
+}
+
+func evalNewExpressionAnno(clsObj *Class, scope *Scope) Object {
+	tmpClass := clsObj
+	classChain := make([]*Class, 0, 3)
+	classChain = append(classChain, clsObj)
+	for tmpClass.Parent != nil {
+		classChain = append(classChain, tmpClass.Parent)
+		tmpClass = tmpClass.Parent
+	}
+
+	//create a new Class scope
+	newScope := NewScope(scope)
+	//evaluate the 'Members' fields of class with proper scope.
+	for idx := len(classChain) - 1; idx >= 0; idx-- {
+		for _, member := range classChain[idx].Members {
+			Eval(member, newScope) //evaluate the 'Members' fields of class
+		}
+		newScope = NewScope(newScope)
+	}
+
+	instance := &ObjectInstance{Class: clsObj, Scope: newScope.parentScope}
+	instance.Scope.Set("this", instance) //make 'this' refer to instance
+		instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
+
+	//Is it has a constructor ?
+	init := clsObj.GetMethod("init")
+	if init == nil {
+		return instance
+	}
+
+	classMux.Lock()
+	defer classMux.Unlock()
+
+	oldInstance := currentInstance
+	currentInstance = instance
+	ret := evalFunctionDirect(init, []Object{}, instance.Scope); 
 	if ret.Type() == ERROR_OBJ {
 		currentInstance = oldInstance
 		return ret //return the error object

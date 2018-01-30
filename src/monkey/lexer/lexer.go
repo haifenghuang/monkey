@@ -95,6 +95,7 @@ var tokenMap = map[rune]token.TokenType{
 	'&': token.BITAND,
 	'|': token.BITOR,
 	'^': token.BITXOR,
+	'@': token.AT,
 }
 
 func (l *Lexer) NextToken() token.Token {

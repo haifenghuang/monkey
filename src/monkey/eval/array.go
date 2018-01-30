@@ -68,7 +68,7 @@ func (a *Array) CallMethod(line string, scope *Scope, method string, args ...Obj
 	case "tail","rest":
 		return a.Tail(line, args...)
 	}
-	panic(NewError(line, NOMETHODERROR, a.Type(), method))
+	panic(NewError(line, NOMETHODERROR, method, a.Type()))
 }
 
 func (a *Array) Len(line string, args ...Object) Object {
