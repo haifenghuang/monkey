@@ -248,7 +248,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * spawn
 * yield #not used
 * qw
-* class new property set get static
+* class new property set get static default
 * interface public private protected # reserved, not used
 
 ### Type conversion
@@ -487,7 +487,7 @@ case i in {
 
 ```
 
-## 整型(Integer)
+## Integer
 
 In monkey, integer is treated as an object, so you could call it's methods.
 Please see below examples:
@@ -1307,20 +1307,27 @@ Please see below example：
 //Declare annotation class
 //Note: In the body, you must use property, not method.
 class @MinMaxValidator {
-  property MinLength { get; set; }
-  property MaxLength { get; set; }
+  property MinLength
+  property MaxLength default 10
 }
 
 //This is a marker annotation
 class @NoSpaceValidator {}
 
+class @DepartmentValidator {
+  property Department
+}
+
 //The 'Request' class
 class Request {
-  @MinMaxValidator(MinLength=1, MaxLength=10)
+  @MinMaxValidator(MinLength=1)
   property FirstName { get; set; }
 
   @NoSpaceValidator
   property LastName { get; set; }
+
+  @DepartmentValidator(Department=["Department of Education", "Department of Labors", "Department of Justice"])
+  property Dept { get; set; }
 }
 
 //This class is responsible for processing the annotation.
@@ -1333,14 +1340,24 @@ class RequestHandler {
         if anno.instanceOf(MinMaxValidator) {
           //p.value is the property real value.
           if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
-            printf("Property '%s' not valid!\n", p.name)
+            printf("Property '%s' is not valid!\n", p.name)
           }
         } elseif anno.instanceOf(NoSpaceValidator) {
           for c in p.value {
             if c == " " || c == "\t" {
-              printf("Property '%s' not valid!\n", p.name)
+              printf("Property '%s' is not valid!\n", p.name)
               break
             }
+          }
+        } elseif anno.instanceOf(DepartmentValidator) {
+          found = false
+          for d in anno.Department {
+            if p.value == d {
+              found = true
+            }
+          }
+          if !found {
+            printf("Property '%s' is not valid!\n", p.name)
           }
         }
       }
@@ -1353,6 +1370,7 @@ class RequestMain {
     request = new Request()
     request.FirstName = "Haifeng123456789"
     request.LastName = "Huang     "
+    request.Dept = "Department of Justice"
     RequestHandler.handle(request)
   }
 }

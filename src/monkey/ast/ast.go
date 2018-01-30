@@ -2383,7 +2383,6 @@ type ClassLiteral struct {
 	Methods    map[string]*FunctionStatement //class's methods
 	Block      *BlockStatement //mainly used for debugging purpose
 	Modifier   ModifierLevel  //NOT IMPLEMENTED
-	HasAnnotation bool
 }
 
 func (c *ClassLiteral) Pos() token.Position {
@@ -2423,7 +2422,7 @@ type ClassStatement struct {
 	Name            *Identifier //Class name
 	CategoryName    *Identifier
 	ClassLiteral    *ClassLiteral
-	IsAnnotation    bool
+	IsAnnotation    bool //class is a annotation class
 }
 
 func (c *ClassStatement) Pos() token.Position {
@@ -2513,6 +2512,7 @@ type PropertyDeclStmt struct {
 	StaticFlag    bool
 	ModifierLevel ModifierLevel   //property's modifier
 	Annotations   []*AnnotationStmt
+	Default       Expression
 }
 
 func (p *PropertyDeclStmt) Pos() token.Position {
@@ -2550,6 +2550,12 @@ func (p *PropertyDeclStmt) String() string {
 		out.WriteString(strings.Join(parameters, ", "))
 		out.WriteString("]")
 	} else {
+	}
+
+	if p.Default != nil { //must be an annotation class
+		out.WriteString(" default ")
+		out.WriteString(p.Default.String())
+		return out.String()
 	}
 
 	out.WriteString(" { ")

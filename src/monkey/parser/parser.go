@@ -313,7 +313,12 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 		}
 	}
 
-	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
+	if stmt.IsAnnotation {
+		stmt.ClassLiteral = p.parseClassLiteralForAnno().(*ast.ClassLiteral)
+	} else {
+		stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
+	}
+
 	stmt.ClassLiteral.Name = stmt.Name.Value
 
 	if p.peekTokenIs(token.SEMICOLON) {
@@ -1981,6 +1986,51 @@ func isClassStmtToken(t token.Token) bool {
 	return false
 }
 
+
+//parse annotation class
+func (p *Parser) parseClassLiteralForAnno() ast.Expression {
+	cls := &ast.ClassLiteral{
+		Token:      p.curToken,
+		Properties: make(map[string]*ast.PropertyDeclStmt),
+	}
+
+	p.nextToken()
+	if p.curTokenIs(token.COLON) {
+		if !p.expectPeek(token.IDENT) {
+			msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		cls.Parent = p.curToken.Literal
+		p.nextToken()
+	}
+	if !p.curTokenIs(token.LBRACE) {
+		msg := fmt.Sprintf("Syntax Error: %v - expected current token to be IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	//why not calling parseBlockStatement()?
+	//Because we need to parse 'public', 'private' modifiers, also 'get' and 'set'.
+	//parseBlockStatement() function do not handling these.
+	//cls.Block = p.parseBlockStatement()
+	cls.Block = p.parseClassBody(true)
+	for _, statement := range cls.Block.Statements {
+		//fmt.Printf("In parseClassLiteral, stmt=%s\n", statement.String()) //debugging purpose
+		switch s := statement.(type) {
+		case *ast.PropertyDeclStmt: //properties
+			cls.Properties[s.Name.Value] = s
+		default:
+			msg := fmt.Sprintf("Syntax Error: %v - Only 'property' statement is allow in class annotation.", p.curToken.Pos)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+	}
+
+	return cls
+}
+
+
 // class : parentClass { block }.
 //e.g. let classname = class : parentClass { block }
 func (p *Parser) parseClassLiteral() ast.Expression {
@@ -2011,7 +2061,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	//Because we need to parse 'public', 'private' modifiers, also 'get' and 'set'.
 	//parseBlockStatement() function do not handling these.
 	//cls.Block = p.parseBlockStatement()
-	cls.Block = p.parseClassBody()
+	cls.Block = p.parseClassBody(false)
 	for _, statement := range cls.Block.Statements {
 		//fmt.Printf("In parseClassLiteral, stmt=%s\n", statement.String()) //debugging purpose
 
@@ -2023,7 +2073,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 		case *ast.PropertyDeclStmt: //properties
 			cls.Properties[s.Name.Value] = s
 		default:
-			msg := fmt.Sprintf("Syntax Error: %v - Only 'let' statement and 'function' statement is allow in class definition.", p.peekToken.Pos)
+			msg := fmt.Sprintf("Syntax Error: %v - Only 'let' statement, 'function' statement and 'property' statement is allow in class definition.", p.peekToken.Pos)
 			p.errors = append(p.errors, msg)
 			return nil
 		}
@@ -2032,12 +2082,12 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	return cls
 }
 
-func (p *Parser) parseClassBody() *ast.BlockStatement {
+func (p *Parser) parseClassBody(processAnnoClass bool) *ast.BlockStatement {
 	stmts := &ast.BlockStatement{Token: p.curToken, Statements:[]ast.Statement{}}
 
 	p.nextToken() //skip '{'
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
-		stmt := p.parseClassStmt()
+		stmt := p.parseClassStmt(processAnnoClass)
 		if stmt != nil {
 			stmts.Statements = append(stmts.Statements, stmt)
 		}
@@ -2053,7 +2103,7 @@ func (p *Parser) parseClassBody() *ast.BlockStatement {
 	return stmts
 }
 
-func (p *Parser) parseClassStmt() ast.Statement {
+func (p *Parser) parseClassStmt(processAnnoClass bool) ast.Statement {
 	//check if it has any annotions.
 	var annos []*ast.AnnotationStmt
 
@@ -2141,19 +2191,29 @@ LABEL:
 		staticFlag = true
 	}
 
-	return p.parseClassSubStmt(modifierLevel, staticFlag, annos)
+	return p.parseClassSubStmt(modifierLevel, staticFlag, annos, processAnnoClass)
 }
 
-func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag bool, annos []*ast.AnnotationStmt) ast.Statement {
+func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag bool, annos []*ast.AnnotationStmt, processAnnoClass bool) ast.Statement {
 	var r ast.Statement
 
-	switch p.curToken.Type {
-	case token.LET:
-		r = p.parseLetStatement()
-	case token.PROPERTY:
-		r = p.parsePropertyDeclStmt()
-	case token.FUNCTION:
-		r = p.parseFunctionStatement()
+	if processAnnoClass { //parse annotation class
+		if p.curToken.Type != token.PROPERTY {
+			msg := fmt.Sprintf("Syntax Error: %v - Only 'property' statement is allowed in class annotation.", p.curToken.Pos)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		r = p.parsePropertyDeclStmt(processAnnoClass)
+	} else {
+		switch p.curToken.Type {
+		case token.LET:
+			r = p.parseLetStatement()
+		case token.PROPERTY:
+			r = p.parsePropertyDeclStmt(processAnnoClass)
+		case token.FUNCTION:
+			r = p.parseFunctionStatement()
+		}
+
 	}
 
 	switch o := r.(type) {
@@ -2174,14 +2234,38 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag b
 	return r
 }
 
-func(p *Parser) parsePropertyDeclStmt() *ast.PropertyDeclStmt {
+//property xxx { get; set; }
+//property xxx { get; } or 
+//property xxx { set; }
+//property xxx { get {xxx} }
+//property xxx { set {xxx} }
+//property xxx { get {xxx} set {xxx} }
+//property this[x] { get {xxx} set {xxx} }
+//property xxx default xxx
+func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclStmt {
 	stmt := &ast.PropertyDeclStmt{Token:p.curToken}
 
 	if !p.expectPeek(token.IDENT) {  //must be an identifier, it's property name
 		return nil
 	}
-
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if processAnnoClass {  //annotation class' property defaults to have both getter and setter.
+		getterToken := token.Token{Pos:p.curToken.Pos, Type:token.GET, Literal:"get"}
+		stmt.Getter = &ast.GetterStmt{Token:getterToken}
+		stmt.Getter.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
+
+		setterToken := token.Token{Pos:p.curToken.Pos, Type:token.SET, Literal:"set"}
+		stmt.Setter = &ast.SetterStmt{Token:setterToken}
+		stmt.Setter.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
+
+		if p.peekTokenIs(token.DEFAULT) {
+			p.nextToken() //skip current token
+			p.nextToken() //skip 'default' keyword
+			stmt.Default = p.parseExpression(LOWEST)
+		}
+		return stmt
+	}
 
 	foundIndexer := false
 	thisToken := p.curToken //save the current token for later use

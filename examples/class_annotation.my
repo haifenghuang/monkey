@@ -3,7 +3,7 @@
 //                                       First
 //////////////////////////////////////////////////////////////////////////////////
 class @Test {
-  property Enabled { get; set; }
+  property Enabled
 }
 
 //marker annotation
@@ -61,7 +61,7 @@ for method in testObj.getMethods() {
 //                                       Second
 //////////////////////////////////////////////////////////////////////////////////
 //class @MethodTrace { //Annotation class
-//  property LogLevel { get; set; }
+//  property LogLevel
 //}
 //
 //enum Logger {
@@ -197,22 +197,23 @@ for method in testObj.getMethods() {
 //
 //Main.main()
 
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //                                       Fourth
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //class @MinMaxValidator {
-//  property MinLength { get; set; }
-//  property MaxLength { get; set; }
+//  property MinLength
+//  property MaxLength default 10
 //}
 //
 //class @NoSpaceValidator {}
 //
 //class @DepartmentValidator {
-//  property Department { get; set; }
+//  property Department
 //}
 //
 //class Request {
-//  @MinMaxValidator(MinLength=1, MaxLength=10)
+//  //@MinMaxValidator(MinLength=1, MaxLength=10)
+//  @MinMaxValidator(MinLength=1)
 //  property FirstName { get; set; }
 //
 //  @NoSpaceValidator
@@ -230,12 +231,12 @@ for method in testObj.getMethods() {
 //      for anno in annos {
 //        if anno.instanceOf(MinMaxValidator) {
 //          if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
-//            printf("Property '%s' not valid!\n", p.name)
+//            printf("Property '%s' is not valid!\n", p.name)
 //          }
 //        } elseif anno.instanceOf(NoSpaceValidator) {
 //          for c in p.value {
 //            if c == " " || c == "\t" {
-//              printf("Property '%s' not valid!\n", p.name)
+//              printf("Property '%s' is not valid!\n", p.name)
 //              break
 //            }
 //          }
@@ -247,7 +248,7 @@ for method in testObj.getMethods() {
 //            }
 //          }
 //          if !found {
-//            printf("Property '%s' not valid!\n", p.name)
+//            printf("Property '%s' is not valid!\n", p.name)
 //          }
 //        }
 //      }
@@ -258,8 +259,8 @@ for method in testObj.getMethods() {
 //class RequestMain {
 //  static fn main() {
 //    request = new Request()
-//    request.FirstName = "Haifeng123456789"
-//    request.LastName = "Huang    "
+//    request.FirstName = "Haifeng123456789" //not valid
+//    request.LastName = "Huang    "  //not valid
 //    request.Dept = "Department of Justice"
 //    RequestHandler.handle(request)
 //  }

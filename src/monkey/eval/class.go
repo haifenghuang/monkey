@@ -473,6 +473,21 @@ func (p *PropertyInfo) GetAnnotations(line string, scope *Scope, args ...Object)
 		annoInstanceObj := annoObj.(*ObjectInstance)
 		ret.Members = append(ret.Members, annoInstanceObj)
 
+		defaultPropMap := make(map[string]ast.Expression)
+		//get all propertis which have default value in the annotation class
+		for name, item := range annoClsObj.Properties {
+			if item.Default != nil {
+				defaultPropMap[name] = item.Default
+			}
+		}
+
+		//check if the property(which has default value) exists in anno.Attribues
+		for name, item := range defaultPropMap {
+			if _, ok := anno.Attributes[name]; !ok {
+				anno.Attributes[name] = item
+			}
+		}
+
 		//set the annotation object's property values.
 		for k, v := range anno.Attributes { //for each annotation attribute
 			val := Eval(v, annoInstanceObj.Scope)

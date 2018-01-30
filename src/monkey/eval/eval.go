@@ -1077,6 +1077,20 @@ func evalFunctionStatement(FnStmt *ast.FunctionStatement, scope *Scope) Object {
 		annoInstanceObj := annoObj.(*ObjectInstance)
 		fn.Annotations = append(fn.Annotations, annoInstanceObj)
 
+		defaultPropMap := make(map[string]ast.Expression)
+		//get all propertis which have default value in the annotation class
+		for name, item := range annoClsObj.Properties {
+			if item.Default != nil {
+				defaultPropMap[name] = item.Default
+			}
+		}
+
+		//check if the property(which has default value) exists in anno.Attribues
+		for name, item := range defaultPropMap {
+			if _, ok := anno.Attributes[name]; !ok {
+				anno.Attributes[name] = item
+			}
+		}
 
 		for k, v := range anno.Attributes { //for each annotation attribute
 			val := Eval(v, annoInstanceObj.Scope)

@@ -251,7 +251,7 @@ a, b, c = 1, "hello world", [1,2,3]
 * spawn
 * yield #not used
 * qw
-* class new property set get static
+* class new property set get static default
 * interface public private protected #保留,暂时没使用
 
 
@@ -1303,20 +1303,27 @@ Monkey也支持非常简单的“注解”：
 
 //声明注解，注解的body中必须是属性，不能是方法
 class @MinMaxValidator {
-  property MinLength { get; set; }
-  property MaxLength { get; set; }
+  property MinLength
+  property MaxLength default 10
 }
 
 //Marker annotation
 class @NoSpaceValidator {}
 
+class @DepartmentValidator {
+  property Department
+}
+
 //这个是请求类，我们对这个类使用注解
 class Request {
-  @MinMaxValidator(MinLength=1, MaxLength=10)
+  @MinMaxValidator(MinLength=1)
   property FirstName { get; set; }
 
   @NoSpaceValidator
   property LastName { get; set; }
+
+  @DepartmentValidator(Department=["Department of Education", "Department of Labors", "Department of Justice"])
+  property Dept { get; set; }
 }
 
 //处理注解的类
@@ -1329,14 +1336,24 @@ class RequestHandler {
         if anno.instanceOf(MinMaxValidator) {
           //p.value表示属性的值
           if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
-            printf("Property '%s' not valid!\n", p.name)
+            printf("Property '%s' is not valid!\n", p.name)
           }
         } elseif anno.instanceOf(NoSpaceValidator) {
           for c in p.value {
             if c == " " || c == "\t" {
-              printf("Property '%s' not valid!\n", p.name)
+              printf("Property '%s' is not valid!\n", p.name)
               break
             }
+          }
+        } elseif anno.instanceOf(DepartmentValidator) {
+          found = false
+          for d in anno.Department {
+            if p.value == d {
+              found = true
+            }
+          }
+          if !found {
+            printf("Property '%s' is not valid!\n", p.name)
           }
         }
       }
@@ -1349,6 +1366,7 @@ class RequestMain {
     request = new Request();
     request.FirstName = "Haifeng123456789"
     request.LastName = "Huang     "
+    request.Dept = "Department of Justice"
     RequestHandler.handle(request);
   }
 }
