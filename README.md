@@ -1289,7 +1289,7 @@ println()
 animal.Run()
 ```
 
-### 注解
+### Annotations
 
 Monkey also has very simple annotation support like java：
 
