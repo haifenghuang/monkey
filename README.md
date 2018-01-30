@@ -11,38 +11,88 @@ It also has a REPL with realtime syntax highlighter.
 This is a sample program using monkey language:
 
 ```swift
-// A pseudo-class using function with closure
-fn Person(name, age) {
-    self = {}  //create an empty hash, or you could use 'self = hash()'
-    self.name = name
-    self.age = age
 
-    //You could also use 'self.getName = fn() { return self.name }'
-    self.getName = () -> return self.name
-    self.getAge  = () -> return self.age
-    self.message = () -> return self.name + ", aged " + str(self.age)
-
-    self.sets = fn(newName, newAge) {
-        self.name = newName
-        self.age = newAge
-    }
-
-    return self
+//Declare annotation class
+//Note: In the body, you must use property, not method.
+class @MinMaxValidator {
+  property MinLength
+  property MaxLength default 10
 }
 
-p = Person("Mike", 40)
-printf("1 - info = %v\n", p.message())
-printf("1 - name = %v\n", p.getName())
-printf("1 - age  = %v\n", p.getAge())
+//This is a marker annotation
+class @NoSpaceValidator {}
 
+class @DepartmentValidator {
+  property Department
+}
 
-printf("\n=========================\n\n")
+//The 'Request' class
+class Request {
+  @MinMaxValidator(MinLength=1)
+  property FirstName { get; set; }
 
-p.sets("HHF", 42)
-printf("2 - info = %v\n", p.message())
-printf("2 - name = %v\n", p.getName())
-printf("2 - age  = %v\n", p.getAge())
+  @NoSpaceValidator
+  property LastName { get; set; }
+
+  @DepartmentValidator(Department=["Department of Education", "Department of Labors"])
+  property Dept { get; set; }
+}
+
+//This class is responsible for processing the annotation.
+class RequestHandler {
+  static fn handle(o) {
+    props = o.getProperties()
+    for p in props {
+      annos = p.getAnnotations()
+      for anno in annos {
+        if anno.instanceOf(MinMaxValidator) {
+          //p.value is the property real value.
+          if len(p.value) > anno.MaxLength || len(p.value) < anno.MinLength {
+            printf("Property '%s' is not valid!\n", p.name)
+          }
+        } elseif anno.instanceOf(NoSpaceValidator) {
+          for c in p.value {
+            if c == " " || c == "\t" {
+              printf("Property '%s' is not valid!\n", p.name)
+              break
+            }
+          }
+        } elseif anno.instanceOf(DepartmentValidator) {
+          found = false
+          for d in anno.Department {
+            if p.value == d {
+              found = true
+            }
+          }
+          if !found {
+            printf("Property '%s' is not valid!\n", p.name)
+          }
+        }
+      }
+    }
+  }
+}
+
+class RequestMain {
+  static fn main() {
+    request = new Request()
+    request.FirstName = "Haifeng123456789"
+    request.LastName = "Huang     "
+    request.Dept = "Department of Labors"
+    RequestHandler.handle(request)
+  }
+}
+
+RequestMain.main()
 ```
+
+Below is the result：
+
+```
+Property 'FirstName' not valid!
+Property 'LastName' not valid!
+```
+
 
 Below is the REPL with real time syntax highlight:
 
@@ -1378,7 +1428,7 @@ class RequestMain {
 RequestMain.main()
 ```
 
-下面是处理结果：
+Below is the result：
 
 ```
 Property 'FirstName' not valid!
