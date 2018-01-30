@@ -462,66 +462,7 @@ func (p *PropertyInfo) GetAnnotations(line string, scope *Scope, args ...Object)
 
 	ret := &Array{}
 	propStmt := p.Instance.GetProperty(p.Name)
-	for _, anno := range propStmt.Annotations { //for each annotation
-		annoClass, ok := scope.Get(anno.Name.Value)
-		if !ok {
-			panic(NewError(line, CLSNOTDEFINE, anno.Name.Value))
-		}
-
-		annoClsObj := annoClass.(*Class)
-		annoObj := evalNewExpressionAnno(annoClsObj, scope) //create a new instance for the annotation
-		annoInstanceObj := annoObj.(*ObjectInstance)
-		ret.Members = append(ret.Members, annoInstanceObj)
-
-		defaultPropMap := make(map[string]ast.Expression)
-		//get all propertis which have default value in the annotation class
-		for name, item := range annoClsObj.Properties {
-			if item.Default != nil {
-				defaultPropMap[name] = item.Default
-			}
-		}
-
-		//check if the property(which has default value) exists in anno.Attribues
-		for name, item := range defaultPropMap {
-			if _, ok := anno.Attributes[name]; !ok {
-				anno.Attributes[name] = item
-			}
-		}
-
-		//set the annotation object's property values.
-		for k, v := range anno.Attributes { //for each annotation attribute
-			val := Eval(v, annoInstanceObj.Scope)
-			prop := annoClsObj.GetProperty(k)
-			if prop == nil { //not property, return value from scope
-				annoInstanceObj.Scope.Set(k, val)
-			} else {
-				if prop.Setter == nil { //property xxx { get; }
-					_, ok := annoInstanceObj.Scope.Get(k)
-					if !ok { //it's the first time assignment
-						if currentInstance != nil { //inside class body assignment
-							annoInstanceObj.Scope.Set(k, val)
-						} else {  //outside class body assignment
-							panic(NewError(line, PROPERTYUSEERROR, k, p.Name))
-						}
-					} else {
-						panic(NewError(line, PROPERTYUSEERROR, k, p.Name))
-					}
-				} else {
-					if len(prop.Setter.Body.Statements) == 0 { // property xxx { set; }
-						annoInstanceObj.Scope.Set("_" + k, val)
-					} else {
-						newScope := NewScope(annoInstanceObj.Scope)
-						newScope.Set("value", val)
-						results := Eval(prop.Setter.Body, newScope)
-						if results.Type() == RETURN_VALUE_OBJ {
-							return results.(*ReturnValue).Value
-						}
-					}
-				}
-			}
-		}
-	}
-
+	processClassAnnotation(propStmt.Annotations, scope, line, ret)
 
 	return ret
 }

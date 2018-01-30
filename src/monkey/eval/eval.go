@@ -1057,74 +1057,8 @@ func evalEnumLiteral(e *ast.EnumLiteral, scope *Scope) Object {
 func evalFunctionStatement(FnStmt *ast.FunctionStatement, scope *Scope) Object {
 	fnObj := evalFunctionLiteral(FnStmt.FunctionLiteral, scope)
 	fn := fnObj.(*Function)
-	//annotation
-	//for _, anno := range FnStmt.Annotations {
-	//	newAnno := &Annotation{Name: anno.Name.Value, Attributes:make(map[string]Object)}
-	//
-	//	for name, expr := range anno.Attributes {
-	//		newAnno.Attributes[name] = Eval(expr, scope)
-	//	}
-	//	fn.Annotations = append(fn.Annotations, newAnno)
-	//}
-	for _, anno := range FnStmt.Annotations {  //for each annotation
-		annoClass, ok := scope.Get(anno.Name.Value)
-		if !ok {
-			panic(NewError(FnStmt.Pos().Sline(), CLSNOTDEFINE, anno.Name.Value))
-		}
 
-		annoClsObj := annoClass.(*Class)
-		annoObj := evalNewExpressionAnno(annoClsObj, scope)
-		annoInstanceObj := annoObj.(*ObjectInstance)
-		fn.Annotations = append(fn.Annotations, annoInstanceObj)
-
-		defaultPropMap := make(map[string]ast.Expression)
-		//get all propertis which have default value in the annotation class
-		for name, item := range annoClsObj.Properties {
-			if item.Default != nil {
-				defaultPropMap[name] = item.Default
-			}
-		}
-
-		//check if the property(which has default value) exists in anno.Attribues
-		for name, item := range defaultPropMap {
-			if _, ok := anno.Attributes[name]; !ok {
-				anno.Attributes[name] = item
-			}
-		}
-
-		for k, v := range anno.Attributes { //for each annotation attribute
-			val := Eval(v, annoInstanceObj.Scope)
-			p := annoClsObj.GetProperty(k)
-			if p == nil { //not property, return value from scope
-				annoInstanceObj.Scope.Set(k, val)
-			} else {
-					if p.Setter == nil { //property xxx { get; }
-						_, ok := annoInstanceObj.Scope.Get(k)
-						if !ok { //it's the first time assignment
-							if currentInstance != nil { //inside class body assignment
-								annoInstanceObj.Scope.Set(k, val)
-							} else {  //outside class body assignment
-								panic(NewError(FnStmt.Pos().Sline(), PROPERTYUSEERROR, k, annoInstanceObj.Class.Name))
-							}
-						} else {
-							panic(NewError(FnStmt.Pos().Sline(), PROPERTYUSEERROR, k, annoInstanceObj.Class.Name))
-						}
-				} else {
-					if len(p.Setter.Body.Statements) == 0 { // property xxx { set; }
-						annoInstanceObj.Scope.Set("_" + k, val)
-					} else {
-						newScope := NewScope(annoInstanceObj.Scope)
-						newScope.Set("value", val)
-						results := Eval(p.Setter.Body, newScope)
-						if results.Type() == RETURN_VALUE_OBJ {
-							return results.(*ReturnValue).Value
-						}
-					}
-				}
-			}
-		}
-	}
-
+	processClassAnnotation(FnStmt.Annotations, scope, FnStmt.Pos().Sline(), fn)
 	scope.Set(FnStmt.Name.String(), fnObj) //save to scope
 
 	return fnObj
@@ -4240,47 +4174,52 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 	return instance
 }
 
-func evalNewExpressionAnno(clsObj *Class, scope *Scope) Object {
-	tmpClass := clsObj
-	classChain := make([]*Class, 0, 3)
-	classChain = append(classChain, clsObj)
-	for tmpClass.Parent != nil {
-		classChain = append(classChain, tmpClass.Parent)
-		tmpClass = tmpClass.Parent
-	}
-
-	//create a new Class scope
-	newScope := NewScope(scope)
-	//evaluate the 'Members' fields of class with proper scope.
-	for idx := len(classChain) - 1; idx >= 0; idx-- {
-		for _, member := range classChain[idx].Members {
-			Eval(member, newScope) //evaluate the 'Members' fields of class
+func processClassAnnotation(Annotations []*ast.AnnotationStmt, scope *Scope, line string, obj Object) {
+	for _, anno := range Annotations {  //for each annotation
+		annoClass, ok := scope.Get(anno.Name.Value)
+		if !ok {
+			panic(NewError(line, CLSNOTDEFINE, anno.Name.Value))
 		}
-		newScope = NewScope(newScope)
+
+		annoClsObj := annoClass.(*Class)
+
+		//create the annotation instance
+		newScope := NewScope(scope)
+		annoInstanceObj := &ObjectInstance{Class: annoClsObj, Scope: newScope}
+		annoInstanceObj.Scope.Set("this", annoInstanceObj) //make 'this' refer to annoObj
+
+		switch o := obj.(type) {
+			case *Function:
+				o.Annotations = append(o.Annotations, annoInstanceObj)
+			case *Array:
+				o.Members = append(o.Members, annoInstanceObj)
+		}
+
+		defaultPropMap := make(map[string]ast.Expression)
+		//get all propertis which have default value in the annotation class
+		for name, item := range annoClsObj.Properties {
+			if item.Default != nil {
+				defaultPropMap[name] = item.Default
+			}
+		}
+
+		//check if the property(which has default value) exists in anno.Attribues
+		for name, item := range defaultPropMap {
+			if _, ok := anno.Attributes[name]; !ok {
+				anno.Attributes[name] = item
+			}
+		}
+
+		for k, v := range anno.Attributes { //for each annotation attribute
+			val := Eval(v, annoInstanceObj.Scope)
+			p := annoClsObj.GetProperty(k)
+			if p == nil { //not property, return value from scope
+				annoInstanceObj.Scope.Set(k, val)
+			} else {
+				annoInstanceObj.Scope.Set("_" + k, val)
+			}
+		}
 	}
-
-	instance := &ObjectInstance{Class: clsObj, Scope: newScope.parentScope}
-	instance.Scope.Set("this", instance) //make 'this' refer to instance
-		instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
-
-	//Is it has a constructor ?
-	init := clsObj.GetMethod("init")
-	if init == nil {
-		return instance
-	}
-
-	classMux.Lock()
-	defer classMux.Unlock()
-
-	oldInstance := currentInstance
-	currentInstance = instance
-	ret := evalFunctionDirect(init, []Object{}, instance.Scope); 
-	if ret.Type() == ERROR_OBJ {
-		currentInstance = oldInstance
-		return ret //return the error object
-	}
-	currentInstance = oldInstance
-	return instance
 }
 
 func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
