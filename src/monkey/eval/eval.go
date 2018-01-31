@@ -4118,6 +4118,18 @@ func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
 		clsObj.Methods[k] = Eval(f, scope).(ClassMethod)
 	}
 
+	//check if the method has @Override annotation, if so, search
+	//the method in parent hierarchical, if not found, then panic.
+	for methodName, fnStmt := range c.Methods {
+		for _, anno := range fnStmt.Annotations {
+			if anno.Name.Value == OVERRIDE_ANNOCLASS.Name {
+				if clsObj.Parent.GetMethod(methodName) == nil {
+					panic(NewError(fnStmt.FunctionLiteral.Pos().Sline(), OVERRIDEERROR, methodName, clsObj.Name))
+				}
+			}
+		}
+	}
+
 	return clsObj
 }
 

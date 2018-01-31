@@ -56,6 +56,10 @@ func (s *Scope) Get(name string) (Object, bool) {
 		return BASE_CLASS, true
 	}
 
+	if name == "Override" {
+		return OVERRIDE_ANNOCLASS, true
+	}
+
 	obj, ok := s.store[name]
 	if !ok && s.parentScope != nil {
 		obj, ok = s.parentScope.Get(name)

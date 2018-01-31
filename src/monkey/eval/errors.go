@@ -50,6 +50,7 @@ const (
 	CALLNONSTATICERROR
 	CLASSCATEGORYERROR
 	PARENTNOTANNOTATION
+	OVERRIDEERROR
 	GENERICERROR
 )
 
@@ -99,6 +100,7 @@ var errorType = map[int]string{
 	CALLNONSTATICERROR:"Could not call non-static members.",
 	CLASSCATEGORYERROR:"No class(%s) found for category(%s).",
 	PARENTNOTANNOTATION:"Annotation(%s)'s Parent(%s) is not annotation.",
+	OVERRIDEERROR:      "Method(%s) of class(%s) must override a superclass method!",
 	GENERICERROR:      "%s",
 }
 

@@ -192,6 +192,13 @@ var BASE_CLASS = &Class{
 	Methods: map[string]ClassMethod{},
 }
 
+//Builtin @Override annotation class
+var OVERRIDE_ANNOCLASS = &Class{
+	Name:    "Override",
+	Parent:  BASE_CLASS,
+	IsAnnotation: true,
+}
+
 func initRootObject() bool {
 	BASE_CLASS.Methods = map[string]ClassMethod {
 		"toString": &BuiltinMethod{

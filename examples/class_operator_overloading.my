@@ -29,6 +29,10 @@ class Vector {
 			// string interpolation support
 		return fmt.sprintf("(%v),(%v),(%v)", this.x, this.y, this.z);
 	}
+
+	fn otherFunc(v) {
+		return this + v  //calling the '+' function
+	}
 }
 
 fn Vectormain() {
@@ -45,6 +49,7 @@ fn Vectormain() {
 	v4 =v1 + 10 //same as v4 = v1.+(10);
 	//returns string "(11),(12),(13)"
 	println(v4.String());
+	println(v1.otherFunc(8).String())
 
 }
 
