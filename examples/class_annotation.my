@@ -200,9 +200,13 @@ for method in testObj.getMethods() {
 ////////////////////////////////////////////////////////////////////////////////
 //                                       Fourth
 ////////////////////////////////////////////////////////////////////////////////
-//class @MinMaxValidator {
-//  property MinLength
+//class @ParentMinMaxValidator {
 //  property MaxLength default 10
+//}
+//
+//class @MinMaxValidator : ParentMinMaxValidator {
+//  property MinLength
+//  //property MaxLength default 10
 //}
 //
 //class @NoSpaceValidator {}

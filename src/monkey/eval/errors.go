@@ -49,6 +49,7 @@ const (
 	INDEXNOTFOUNDERROR
 	CALLNONSTATICERROR
 	CLASSCATEGORYERROR
+	PARENTNOTANNOTATION
 	GENERICERROR
 )
 
@@ -97,6 +98,7 @@ var errorType = map[int]string{
 	INDEXNOTFOUNDERROR:"Indexer not found for class(%s)",
 	CALLNONSTATICERROR:"Could not call non-static members.",
 	CLASSCATEGORYERROR:"No class(%s) found for category(%s).",
+	PARENTNOTANNOTATION:"Annotation(%s)'s Parent(%s) is not annotation.",
 	GENERICERROR:      "%s",
 }
 

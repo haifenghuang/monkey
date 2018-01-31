@@ -34,6 +34,7 @@ type Class struct {
 	Methods    map[string]ClassMethod //BuiltinMethod or Function object
 	Properties map[string]*ast.PropertyDeclStmt
 	Scope      *Scope
+	IsAnnotation bool //true if the class is an annotation class
 }
 
 func (c *Class) Inspect() string { return "<class:" + c.Name + ">" }

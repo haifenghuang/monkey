@@ -4058,7 +4058,13 @@ func evalClassStatement(c *ast.ClassStatement, scope *Scope) Object {
 		return NIL
 	}
 
-	clsObj := evalClassLiteral(c.ClassLiteral, scope)
+	var clsObj Object
+	if c.IsAnnotation {
+		clsObj = evalClassLiterlForAnno(c.ClassLiteral, scope)
+	} else {
+		clsObj = evalClassLiteral(c.ClassLiteral, scope)
+	}
+
 	scope.Set(c.Name.Value, clsObj) //save to scope
 
 	return NIL
@@ -4111,6 +4117,38 @@ func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
 	for k, f := range c.Methods {
 		clsObj.Methods[k] = Eval(f, scope).(ClassMethod)
 	}
+
+	return clsObj
+}
+
+func evalClassLiterlForAnno(c *ast.ClassLiteral, scope *Scope) Object {
+	var parentClass = BASE_CLASS //base class is the root of all classes in monkey
+	if c.Parent != "" {
+		parent, ok := scope.Get(c.Parent)
+		if !ok {
+			panic(NewError(c.Pos().Sline(), PARENTNOTDECL, c.Parent))
+		}
+
+		parentClass, ok = parent.(*Class)
+		if !ok {
+			panic(NewError(c.Pos().Sline(), NOTCLASSERROR, c.Parent))
+		}
+	}
+
+	if parentClass != BASE_CLASS && !parentClass.IsAnnotation { //parent not annotation
+		panic(NewError(c.Pos().Sline(), PARENTNOTANNOTATION, c.Name, parentClass.Name))
+	}
+
+	clsObj := &Class{
+		Name:         c.Name,
+		Parent:       parentClass,
+		Properties:   c.Properties,
+		IsAnnotation: true,
+	}
+
+	//create a new Class scope
+	clsObj.Scope = NewScope(scope)
+	clsObj.Scope.Set("this", clsObj) //make 'this' refer to class object itself
 
 	return clsObj
 }
@@ -4197,15 +4235,20 @@ func processClassAnnotation(Annotations []*ast.AnnotationStmt, scope *Scope, lin
 
 		defaultPropMap := make(map[string]ast.Expression)
 		//get all propertis which have default value in the annotation class
-		for name, item := range annoClsObj.Properties {
-			if item.Default != nil {
-				defaultPropMap[name] = item.Default
+		tmpCls := annoClsObj
+		for tmpCls != nil {
+			for name, item := range tmpCls.Properties {
+				if item.Default != nil {
+					defaultPropMap[name] = item.Default
+				}
 			}
+
+			tmpCls = tmpCls.Parent
 		}
 
 		//check if the property(which has default value) exists in anno.Attribues
 		for name, item := range defaultPropMap {
-			if _, ok := anno.Attributes[name]; !ok {
+			if _, ok := anno.Attributes[name]; !ok { //not exists
 				anno.Attributes[name] = item
 			}
 		}
@@ -4213,7 +4256,7 @@ func processClassAnnotation(Annotations []*ast.AnnotationStmt, scope *Scope, lin
 		for k, v := range anno.Attributes { //for each annotation attribute
 			val := Eval(v, annoInstanceObj.Scope)
 			p := annoClsObj.GetProperty(k)
-			if p == nil { //not property, return value from scope
+			if p == nil {
 				annoInstanceObj.Scope.Set(k, val)
 			} else {
 				annoInstanceObj.Scope.Set("_" + k, val)
