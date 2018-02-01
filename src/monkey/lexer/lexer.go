@@ -19,9 +19,8 @@ type Lexer struct {
 	position     int  //character offset
 	readPosition int  //reading offset
 
-	lineOffset     int // current line offset
-	tokStartOffset int // character offset of the start of the current token
 	line           int
+	col            int
 }
 
 func New(filename, input string) *Lexer {
@@ -29,9 +28,8 @@ func New(filename, input string) *Lexer {
 	l.ch = ' '
 	l.position = 0
 	l.readPosition = 0
-	l.lineOffset = 0
-	l.tokStartOffset = 0
 	l.line = 1
+	l.col = 1
 
 	l.readNext()
 	if l.ch == bom {
@@ -47,8 +45,10 @@ func (l *Lexer) readNext() {
 	} else {
 		l.ch = l.input[l.readPosition]
 		if l.ch == '\n' {
-			l.lineOffset = l.position + 1
+			l.col = 1
 			l.line++
+		} else {
+			l.col += 1
 		}
 	}
 
@@ -100,9 +100,10 @@ var tokenMap = map[rune]token.TokenType{
 
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
-	pos := l.getPos()
 	l.skipWhitespace()
-	l.tokStartOffset = l.position
+	pos := l.getPos()
+	pos.Col -= 1
+
 	if t, ok := tokenMap[l.ch]; ok {
 		switch t {
 		case token.ASSIGN:
@@ -174,6 +175,9 @@ func (l *Lexer) NextToken() token.Token {
 		case token.SLASH:
 			if l.peek() == '/' {
 				l.skipComment()
+				return l.NextToken()
+			} else if l.peek() == '*' {
+				_ = l.skipMultilineComment()
 				return l.NextToken()
 			} else {
 				if prevToken.Type == token.RBRACE || // impossible?
@@ -618,12 +622,33 @@ func (l *Lexer) skipComment() {
 	}
 }
 
+func (l *Lexer) skipMultilineComment() error {
+	var err error
+loop:
+	for {
+		l.readNext()
+		switch l.ch {
+		case '*':
+			switch l.peek() {
+			case '/': // got the block ending symbol: '*/'
+				l.readNext() //skip the '*'
+				l.readNext() //skip the '/'
+				break loop
+			}
+		case 0: // Got EOF, but not comment terminator.
+			err = errors.New("Unterminated multiline comment, GOT EOF!")
+			break loop
+		}
+	}
+
+	return err
+}
+
 func (l *Lexer) getPos() token.Position {
 	return token.Position{
 		Filename: l.filename,
 		Offset:   l.position,
 		Line:     l.line,
-		Col:      l.tokStartOffset - l.lineOffset + 1,
-		//Col:     l.lineOffset - l.tokStartOffset + 1,
+		Col:      l.col,
 	}
 }

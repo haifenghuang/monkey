@@ -166,12 +166,18 @@ monkey path/to/file
 
 ### 注释
 
-Monkey仅支持单行注释.
+Monkey支持两种形式的单行注释和块注释：
 
 ```swift
-// an inline comment
-# another inline comment
+// a single line comment
+# another single line comment
+
+/* This is a 
+   block comment.
+*/
 ```
+
+同时也支持块注释
 
 ### 数据类型
 
@@ -1344,6 +1350,7 @@ Monkey也支持非常简单的“注解”：
 
 
 使用`class @annotationName {}`的方式来声明一个注解。
+Monkey同时包含一个内置的注解`@Override`（作用于java的@Override类似）。
 
 请看下面的例子：
 

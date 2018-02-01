@@ -15,7 +15,7 @@ class Vector {
 
 	// instance method (built-in operator overriding)
 	fn +(v) {
-		if (type(v) == "INTEGER" {
+		if (type(v) == "INTEGER") {
 			return new Vector(x+v, y+v, z+v);
 		}
 		elseif v.is_a(Vector) {

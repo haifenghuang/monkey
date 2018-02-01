@@ -163,11 +163,15 @@ monkey path/to/file
 
 ### Comments
 
-Monkey only support single line comment.
+Monkey support two kinds of single line comment and also block comment.
 
 ```swift
-// an inline comment
-# another inline comment
+// this is a single line comment
+# this is another single line comment
+
+/* This is a 
+   block comment.
+*/
 ```
 
 ### Data Types
@@ -1348,7 +1352,8 @@ Monkey also has very simple annotation support like java：
 * When use annotations, you must create an object.
 
 
-You could use `class @annotationName {}` to declare an annotation class
+You could use `class @annotationName {}` to declare an annotation class.
+Monkey also include a builtin `@Override` annotation(just like java's @Override).
 
 Please see below example：
 

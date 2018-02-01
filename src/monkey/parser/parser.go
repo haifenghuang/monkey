@@ -204,6 +204,12 @@ func New(l *lexer.Lexer, wd string) *Parser {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
+	defer func() {
+		if r := recover(); r != nil {
+				return //Here we just 'return', because the caller will report the errors.
+		}
+	}()
+
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 	program.Includes = make(map[string]*ast.IncludeStatement)
@@ -291,8 +297,6 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	}
 
 	if !p.expectPeek(token.IDENT) { //classname
-		msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
-		p.errors = append(p.errors, msg)
 		return nil
 	}
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
@@ -309,7 +313,10 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 			stmt.CategoryName = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 			p.nextToken()
 		} else {
-			panic(fmt.Errorf("Class's category should be followed by an identifier or a '}'."))
+			pos := p.fixPosCol()
+			msg := fmt.Sprintf("Syntax Error:%v- Class's category should be followed by an identifier or a ')', got %s instead.", pos, p.peekToken.Type)
+			p.errors = append(p.errors, msg)
+			return nil
 		}
 	}
 
@@ -445,6 +452,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 func (p *Parser)parseTupleExpression(tok token.Token, expr ast.Expression) ast.Expression {
 	members := []ast.Expression{expr}
 
+	oldToken := tok
 	for {
 		switch p.curToken.Type {
 		case token.RPAREN:
@@ -459,16 +467,20 @@ func (p *Parser)parseTupleExpression(tok token.Token, expr ast.Expression) ast.E
 				return ret
 			}
 			members = append(members, p.parseExpression(LOWEST))
+			oldToken = p.curToken
 			p.nextToken()
 		default:
-			msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ',' or ')', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+			oldToken.Pos.Col = oldToken.Pos.Col + len(oldToken.Literal)
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be ',' or ')', got %s instead", oldToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
+			return nil
 		}
 	}
 }
 
 func (p *Parser) parseTryStatement() ast.Expression {
 
+	savedToken := p.curToken
 	ts := &ast.TryStmt{Token: p.curToken}
 	ts.Catches = []ast.Expression{}
 
@@ -533,6 +545,8 @@ func (p *Parser) parseTryStatement() ast.Expression {
 	}
 
 	if len(ts.Catches) == 0 && ts.Finally == nil { //no catch and no finally
+		msg := fmt.Sprintf("Syntax Error:%v- Try block should have at least one 'catch' or 'finally' block.", savedToken.Pos)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	return ts
@@ -597,9 +611,9 @@ func (p *Parser) parseDeferStatement() *ast.DeferStmt {
 }
 
 func (p *Parser) parseBreakWithoutLoopContext() ast.Expression {
-	msg := fmt.Sprintf("Syntax Error: %v - 'break' outside of loop context", p.curToken.Pos)
-
+	msg := fmt.Sprintf("Syntax Error:%v- 'break' outside of loop context", p.curToken.Pos)
 	p.errors = append(p.errors, msg)
+
 	return p.parseBreakExpression()
 }
 
@@ -608,8 +622,9 @@ func (p *Parser) parseBreakExpression() ast.Expression {
 }
 
 func (p *Parser) parseContinueWithoutLoopContext() ast.Expression {
-	msg := fmt.Sprintf("Syntax Error: %v - 'continue' outside of loop context", p.curToken.Pos)
+	msg := fmt.Sprintf("Syntax Error:%v- 'continue' outside of loop context", p.curToken.Pos)
 	p.errors = append(p.errors, msg)
+
 	return p.parseContinueExpression()
 }
 
@@ -625,6 +640,11 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	//parse left hand side of the assignment
 	for {
 		p.nextToken()
+		if !p.curTokenIs(token.IDENT) {
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier, got %s instead.", p.curToken.Pos, p.curToken.Type)
+			p.errors = append(p.errors, msg)
+			return stmt
+		}
 		name := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 		stmt.Names = append(stmt.Names, name)
 
@@ -689,7 +709,9 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		Above 'if' expression has no '}', if we do not check below condition, it will evaluate correctly and no problem occurred.
 	*/
 	if p.peekTokenIs(token.EOF) && !p.curTokenIs(token.RBRACE) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got EOF instead. Block should end with '}'.", p.peekToken.Pos)
+		pos := p.peekToken.Pos
+		pos.Col += 1
+		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be '}', got EOF instead. Block should end with '}'.", pos)
 		p.errors = append(p.errors, msg)
 	}
 
@@ -715,14 +737,14 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 		case *ast.Identifier:
 			e.Name = indexExp
 		default:
-			msg := fmt.Sprintf("Syntax Error: Assignment operator expects an identifier")
+			msg := fmt.Sprintf("Syntax Error:%v- Index assignment expects an identifier", indexExp.Left.Pos())
 			p.errors = append(p.errors, msg)
-			return nil
+			return e
 		}
 	} else {
-		msg := fmt.Sprintf("Syntax Error: %v - expected assign token to be IDENT, got %s instead", p.curToken.Pos, name.TokenLiteral())
+		msg := fmt.Sprintf("Syntax Error:%v- expected assign token to be an identifier, got %s instead", name.Pos(), name.TokenLiteral())
 		p.errors = append(p.errors, msg)
-		return nil
+		return e
 	}
 
 	p.nextToken()
@@ -736,9 +758,9 @@ func (p *Parser) parseIncludeStatement() *ast.IncludeStatement {
 
 	p.nextToken()
 	if p.curToken.Type != token.STRING && p.curToken.Type != token.IDENT {
-		msg := fmt.Sprintf("Syntax Error: %v - expected token to be STRING|IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be STRING|IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
-		return nil
+		return stmt
 	}
 
 	oldToken := p.curToken
@@ -769,12 +791,12 @@ func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, error) 
 		// Check for 'MONKEY_ROOT' environment variable
 		includeRoot := os.Getenv("MONKEY_ROOT")
 		if len(includeRoot) == 0 { //'MONKEY_ROOT' environment variable is not set
-			return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, path)
+			return nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.my, %s", p.curToken.Pos, importpath, path)
 		} else {
 			fn = filepath.Join(includeRoot, importpath + ".my")
 			e, err := ioutil.ReadFile(fn)
 			if err != nil {
-				return nil, fmt.Errorf("no file or directory: %s.my, %s", importpath, includeRoot)
+				return nil, fmt.Errorf("Syntax Error:%v- no file or directory: %s.my, %s", p.curToken.Pos, importpath, includeRoot)
 			}
 			f = e
 		}
@@ -1022,7 +1044,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	}
 
 	if err != nil {
-		msg := fmt.Sprintf("Syntax Error: %v - could not parse %q as integer", p.curToken.Pos, p.curToken.Literal)
+		msg := fmt.Sprintf("Syntax Error:%v- could not parse %q as integer", p.curToken.Pos, p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 	}
 	lit.Value = value
@@ -1046,7 +1068,7 @@ func (p *Parser) parseUIntegerLiteral() ast.Expression {
 	}
 
 	if err != nil {
-		msg := fmt.Sprintf("Syntax Error: %v - could not parse %q as unsigned integer", p.curToken.Pos, p.curToken.Literal)
+		msg := fmt.Sprintf("Syntax Error:%v- could not parse %q as unsigned integer", p.curToken.Pos, p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 	}
 	lit.Value = value
@@ -1059,7 +1081,7 @@ func (p *Parser) parseFloatLiteral() ast.Expression {
 
 	value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
-		msg := fmt.Sprintf("Syntax Error: %v - could not parse %q as float", p.curToken.Pos, p.curToken.Literal)
+		msg := fmt.Sprintf("Syntax Error:%v- could not parse %q as float", p.curToken.Pos, p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 	}
 	lit.Value = value
@@ -1205,10 +1227,6 @@ func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
 
 func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	ic := &ast.IfConditionExpr{Token: p.curToken}
-
-	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken() //skip current token
-	}
 	p.nextToken()
 
 	ic.Cond = p.parseExpressionStatement().Expression
@@ -1216,10 +1234,7 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken() //skip current token
 	}
-
-	if !p.expectPeek(token.LBRACE) {
-		return nil
-	}
+	p.nextToken() //skip ")"
 
 	ic.Block = p.parseBlockStatement()
 
@@ -1293,9 +1308,9 @@ func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 	if p.peekTokenIs(token.RBRACKET) {
 		p.nextToken()
 	} else {
-		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ']', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+		pos := p.fixPosCol()
+		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be ']', got %s instead", pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
-		return nil
 	}
 
 	return indexExp
@@ -1359,16 +1374,16 @@ func (p *Parser) parseHashExpression() ast.Expression {
 			p.nextToken() //skip the '=>'
 			hash.Pairs[key] = p.parseExpression(LOWEST)
 			p.nextToken()
-			if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) {
+			if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) { //allow for the last comma symbol
 				p.nextToken()
 				break
 			}
 		}
 		return hash
 	} else {
-		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ':' or '=>', got %s instead", p.peekToken.Pos, p.peekToken.Type)
+		pos := p.fixPosCol()
+		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be ':' or '=>', got %s instead", pos, p.peekToken.Type)
 		p.errors = append(p.errors, msg)
-		return nil
 	}
 
 	return nil
@@ -1660,7 +1675,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 			} //end for
 
 			if !p.curTokenIs(token.LBRACE) {
-				msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '{', got %s instead", p.peekToken.Pos, p.curToken.Type)
+				msg := fmt.Sprintf("Syntax Error:%v- expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
 				p.errors = append(p.errors, msg)
 			}
 
@@ -1724,7 +1739,7 @@ func (p *Parser) parseFuncExpressionArray(fn *ast.FunctionLiteral, closure token
 	for {
 		p.nextToken()
 		if !p.curTokenIs(token.IDENT) {
-			msg := fmt.Sprintf("Syntax Error: Function parameter not identifier, GOT(%s)!", p.curToken.Literal)
+			msg := fmt.Sprintf("Syntax Error:%v- Function parameter not identifier, GOT(%s)!", p.curToken.Pos, p.curToken.Literal)
 			p.errors = append(p.errors, msg)
 			return
 		}
@@ -1744,7 +1759,7 @@ func (p *Parser) parseFuncExpressionArray(fn *ast.FunctionLiteral, closure token
 			fn.Values[key] = v
 		} else if !p.peekTokenIs(token.ELLIPSIS) {
 			if hasDefParamValue && !fn.Variadic {
-				msg := fmt.Sprintf("Syntax Error: Function's default parameter order not correct!")
+				msg := fmt.Sprintf("Syntax Error:%v- Function's default parameter order not correct!", p.curToken.Pos.Sline())
 				p.errors = append(p.errors, msg)
 				return
 			}
@@ -1752,7 +1767,7 @@ func (p *Parser) parseFuncExpressionArray(fn *ast.FunctionLiteral, closure token
 
 		if p.peekTokenIs(token.COMMA) {
 			if fn.Variadic {
-				msg := fmt.Sprintf("Syntax Error: Variadic argument in function should be last!")
+				msg := fmt.Sprintf("Syntax Error:%v- Variadic argument in function should be last!", p.curToken.Pos.Sline())
 				p.errors = append(p.errors, msg)
 				return
 			}
@@ -1761,7 +1776,7 @@ func (p *Parser) parseFuncExpressionArray(fn *ast.FunctionLiteral, closure token
 
 		if p.peekTokenIs(token.ELLIPSIS) { //Variadic function
 			if fn.Variadic {
-				msg := fmt.Sprintf("Syntax Error: Only 1 variadic argument is allowed in function!")
+				msg := fmt.Sprintf("Syntax Error:%v- Only 1 variadic argument is allowed in function!", p.curToken.Pos.Sline())
 				p.errors = append(p.errors, msg)
 				return
 			}
@@ -1769,7 +1784,7 @@ func (p *Parser) parseFuncExpressionArray(fn *ast.FunctionLiteral, closure token
 
 			p.nextToken()
 			if !p.peekTokenIs(closure) {
-				msg := fmt.Sprintf("Syntax Error: Variadic argument in function should be last!")
+				msg := fmt.Sprintf("Syntax Error:%v- Variadic argument in function should be last!", p.curToken.Pos.Sline())
 				p.errors = append(p.errors, msg)
 				return
 			}
@@ -1896,6 +1911,7 @@ func (p *Parser) parseEnumExpression() ast.Expression {
 
 	e := &ast.EnumLiteral{Token: p.curToken}
 	e.Pairs = make(map[ast.Expression]ast.Expression)
+	idPair := make(map[string]ast.Expression)
 
 	if !p.expectPeek(token.LBRACE) {
 		return e
@@ -1916,8 +1932,9 @@ func (p *Parser) parseEnumExpression() ast.Expression {
 
 		// peek next that can be only '=' or ',' or '}'
 		if !p.peekTokenIs(token.ASSIGN) && !p.peekTokenIs(token.COMMA) && !p.peekTokenIs(token.RBRACE) {
-			msg := fmt.Sprintf("Syntax Error: %v - Token %s not allowed here.", p.peekToken.Pos, p.peekToken.Type)
+			msg := fmt.Sprintf("Syntax Error:%v- Token %s not allowed here.", p.peekToken.Pos, p.peekToken.Type)
 			p.errors = append(p.errors, msg)
+			return nil
 		}
 
 		// check for optional default value (optional only in `INT` case)
@@ -1941,11 +1958,15 @@ func (p *Parser) parseEnumExpression() ast.Expression {
 			autoInt++
 		}
 
-		if _, ok := e.Pairs[enum_id]; ok { //is identifier redeclared
-			msg := fmt.Sprintf("Syntax Error: %v - Identifier %s redeclared.", p.peekToken.Pos, p.curToken.Type)
+
+		str_enum_id := enum_id.(*ast.Identifier).Value
+		if _, ok := idPair[str_enum_id]; ok { //is identifier redeclared?
+			msg := fmt.Sprintf("Syntax Error:%v- Identifier %s redeclared.", p.curToken.Pos, str_enum_id)
 			p.errors = append(p.errors, msg)
+			return nil
 		} else {
 			e.Pairs[enum_id] = enum_value
+			idPair[str_enum_id] = enum_value
 		}
 
 		if !p.peekTokenIs(token.COMMA) {
@@ -1997,15 +2018,13 @@ func (p *Parser) parseClassLiteralForAnno() ast.Expression {
 	p.nextToken()
 	if p.curTokenIs(token.COLON) {
 		if !p.expectPeek(token.IDENT) {
-			msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
-			p.errors = append(p.errors, msg)
 			return nil
 		}
 		cls.Parent = p.curToken.Literal
 		p.nextToken()
 	}
 	if !p.curTokenIs(token.LBRACE) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected current token to be IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2021,7 +2040,7 @@ func (p *Parser) parseClassLiteralForAnno() ast.Expression {
 		case *ast.PropertyDeclStmt: //properties
 			cls.Properties[s.Name.Value] = s
 		default:
-			msg := fmt.Sprintf("Syntax Error: %v - Only 'property' statement is allow in class annotation.", p.curToken.Pos)
+			msg := fmt.Sprintf("Syntax Error:%v- Only 'property' statement is allow in class annotation.", s.Pos())
 			p.errors = append(p.errors, msg)
 			return nil
 		}
@@ -2044,15 +2063,13 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	p.nextToken()
 	if p.curTokenIs(token.COLON) {
 		if !p.expectPeek(token.IDENT) {
-			msg := fmt.Sprintf("Syntax Error: %v - expected token to be IDENTIFIER, got %s instead", p.peekToken.Pos, p.peekToken.Type)
-			p.errors = append(p.errors, msg)
 			return nil
 		}
 		cls.Parent = p.curToken.Literal
 		p.nextToken()
 	}
 	if !p.curTokenIs(token.LBRACE) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected current token to be IDENTIFIER, got %s instead", p.curToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be '{', got %s instead", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2073,7 +2090,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 		case *ast.PropertyDeclStmt: //properties
 			cls.Properties[s.Name.Value] = s
 		default:
-			msg := fmt.Sprintf("Syntax Error: %v - Only 'let' statement, 'function' statement and 'property' statement is allow in class definition.", p.peekToken.Pos)
+			msg := fmt.Sprintf("Syntax Error:%v- Only 'let' statement, 'function' statement and 'property' statement is allow in class definition.", s.Pos())
 			p.errors = append(p.errors, msg)
 			return nil
 		}
@@ -2096,7 +2113,9 @@ func (p *Parser) parseClassBody(processAnnoClass bool) *ast.BlockStatement {
 	}
 
 	if p.peekTokenIs(token.EOF) && !p.curTokenIs(token.RBRACE) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got EOF instead. Block should end with '}'.", p.peekToken.Pos)
+		pos := p.peekToken.Pos
+		pos.Col += 1
+		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be '}', got EOF instead. Block should end with '}'.", pos)
 		p.errors = append(p.errors, msg)
 	}
 
@@ -2104,7 +2123,6 @@ func (p *Parser) parseClassBody(processAnnoClass bool) *ast.BlockStatement {
 }
 
 func (p *Parser) parseClassStmt(processAnnoClass bool) ast.Statement {
-	//check if it has any annotions.
 	var annos []*ast.AnnotationStmt
 
 LABEL:
@@ -2125,12 +2143,16 @@ LABEL:
 			tokenIsLParen = false
 			p.nextToken()
 		} else { //marker annotation, e.g. @Demo
+			 //only 'property' and 'function' can have annotations
+			if !p.peekTokenIs(token.FUNCTION) && !p.peekTokenIs(token.PROPERTY) && !p.peekTokenIs(token.AT) && !p.peekTokenIs(token.STATIC) {
+				msg := fmt.Sprintf("Syntax Error:%v- expected token to be 'fn'| 'property'|'static', or another annotation, got '%s' instead", p.peekToken.Pos, p.peekToken.Type)
+				p.errors = append(p.errors, msg)
+				return nil
+			}
 			tokenIsLParen = false
 			p.nextToken()
 			annos = append(annos, anno)
 			goto LABEL
-			//msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '{' or '(', got '%s' instead", p.peekToken.Pos, p.peekToken.Type)
-			//panic(msg)
 		}
 
 		for {
@@ -2153,19 +2175,21 @@ LABEL:
 
 		if tokenIsLParen {
 			if !p.curTokenIs(token.RPAREN) {
-				msg := fmt.Sprintf("Syntax Error: %v - expected next token to be ')', got '%s' instead", p.curToken.Pos, p.curToken.Type)
-				panic(msg)
+				msg := fmt.Sprintf("Syntax Error:%v- expected token to be ')', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+				p.errors = append(p.errors, msg)
+				return nil
 			}
 		} else if !p.curTokenIs(token.RBRACE) {
-			msg := fmt.Sprintf("Syntax Error: %v - expected next token to be '}', got '%s' instead", p.curToken.Pos, p.curToken.Type)
-			panic(msg)
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be '}', got '%s' instead", p.curToken.Pos, p.curToken.Type)
+			p.errors = append(p.errors, msg)
+			return nil
 		}
 		p.nextToken()
 		annos = append(annos, anno)
 	} //end for
 
 	if !isClassStmtToken(p.curToken) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected statements.", p.peekToken.Pos)
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be 'let'|'property'|'fn'|'public'|'protected'|'private'|'static', got %s instead.", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2199,7 +2223,7 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag b
 
 	if processAnnoClass { //parse annotation class
 		if p.curToken.Type != token.PROPERTY {
-			msg := fmt.Sprintf("Syntax Error: %v - Only 'property' statement is allowed in class annotation.", p.curToken.Pos)
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be 'property'.Only 'property' statement is allowed in class annotation.", p.curToken.Pos)
 			p.errors = append(p.errors, msg)
 			return nil
 		}
@@ -2360,7 +2384,8 @@ func (p *Parser) parseNewExpression() ast.Expression {
 
 	call, ok := exp.(*ast.CallExpression)
 	if !ok {
-		msg := fmt.Sprintf("Syntax Error: %v - Invalid object construction for 'new'.", p.peekToken.Pos, p.curToken.Type)
+		pos := p.fixPosCol()
+		msg := fmt.Sprintf("Syntax Error:%v- Invalid object construction for 'new'. maybe you want 'new xxx()'", pos)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2387,7 +2412,7 @@ func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 
 	p.nextToken()
 	if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.INT) && !p.curTokenIs(token.FLOAT) {
-		msg := fmt.Sprintf("Syntax Error: %v - expected next token to be 'IDENT|INT|FLOAT', got %s instead", p.peekToken.Pos, p.curToken.Type)
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be 'IDENT|INT|FLOAT', got %s instead", p.curToken.Pos, p.curToken.Type)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2397,7 +2422,7 @@ func (p *Parser) parseStrExpressionArray(a []ast.Expression) []ast.Expression {
 		p.nextToken()
 		p.nextToken()
 		if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.INT) && !p.curTokenIs(token.FLOAT) {
-			msg := fmt.Sprintf("Syntax Error: %v - expected next token to be 'IDENT|INT|FLOAT', got %s instead", p.peekToken.Pos, p.curToken.Type)
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be 'IDENT|INT|FLOAT', got %s instead", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			return nil
 		}
@@ -2442,13 +2467,13 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 			case *ast.Identifier:
 				fn.Parameters = append(fn.Parameters, param)
 			default:
-				msg := fmt.Sprintf("Syntax Error: %v - Arrow function expects a list of identifiers as arguments", p.curToken.Pos)
+				msg := fmt.Sprintf("Syntax Error:%v- Arrow function expects a list of identifiers as arguments", param.Pos())
 				p.errors = append(p.errors, msg)
 				return nil
 			}
 		}
 	default:
-		msg := fmt.Sprintf("Syntax Error: %v - Arrow function expects identifiers as arguments", p.curToken.Pos)
+		msg := fmt.Sprintf("Syntax Error:%v- Arrow function expects identifiers as arguments", exprType.Pos())
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -2471,8 +2496,10 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("Syntax Error: %v - no prefix parse functions for '%s' found", p.curToken.Pos, t)
-	p.errors = append(p.errors, msg)
+	if t != token.EOF {
+		msg := fmt.Sprintf("Syntax Error:%v- no prefix parse functions for '%s' found", p.curToken.Pos, t)
+		p.errors = append(p.errors, msg)
+	}
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -2517,10 +2544,23 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 }
 
 func (p *Parser) peekError(t token.TokenType) {
-	msg := fmt.Sprintf("Syntax Error: %v - expected next token to be %s, got %s instead", p.peekToken.Pos, t, p.peekToken.Type)
+	pos := p.fixPosCol()
+	msg := fmt.Sprintf("Syntax Error:%v- expected next token to be %s, got %s instead", pos, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) Errors() []string {
 	return p.errors
+}
+
+//fix position column(for error report)
+func(p *Parser) fixPosCol() token.Position {
+	pos := p.curToken.Pos
+	if p.curToken.Type == token.STRING || p.curToken.Type == token.ISTRING {
+		pos.Col = pos.Col + len(p.curToken.Literal) + 2 //2: two double/single quote(s)
+	} else {
+		pos.Col = pos.Col + len(p.curToken.Literal)
+	}
+
+	return pos
 }
