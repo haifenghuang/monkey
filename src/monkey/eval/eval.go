@@ -1842,13 +1842,21 @@ func evalIfExpression(ie *ast.IfExpression, scope *Scope) Object {
 		}
 
 		if IsTrue(condition) {
-			return evalBlockStatements(c.Block.Statements, scope)
+			switch o := c.Body.(type) {
+			case *ast.BlockStatement:
+				return evalBlockStatements(o.Statements, scope)
+			}
+			return Eval(c.Body, scope)
 		}
 	}
 
 	//eval "else" part
 	if ie.Alternative != nil {
-		return evalBlockStatements(ie.Alternative.Statements, scope)
+		switch o := ie.Alternative.(type) {
+		case *ast.BlockStatement:
+			return evalBlockStatements(o.Statements, scope)
+		}
+		return Eval(ie.Alternative, scope)
 	}
 
 	return NIL

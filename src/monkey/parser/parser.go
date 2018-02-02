@@ -1204,26 +1204,35 @@ func (p *Parser) parseMapExprExpression(tok token.Token) ast.Expression {
 func (p *Parser) parseIfExpression() ast.Expression {
 	ie := &ast.IfExpression{Token: p.curToken}
 	// parse if/else-if expressions
-	ie.Conditions = p.parseConditionalExpressions()
-
-	// ELSE or RBRACE
-	if p.peekTokenIs(token.ELSE) {
-		p.nextToken() //skip "}"
-		p.nextToken() //skip "else"
-		ie.Alternative = p.parseBlockStatement()
-	}
-
+	ie.Conditions = p.parseConditionalExpressions(ie)
 	return ie
 }
 
-func (p *Parser) parseConditionalExpressions() []*ast.IfConditionExpr {
+func (p *Parser) parseConditionalExpressions(ie *ast.IfExpression) []*ast.IfConditionExpr {
 	// if part
 	ic := []*ast.IfConditionExpr{p.parseConditionalExpression()}
 
 	//else-if
-	for p.peekTokenIs(token.ELSEIF) || p.peekTokenIs(token.ELSIF) || p.peekTokenIs(token.ELIF) { //could be 'elseif' or 'elsif' or 'elif'
+	for p.peekTokenIs(token.ELSEIF) || p.peekTokenIs(token.ELSIF) || p.peekTokenIs(token.ELIF) || p.peekTokenIs(token.ELSE) { //could be 'elseif' or 'elsif' or 'elif', or 'else'
 		p.nextToken()
-		ic = append(ic, p.parseConditionalExpression())
+
+		if p.curTokenIs(token.ELSE) {
+			if !p.peekTokenIs(token.IF) {
+				if p.peekTokenIs(token.LBRACE) { //block statement. e.g. 'else {'
+					p.nextToken()
+					ie.Alternative = p.parseBlockStatement()
+				} else { //single expression, e.g. 'else println(xxx)'
+					p.nextToken()
+					ie.Alternative = p.parseExpressionStatement().Expression
+				}
+				break
+			} else { //'else if'
+				p.nextToken()
+				ic = append(ic, p.parseConditionalExpression())
+			}
+		} else {
+			ic = append(ic, p.parseConditionalExpression())
+		}
 	}
 
 	return ic
@@ -1240,14 +1249,12 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	}
 
 	if !p.peekTokenIs(token.LBRACE) {
-		pos := p.fixPosCol()
-		msg := fmt.Sprintf("Syntax Error:%v- expected token to be '{', got %s instead", pos, p.peekToken.Type)
-		p.errors = append(p.errors, msg)
-		return nil
+		p.nextToken()
+		ic.Body = p.parseExpressionStatement().Expression
+	} else {
+		p.nextToken()
+		ic.Body = p.parseBlockStatement()
 	}
-	p.nextToken()
-
-	ic.Block = p.parseBlockStatement()
 
 	return ic
 }

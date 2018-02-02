@@ -395,7 +395,7 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ### Control flow
 
-* if/if-else/if-elif-else/if-elsif-else/if-elseif-else
+* if/if-else/if-elif-else/if-elsif-else/if-elseif-else/if-else if-else
 * unless/unless-else
 * for/for-in
 * while

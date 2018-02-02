@@ -398,7 +398,7 @@ println(LogOption.getName(LogOption.Lshortfile))
 
 ### 控制流程
 
-* if/if-else/if-elif-else/if-elsif-else/if-elseif-else
+* if/if-else/if-elif-else/if-elsif-else/if-elseif-else/if-else if-else
 * unless/unless-else
 * for/for-in
 * while
