@@ -218,13 +218,13 @@ for method in testObj.getMethods() {
 //class Request {
 //  //@MinMaxValidator(MinLength=1, MaxLength=10)
 //  @MinMaxValidator(MinLength=1)
-//  property FirstName { get; set; }
+//  property FirstName;
 //
 //  @NoSpaceValidator
-//  property LastName { get; set; }
+//  property LastName;
 //
 //  @DepartmentValidator(Department=["Department of Education", "Department of Labors", "Department of Justice"])
-//  property Dept { get; set; }
+//  property Dept;
 //}
 //
 //class RequestHandler {

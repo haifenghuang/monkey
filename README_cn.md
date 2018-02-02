@@ -30,13 +30,13 @@ class @DepartmentValidator {
 //这个是请求类，我们对这个类使用注解
 class Request {
   @MinMaxValidator(MinLength=1)
-  property FirstName { get; set; }
+  property FirstName; //这种方式声明的属性，默认为可读可写。等价于'property FirstName { get; set; }'
 
   @NoSpaceValidator
-  property LastName { get; set; }
+  property LastName;
 
   @DepartmentValidator(Department=["Department of Education", "Department of Labors"])
-  property Dept { get; set; }
+  property Dept;
 }
 
 //处理注解的类
@@ -1165,7 +1165,7 @@ class Date {
         }
     }
 
-    property Year { get; set;}
+    property Year; //与'property Year { get; set;}'等价
 
     property Day { get; }
 
@@ -1372,13 +1372,13 @@ class @DepartmentValidator {
 //这个是请求类，我们对这个类使用注解
 class Request {
   @MinMaxValidator(MinLength=1)
-  property FirstName { get; set; }
+  property FirstName; //默认可读可写(getter和setter),等价于'property FirstName {get; set;}'
 
   @NoSpaceValidator
-  property LastName { get; set; }
+  property LastName;
 
   @DepartmentValidator(Department=["Department of Education", "Department of Labors", "Department of Justice"])
-  property Dept { get; set; }
+  property Dept;
 }
 
 //处理注解的类

@@ -29,13 +29,13 @@ class @DepartmentValidator {
 //The 'Request' class
 class Request {
   @MinMaxValidator(MinLength=1)
-  property FirstName { get; set; }
+  property FirstName; //getter and setter are implicit. It is equal to 'property FirstName { get; set; }'
 
   @NoSpaceValidator
-  property LastName { get; set; }
+  property LastName;
 
   @DepartmentValidator(Department=["Department of Education", "Department of Labors"])
-  property Dept { get; set; }
+  property Dept;
 }
 
 //This class is responsible for processing the annotation.
@@ -1376,13 +1376,13 @@ class @DepartmentValidator {
 //The 'Request' class
 class Request {
   @MinMaxValidator(MinLength=1)
-  property FirstName { get; set; }
+  property FirstName; // getter and setter is implicit
 
   @NoSpaceValidator
-  property LastName { get; set; }
+  property LastName;
 
   @DepartmentValidator(Department=["Department of Education", "Department of Labors", "Department of Justice"])
-  property Dept { get; set; }
+  property Dept;
 }
 
 //This class is responsible for processing the annotation.

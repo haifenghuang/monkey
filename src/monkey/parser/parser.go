@@ -2285,7 +2285,7 @@ func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclSt
 	}
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	if processAnnoClass {  //annotation class' property defaults to have both getter and setter.
+	if processAnnoClass || p.peekTokenIs(token.SEMICOLON) {  //annotation class' property defaults to have both getter and setter.
 		getterToken := token.Token{Pos:p.curToken.Pos, Type:token.GET, Literal:"get"}
 		stmt.Getter = &ast.GetterStmt{Token:getterToken}
 		stmt.Getter.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
@@ -2294,10 +2294,16 @@ func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclSt
 		stmt.Setter = &ast.SetterStmt{Token:setterToken}
 		stmt.Setter.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
 
-		if p.peekTokenIs(token.DEFAULT) {
-			p.nextToken() //skip current token
-			p.nextToken() //skip 'default' keyword
-			stmt.Default = p.parseExpression(LOWEST)
+		if processAnnoClass {
+			if p.peekTokenIs(token.DEFAULT) {
+				p.nextToken() //skip current token
+				p.nextToken() //skip 'default' keyword
+				stmt.Default = p.parseExpression(LOWEST)
+			}
+		} else {
+			if p.peekTokenIs(token.SEMICOLON) { //e.g. 'property xxx；'
+				p.nextToken()
+			}
 		}
 		return stmt
 	}
