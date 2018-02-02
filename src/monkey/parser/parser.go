@@ -591,10 +591,14 @@ func (p *Parser) parseInterpolatedString() ast.Expression {
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
-	if p.peekTokenIs(token.SEMICOLON) {
+	if p.peekTokenIs(token.SEMICOLON) { //e.g.{ return; }
 		p.nextToken()
 		return stmt
 	}
+	if p.peekTokenIs(token.RBRACE) { //e.g. { return }
+		return stmt
+	}
+
 	p.nextToken()
 	stmt.ReturnValue = p.parseExpressionStatement().Expression
 
@@ -1234,7 +1238,14 @@ func (p *Parser) parseConditionalExpression() *ast.IfConditionExpr {
 	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken() //skip current token
 	}
-	p.nextToken() //skip ")"
+
+	if !p.peekTokenIs(token.LBRACE) {
+		pos := p.fixPosCol()
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be '{', got %s instead", pos, p.peekToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
 
 	ic.Block = p.parseBlockStatement()
 
