@@ -6,6 +6,13 @@ import (
 	"sync"
 )
 
+var BuiltinClasses = map[string]*Class {
+	"object"  : BASE_CLASS,
+	"Override": OVERRIDE_ANNOCLASS,
+	"NotNull" : NOTNULL_ANNOCLASS,
+	"NotEmpty": NOTEMPTY_ANNOCLASS,
+}
+
 func NewScope(p *Scope) *Scope {
 	s := make(map[string]Object)
 	ret := &Scope{store: s, parentScope: p}
@@ -52,12 +59,9 @@ func (s *Scope) Get(name string) (Object, bool) {
 	s.RLock()
 	defer s.RUnlock()
 
-	if name == "object" {
-		return BASE_CLASS, true
-	}
-
-	if name == "Override" {
-		return OVERRIDE_ANNOCLASS, true
+	//check the builtin class/annotation
+	if val, ok := BuiltinClasses[name]; ok {
+		return val, ok
 	}
 
 	obj, ok := s.store[name]

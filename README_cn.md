@@ -1350,7 +1350,11 @@ Monkey也支持非常简单的“注解”：
 
 
 使用`class @annotationName {}`的方式来声明一个注解。
-Monkey同时包含一个内置的注解`@Override`（作用于java的@Override类似）。
+Monkey同时包含几个内置的注解：
+
+* @Override（作用于java的@Override类似）。
+* @NotNull
+* @NotEmpty
 
 请看下面的例子：
 

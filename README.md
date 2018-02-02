@@ -1353,7 +1353,11 @@ Monkey also has very simple annotation support like java：
 
 
 You could use `class @annotationName {}` to declare an annotation class.
-Monkey also include a builtin `@Override` annotation(just like java's @Override).
+Monkey also include some builtin annotations:
+
+* @Override annotation(just like java's @Override).
+* @NotNull
+* @NotEmpty
 
 Please see below example：
 

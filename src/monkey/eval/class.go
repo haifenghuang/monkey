@@ -199,6 +199,22 @@ var OVERRIDE_ANNOCLASS = &Class{
 	IsAnnotation: true,
 }
 
+//Builtin @NotNull annotation class
+//The annotated element must not be {@code null}.
+var NOTNULL_ANNOCLASS = &Class{
+	Name:    "NotNull",
+	Parent:  BASE_CLASS,
+	IsAnnotation: true,
+}
+
+//Builtin @NotEmpty annotation class
+//Asserts that the annotated string, tuple, map or array is not null or empty.
+var NOTEMPTY_ANNOCLASS = &Class{
+	Name:    "NotEmpty",
+	Parent:  BASE_CLASS,
+	IsAnnotation: true,
+}
+
 func initRootObject() bool {
 	BASE_CLASS.Methods = map[string]ClassMethod {
 		"toString": &BuiltinMethod{
