@@ -4288,12 +4288,43 @@ func processClassAnnotation(Annotations []*ast.AnnotationStmt, scope *Scope, lin
 func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
 	switch fn := fn.(type) {
 	case *Function:
-		if len(args) < len(fn.Literal.Parameters) {
-			panic(NewError("", GENERICERROR, "Not enough parameters to call function"))
-		}
-		extendedScope := extendFunctionScope(fn, scope, args)
+//		if len(args) < len(fn.Literal.Parameters) {
+//			panic(NewError("", GENERICERROR, "Not enough parameters to call function"))
+//		}
 
-		results := Eval(fn.Literal.Body, extendedScope)
+		newScope := NewScope(scope)
+		variadicParam := []Object{}
+		for i, _ := range args {
+			//Because of function default values, we need to check `i >= len(args)`
+			if fn.Variadic && i >= len(fn.Literal.Parameters)-1 {
+				for j := i; j < len(args); j++ {
+					variadicParam = append(variadicParam, args[j])
+				}
+				break
+			} else if i >= len(fn.Literal.Parameters) {
+				break
+			} else {
+				newScope.Set(fn.Literal.Parameters[i].String(), args[i])
+			}
+		}
+
+		// Variadic argument is passed as a single array
+		// of parameters.
+		if fn.Variadic {
+			newScope.Set(fn.Literal.Parameters[len(fn.Literal.Parameters)-1].String(), &Array{Members: variadicParam})
+			if len(args) < len(fn.Literal.Parameters) {
+				newScope.Set("@_", NewInteger(int64(len(fn.Literal.Parameters)-1)))
+			} else {
+				newScope.Set("@_", NewInteger(int64(len(args))))
+			}
+		} else {
+			newScope.Set("@_", NewInteger(int64(len(fn.Literal.Parameters))))
+		}
+
+		//newScope.DebugPrint("    ") //debug
+//		extendedScope := extendFunctionScope(fn, fn.Scope, args)
+
+		results := Eval(fn.Literal.Body, newScope)
 		if results.Type() == RETURN_VALUE_OBJ {
 			return results.(*ReturnValue).Value
 		}

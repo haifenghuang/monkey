@@ -227,3 +227,33 @@ println(myAnimalCat.hashCode())        //hashCode() method is coming from the ro
 println(myAnimalCat.is_a(Cat))         //is_a() method is coming from the root class 'object'
 println(myAnimalCat.instanceOf(Cat))   //instanceOf() method is is equal to is_a() method
 println(myAnimalCat.classOf())         //classOf() method is coming from the root class 'object'
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//                                       Fourth
+//////////////////////////////////////////////////////////////////////////////////
+//class Person {
+//	let firstName;
+//	let lastName;
+//	let nickName;
+//
+//	fn init(firstname, lastname="huang", nickname="mike") {
+//		this.firstName = firstname
+//		this.lastName = lastname
+//		this.nickName = nickname
+//	}
+//
+//	fn Msg(extra1, extra2="extra2", args...) {
+//		printf("firstName=%s, lastName=%s, nickName=%s\n", firstName, lastName, nickName)
+//		printf("extra1=%s, extra2=%s\n", extra1, extra2)
+//		for i in args {
+//			printf("i=%v\n", i)
+//		}
+//	}
+//}
+//
+//obj = new Person("haifeng")
+//obj.Msg("extra1", "Hello", 1, [1,2,3], (4,5,6))
+//
+//println()
+//obj.Msg("extra1")
