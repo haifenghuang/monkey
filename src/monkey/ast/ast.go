@@ -87,7 +87,12 @@ func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 
 	for _, s := range bs.Statements {
-		out.WriteString(s.String())
+		str := s.String()
+
+		out.WriteString(str)
+		if str[len(str)-1:] !=";" {
+			out.WriteString(";")
+		}
 	}
 
 	return out.String()
@@ -1147,7 +1152,7 @@ func (rs *ReturnStatement) String() string {
 		out.WriteString(rs.ReturnValue.String())
 	}
 
-	out.WriteString("; ")
+	out.WriteString(";")
 
 	return out.String()
 }
@@ -1173,7 +1178,11 @@ func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
-		return es.Expression.String()
+		str := es.Expression.String()
+		if str[len(str)-1:] !=";" {
+			str = str + ";"
+		}
+		return str
 	}
 	return ""
 }
