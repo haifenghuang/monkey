@@ -1090,6 +1090,39 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	if right.Type() == ERROR_OBJ {
 		return right
 	}
+
+	if right.Type() == INSTANCE_OBJ {
+		/* e.g. p.operator = '-':
+			class vector {
+				let x;
+				let y;
+				fn init (a, b) {
+					this.x = a
+					this.y = b
+				}
+				fn -() {
+					return new Vector(-x,-y)
+				}
+			}
+			v1 = new vector(3,4)
+			v2 = -v1
+		*/
+		instanceObj := right.(*ObjectInstance)
+		method := instanceObj.GetMethod(p.Operator)
+		if method != nil {
+			switch method.(type) {
+				case *Function:
+					newScope := NewScope(instanceObj.Scope)
+					newScope.Set("parent", instanceObj.Class.Parent)
+					args := []Object{right}
+					return evalFunctionDirect(method, args, newScope)
+				case *BuiltinMethod:
+					//do nothing for now
+			}
+		}
+		panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
+	}
+
 	switch p.Operator {
 	case "!":
 		return evalBangOperatorExpression(right)
@@ -1099,20 +1132,23 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 		switch right.Type() {
 		case INTEGER_OBJ:
 			i := right.(*Integer)
-			i.Int64 = -i.Int64
-			return i
+			return NewInteger(-i.Int64)
+			//bug : we need to return a new 'Integer' object, we should not change the original 'Integer' object.
+			//i.Int64 = -i.Int64
+			//return i
 		case UINTEGER_OBJ:
 			i := right.(*UInteger)
 			if i.UInt64 == 0 {
-				i.UInt64 = 0
 				return i
 			} else {
 				panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
 			}
 		case FLOAT_OBJ:
 			f := right.(*Float)
-			f.Float64 = -f.Float64
-			return f
+			return NewFloat(-f.Float64)
+			//bug : we need to return a new 'Float' object, we should not change the original 'Float' object.
+			//f.Float64 = -f.Float64
+			//return f
 		}
 
 	case "++":
@@ -3856,6 +3892,23 @@ func evalTupleIndex(tuple *Tuple, ie *ast.IndexExpression, scope *Scope) Object 
 }
 
 func evalPostfixExpression(left Object, node *ast.PostfixExpression) Object {
+	if left.Type() == INSTANCE_OBJ { //operator overloading
+		instanceObj := left.(*ObjectInstance)
+		method := instanceObj.GetMethod(node.Operator)
+		if method != nil {
+			switch method.(type) {
+				case *Function:
+					newScope := NewScope(instanceObj.Scope)
+					newScope.Set("parent", instanceObj.Class.Parent)
+					args := []Object{left}
+					return evalFunctionDirect(method, args, newScope)
+				case *BuiltinMethod:
+					//do nothing for now
+			}
+		}
+		panic(NewError(node.Pos().Sline(), POSTFIXOP, node.Operator, left.Type()))
+	}
+
 	switch node.Operator {
 	case "++":
 		return evalIncrementPostfixOperatorExpression(node, left)

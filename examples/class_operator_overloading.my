@@ -24,6 +24,18 @@ class Vector {
 		return nil;
 	}
 
+	fn -() {
+		return new Vector(-(x),-(y),-(z))
+	}
+
+	fn ++() {
+		return new Vector(x+1,y+1,z+1)
+	}
+
+	fn --() {
+		return new Vector(x-1,y-1,z-1)
+	}
+
 	// instance method (built-in String conversion overriding)
 	fn String() {
 			// string interpolation support
@@ -51,6 +63,14 @@ fn Vectormain() {
 	println(v4.String());
 	println(v1.otherFunc(8).String())
 
+	v5 = -v4
+	println(v5.String())
+
+	v6 = --v4
+	println(v6.String())
+
+	v7 = ++v4
+	println(v7.String())
 }
 
 Vectormain()
