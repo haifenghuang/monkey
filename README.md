@@ -2,6 +2,67 @@
 
 Chinese version: [中文](README_cn.md)
 
+Table of Contents
+=================
+
+* [Monkey Programming Language](#monkey-programming-language)
+* [Table of Contents](#table-of-contents)
+  * [Summary](#summary)
+  * [Overview](#overview)
+  * [Installation](#installation)
+  * [Basic use](#basic-use)
+  * [Language Tour](#language-tour)
+    * [Comments](#comments)
+    * [Data Types](#data-types)
+    * [Constants(Literal)](#constantsliteral)
+    * [Variables](#variables)
+    * [Reserved keywords](#reserved-keywords)
+    * [Type conversion](#type-conversion)
+    * [qw(Quote word) keyword](#qwquote-word-keyword)
+    * [enum keyword](#enum-keyword)
+    * [Control flow](#control-flow)
+    * [Integer](#integer)
+    * [Float](#float)
+    * [Decimal](#decimal)
+    * [Array](#array)
+    * [String](#string)
+    * [Hash](#hash)
+    * [Tuple](#tuple)
+    * [class](#class)
+      * [inheritance and polymorphism](#inheritance-and-polymorphism)
+      * [operator overloading](#operator-overloading)
+      * [property(like c\#)](#propertylike-c)
+      * [indexer](#indexer)
+      * [static members/methods/properties](#static-membersmethodsproperties)
+      * [Class Category](#class-category)
+      * [Annotations](#annotations)
+    * [Standard input/output/error](#standard-inputoutputerror)
+    * [Error Handling of standard library](#error-handling-of-standard-library)
+    * [About defer keyword](#about-defer-keyword)
+    * [Concatenation of different types](#concatenation-of-different-types)
+    * [Comprehensions](#comprehensions)
+    * [grep and map](#grep-and-map)
+    * [Function](#function)
+    * [Pipe Operator](#pipe-operator)
+    * [Spawn and channel](#spawn-and-channel)
+  * [Standard module introduction](#standard-module-introduction)
+      * [fmt module](#fmt-module)
+      * [time module](#time-module)
+      * [logger module](#logger-module)
+      * [flag module(for handling of command line options)](#flag-modulefor-handling-of-command-line-options)
+      * [json module(for json marshal &amp; unmarshal)](#json-modulefor-json-marshal--unmarshal)
+      * [net module](#net-module)
+      * [linq module](#linq-module)
+      * [Linq for file](#linq-for-file)
+      * [csv module](#csv-module)
+      * [template module](#template-module)
+      * [sql module](#sql-module)
+  * [About regular expression](#about-regular-expression)
+  * [Useful Utilities](#useful-utilities)
+  * [Syntax Highlight](#syntax-highlight)
+  * [Futual Plans](#futual-plans)
+  * [License](#license)
+
 ## Summary
 
 Monkey is a toy language interpreter, written in Go. It has C-style syntax, and is largely inspired by Ruby, Python, Perl and c#
@@ -541,7 +602,7 @@ case i in {
 
 ```
 
-## Integer
+### Integer
 
 In monkey, integer is treated as an object, so you could call it's methods.
 Please see below examples:
@@ -593,7 +654,7 @@ f2 = 15.20.floor()
 println(f2)
 ```
 
-## Decimal
+### Decimal
 
 In monkey, decimal is Arbitrary-precision fixed-point decimal numbers.
 And the code mainly based on [decimal](https://github.com/shopspring/decimal).
@@ -968,7 +1029,7 @@ revTuple = reverse(tp)
 println(revTuple) //result: (9, 8, 7, 6, 4, 2, 5, 3, 1)
 ```
 
-## class
+### class
 
 Monkey has limited support for the oop concept, below is a list of features:
 
@@ -1009,7 +1070,7 @@ class Animal : object {
 }
 ```
 
-### inheritance and polymorphism
+#### inheritance and polymorphism
 
 You can inherit a class using `:`:
 
@@ -1108,7 +1169,7 @@ generic noise
 oooooooo
 ```
 
-### operator overloading
+#### operator overloading
 
 ```swift
 class Vector {
@@ -1153,7 +1214,7 @@ fn Vectormain() {
 Vectormain()
 ```
 
-### property(like c#)
+#### property(like c#)
 
 ```swift
 class Date {
@@ -1213,7 +1274,7 @@ dateObj.getDateInfo()
 //dateObj.Day = 18
 ```
 
-### indexer
+#### indexer
 
 Monkey has support for class `indexer`(like c#). 
 An indexer is a member that enables an object to be indexed in the same way as an array.
@@ -1297,7 +1358,7 @@ fn Main()
 Main()
 ```
 
-### static members/methods/properties
+#### static members/methods/properties
 
 ```swift
 class Test
@@ -1318,7 +1379,7 @@ class Test
 Test.Main()
 ```
 
-### Class Category
+#### Class Category
 
 Monkey also support class Category like objective-c（C# is called 'extension methods'）.
 
@@ -1344,7 +1405,7 @@ println()
 animal.Run()
 ```
 
-### Annotations
+#### Annotations
 
 Monkey also has very simple annotation support like java：
 
@@ -1446,7 +1507,7 @@ Property 'LastName' not valid!
 ```
 
 
-## Standard input/output/error
+### Standard input/output/error
 
 There are three predefined object for representing standard input, standard output, standard error.
 They are `stdin`, `stdout`, `stderr`.
@@ -1461,7 +1522,7 @@ name = stdin.read(1024)  //read up to 1024 bytes from stdin
 println("Your name is " + name)
 ```
 
-## Error Handling of standard library
+### Error Handling of standard library
 
 When a standard library function returns `nil` or `false`, you can use the return value's message() function for the error message:
 
@@ -1486,7 +1547,7 @@ if (ret == false) {
 Maybe you are curious about why `nil` or `false` have message() function? Because in monkey, `nil` and `false`
 both are objects, so they have method to operate on it.
 
-## About `defer` keyword
+### About `defer` keyword
 
 A defer statement defers the execution of a function until the surrounding function returns.
 
@@ -1523,7 +1584,7 @@ defer file.close()
 
 ```
 
-## Concatenation of different types
+### Concatenation of different types
 
 In monkey, you could concatenate of different types. See below for examples:
 
@@ -1568,7 +1629,7 @@ hash -= 5
 println(hash)
 ```
 
-## Comprehensions
+### Comprehensions
 
 Monkey support list(array,string, range, tuple) comprehensions.
 list comprehension will return an array.
@@ -1622,7 +1683,7 @@ z5 = {x+1:x+2 for x in (1,2,3)}
 println(z5) // result: {4 => 5, 2 => 3, 3 => 4}. Order may differ
 ```
 
-## grep and map
+### grep and map
 
 The `grep` and `map` operators are just like perl's `grep` and `map`.
 
@@ -1656,7 +1717,7 @@ let values = map { fields[$_] } grep { $_ =~ pattern } fields.keys()
 println(values)
 ```
 
-## Function
+### Function
 
 Function in monkey is a first-class object. This means the language supports passing functions as arguments to
 other functions, returning them as the values from other functions, and assigning them to variables or storing
@@ -1762,7 +1823,7 @@ if ret[1] != "" {
 }
 ```
 
-## Pipe Operator
+### Pipe Operator
 
 The pipe operator, inspired by [Elixir](https://elixir-lang.org/).
 And thanks for the project [Aria](https://github.com/fadion/aria), I got the idea and some code from this project.
@@ -1784,7 +1845,7 @@ printf("mm=%d\n", mm)
 "Hello %s!\n" |> fmt.printf("world")
 ```
 
-## Spawn and channel
+### Spawn and channel
 
 You can use `spawn` to create a new thread, and `chan` to communicate with the thread.
 
@@ -1805,7 +1866,7 @@ In monkey, there are some standard modules provided for you. e.g. json, sql, sor
 This is a brief introduction of some of the monkey standard modules, don't expect it to be thorough.
 If you are curious, please see the source code.
 
-### fmt module
+#### fmt module
 
 ```swift
 let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
@@ -1876,7 +1937,7 @@ if (flag.isSet("age")) {
 }
 ```
 
-#### json module( for json marshal & unmarshal)
+#### json module(for json marshal & unmarshal)
 
 ```swift
 let hsJson = {"key1" => 10,

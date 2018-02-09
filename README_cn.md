@@ -1,10 +1,75 @@
 # Monkey程序语言
+=================
+
+Table of Contents
+=================
+
+* [Monkey程序语言](#monkey%E7%A8%8B%E5%BA%8F%E8%AF%AD%E8%A8%80)
+  * [主页](#%E4%B8%BB%E9%A1%B5)
+  * [概述](#%E6%A6%82%E8%BF%B0)
+  * [总览](#%E6%80%BB%E8%A7%88)
+  * [安装](#%E5%AE%89%E8%A3%85)
+  * [基本用法](#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95)
+  * [语言之旅](#%E8%AF%AD%E8%A8%80%E4%B9%8B%E6%97%85)
+    * [注释](#%E6%B3%A8%E9%87%8A)
+    * [数据类型](#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
+    * [常量(字面值)](#%E5%B8%B8%E9%87%8F%E5%AD%97%E9%9D%A2%E5%80%BC)
+    * [变量](#%E5%8F%98%E9%87%8F)
+    * [保留字](#%E4%BF%9D%E7%95%99%E5%AD%97)
+    * [类型转换](#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2)
+    * [qw(Quote word)关键字](#qwquote-word%E5%85%B3%E9%94%AE%E5%AD%97)
+    * [enum关键字](#enum%E5%85%B3%E9%94%AE%E5%AD%97)
+    * [控制流程](#%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B)
+    * [整型(Integer)](#%E6%95%B4%E5%9E%8Binteger)
+    * [浮点型(Float)](#%E6%B5%AE%E7%82%B9%E5%9E%8Bfloat)
+    * [Decimal类型](#decimal%E7%B1%BB%E5%9E%8B)
+    * [数组(Array)](#%E6%95%B0%E7%BB%84array)
+    * [字符串(String)](#%E5%AD%97%E7%AC%A6%E4%B8%B2string)
+    * [哈希(Hash)](#%E5%93%88%E5%B8%8Chash)
+    * [元祖(Tuple)](#%E5%85%83%E7%A5%96tuple)
+    * [类](#%E7%B1%BB)
+      * [继承和多态](#%E7%BB%A7%E6%89%BF%E5%92%8C%E5%A4%9A%E6%80%81)
+      * [操作符重载](#%E6%93%8D%E4%BD%9C%E7%AC%A6%E9%87%8D%E8%BD%BD)
+      * [属性(类似C\#)](#%E5%B1%9E%E6%80%A7%E7%B1%BB%E4%BC%BCc)
+      * [索引器](#%E7%B4%A2%E5%BC%95%E5%99%A8)
+      * [静态变量/方法/属性](#%E9%9D%99%E6%80%81%E5%8F%98%E9%87%8F%E6%96%B9%E6%B3%95%E5%B1%9E%E6%80%A7)
+      * [类类别(class category)](#%E7%B1%BB%E7%B1%BB%E5%88%ABclass-category)
+      * [注解](#%E6%B3%A8%E8%A7%A3)
+    * [标准输入/输出/错误](#%E6%A0%87%E5%87%86%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E9%94%99%E8%AF%AF)
+    * [标准库中的错误处理](#%E6%A0%87%E5%87%86%E5%BA%93%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86)
+    * [关于defer关键字](#%E5%85%B3%E4%BA%8Edefer%E5%85%B3%E9%94%AE%E5%AD%97)
+    * [不同类型的联接](#%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8B%E7%9A%84%E8%81%94%E6%8E%A5)
+    * [列表推导(Comprehensions)](#%E5%88%97%E8%A1%A8%E6%8E%A8%E5%AF%BCcomprehensions)
+    * [Grep和map](#grep%E5%92%8Cmap)
+    * [函数](#%E5%87%BD%E6%95%B0)
+    * [Pipe操作符](#pipe%E6%93%8D%E4%BD%9C%E7%AC%A6)
+    * [Spawn 和 channel](#spawn-%E5%92%8C-channel)
+  * [标准模块介绍](#%E6%A0%87%E5%87%86%E6%A8%A1%E5%9D%97%E4%BB%8B%E7%BB%8D)
+    * [fmt 模块](#fmt-%E6%A8%A1%E5%9D%97)
+    * [time 模块](#time-%E6%A8%A1%E5%9D%97)
+    * [logger 模块](#logger-%E6%A8%A1%E5%9D%97)
+    * [flag 模块(处理命令行选项)](#flag-%E6%A8%A1%E5%9D%97%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4%E8%A1%8C%E9%80%89%E9%A1%B9)
+    * [json 模块( json序列化(marshal)和反序列化(unmarshal) )](#json-%E6%A8%A1%E5%9D%97-json%E5%BA%8F%E5%88%97%E5%8C%96marshal%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96unmarshal-)
+    * [net 模块](#net-%E6%A8%A1%E5%9D%97)
+    * [linq 模块](#linq-%E6%A8%A1%E5%9D%97)
+    * [Linq for file支持](#linq-for-file%E6%94%AF%E6%8C%81)
+    * [csv 模块](#csv-%E6%A8%A1%E5%9D%97)
+    * [template 模块](#template-%E6%A8%A1%E5%9D%97)
+    * [sql 模块](#sql-%E6%A8%A1%E5%9D%97)
+  * [实用工具](#%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7)
+  * [语法高亮](#%E8%AF%AD%E6%B3%95%E9%AB%98%E4%BA%AE)
+  * [未来计划](#%E6%9C%AA%E6%9D%A5%E8%AE%A1%E5%88%92)
+  * [许可证](#%E8%AE%B8%E5%8F%AF%E8%AF%81)
+  * [备注](#%E5%A4%87%E6%B3%A8)
+
 
 ## 主页
+=================
 
 [monkey](https://github.com/haifenghuang/monkey)
 
 ## 概述
+=================
 
 Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python, Perl和C#.
 支持常用的控制流程，函数式编程和面向对象编程。
@@ -99,6 +164,7 @@ Property 'LastName' not valid!
 ![REPL](REPL.gif)
 
 ## 总览
+=================
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
 * 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法,注解)
@@ -142,10 +208,12 @@ Property 'LastName' not valid!
 但是，解析器的速度并不是这个项目考虑的因素
 
 ## 安装
+=================
 
 下载本项目，运行`./run.sh`
 
 ## 基本用法
+=================
 
 你可以如下方式使用REPL:
 
@@ -163,8 +231,10 @@ monkey path/to/file
 ```
 
 ## 语言之旅
+=================
 
 ### 注释
+--------
 
 Monkey支持两种形式的单行注释和块注释：
 
@@ -180,6 +250,7 @@ Monkey支持两种形式的单行注释和块注释：
 同时也支持块注释
 
 ### 数据类型
+------------
 
 Monkey支持9种基本类型: `String`, `Int`, `UInt`, `Float`, `Bool`, `Array`, `Hash`, `Tuple`和`Nil`
 
@@ -197,6 +268,7 @@ n = nil
 ```
 
 ### 常量(字面值)
+----------------
 
 Monkey中，主要有11种类型的常量(字面量).
 
@@ -266,6 +338,7 @@ println(f2(1,2))
 ```
 
 ### 变量
+--------
 
 你可以使用`let`来声明一个变量，或直接使用赋值的方式来声明并赋值一个变量:`variable=value`.
 
@@ -283,7 +356,8 @@ e = 5
 a, b, c = 1, "hello world", [1,2,3]
 ```
 
-## 保留字
+### 保留字
+---------
 
 下面列出了monkey语言的保留字：
 
@@ -310,6 +384,7 @@ a, b, c = 1, "hello world", [1,2,3]
 
 
 ### 类型转换
+------------
 
 你可以使用内置的方法：`int()`, `uint()`, `float()`, `str()`, `array()`, `tuple`, `hash`, `decimal`来进行不同类型之间的转换.
 
@@ -351,7 +426,8 @@ let h3 = hash((10, 20))     //result: {10 => 20}
 let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
 ```
 
-## `qw`(Quote word)关键字
+### `qw`(Quote word)关键字
+--------------------------
 
 `qw`关键字类似perl的`qw`关键字. 当你想使用很多的双引号字符串时,`qw`就是一个好帮手.
 
@@ -364,7 +440,8 @@ newArr = qw(1,2,3.5) //注：这里的newArr是一个字符串数组，不是一
 fmt.printf("newArr=%v\n", newArr)
 ```
 
-## `enum`关键字
+### `enum`关键字
+----------------
 
 在mokey中，你可以使用`enum`来定义常量.
 
@@ -397,6 +474,7 @@ println(LogOption.getName(LogOption.Lshortfile))
 ```
 
 ### 控制流程
+------------
 
 * if/if-else/if-elif-else/if-elsif-else/if-elseif-else/if-else if-else
 * unless/unless-else
@@ -545,6 +623,7 @@ case i in {
 ```
 
 ### 整型(Integer)
+-----------------
 
 在Monkey中，整型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
 
@@ -580,6 +659,7 @@ if 9.isOdd() {
 ```
 
 ### 浮点型(Float)
+-----------------
 
 在Monkey中，浮点型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
 
@@ -594,7 +674,8 @@ f2 = 15.20.floor()
 println(f2)
 ```
 
-## Decimal类型
+### Decimal类型
+--------------
 
 在Monkey中，Decimal类型表示一个任意精度固定位数的十进数(Arbitrary-precision fixed-point decimal numbers).
 这个类型的代码主要是基于[decimal](https://github.com/shopspring/decimal).
@@ -621,6 +702,7 @@ fmt.println("123.45678901234567/3 = ", d3.div(d2))
 ```
 
 ### 数组(Array)
+---------------
 
 在Monkey中, 你可以使用[]来初始化一个空的数组:
 
@@ -709,6 +791,7 @@ println("Reverse Array =", revArr)
 ```
 
 ### 字符串(String)
+------------------
 
 在monkey中, 有三种类型的`string`:
 
@@ -784,6 +867,7 @@ println("Reverse str =", revStr)
 ```
 
 ### 哈希(Hash)
+---------------
 
 在monkey中, 使用{}来创建一个空的哈希:
 
@@ -841,6 +925,7 @@ println("Reverse Hash =", revHash)
 ```
 
 ### 元祖(Tuple)
+---------------
 
 在Monkey中, `tuple`与数组非常类似, 但一旦你创建了一个元祖，你就不能够更改它。
 
@@ -963,7 +1048,8 @@ revTuple = reverse(tp)
 println(revTuple) //结果: (9, 8, 7, 6, 4, 2, 5, 3, 1)
 ```
 
-## 类
+### 类
+======
 
 Monkey支持简单的面向对象编程, 下面列出了Mokey支持的特性：
 
@@ -1004,7 +1090,8 @@ class Animal : object {
 }
 ```
 
-### 继承和多态
+#### 继承和多态
+---------------
 
 你使用`:`来表示继承关系:
 
@@ -1103,7 +1190,8 @@ generic noise
 oooooooo
 ```
 
-### 操作符重载
+#### 操作符重载
+---------------
 
 ```swift
 class Vector {
@@ -1148,7 +1236,8 @@ fn Vectormain() {
 Vectormain()
 ```
 
-### 属性(类似C#)
+#### 属性(类似C#)
+---------------
 
 ```swift
 class Date {
@@ -1208,7 +1297,8 @@ dateObj.getDateInfo()
 //dateObj.Day = 18
 ```
 
-### 索引器
+#### 索引器
+----------
 
 Monkey还支持类似C#的索引器(`Indexer`)。
 索引器能够让你像访问数组一样访问对象。
@@ -1294,7 +1384,8 @@ fn Main()
 Main()
 ```
 
-### 静态变量/方法/属性
+#### 静态变量/方法/属性
+----------------------
 
 ```swift
 class Test
@@ -1315,7 +1406,8 @@ class Test
 Test.Main()
 ```
 
-### 类类别(class category)
+#### 类类别(class category)
+--------------------------
 
 Monkey支持类似objective-c的类别（C#中称为extension methods）。
 
@@ -1341,7 +1433,8 @@ println()
 animal.Run()
 ```
 
-### 注解
+#### 注解
+--------
 
 Monkey也支持非常简单的“注解”：
 
@@ -1442,7 +1535,8 @@ Property 'LastName' not valid!
 ```
 
 
-## 标准输入/输出/错误
+### 标准输入/输出/错误
+=====================
 
 Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
 
@@ -1456,7 +1550,8 @@ name = stdin.read(1024)  //从标准输入读最多1024字节
 println("Your name is " + name)
 ```
 
-## 标准库中的错误处理
+### 标准库中的错误处理
+=====================
 
 当标准库中的函数返回`nil`或者`false`的时候，你可以使用它们的`message()`方法类获取错误信息:
 
@@ -1482,7 +1577,8 @@ if (ret == false) {
 
 也许你会觉得奇怪，为什么`nil`或`false`有`message()`方法？ 因为在monkey中, `nil`和`false`两个都是对象，因此它们都有方法。
 
-## 关于`defer`关键字
+### 关于`defer`关键字
+====================
 
 `defer`语句推迟(defer)某个函数的执行直到函数返回。
 
@@ -1505,7 +1601,8 @@ I'm defer1
 4
 ```
 
-## 不同类型的联接
+### 不同类型的联接
+=================
 
 Monkey中，你可以联接不同的类型。请看下面的例子:
 
@@ -1550,7 +1647,8 @@ hash -= 5
 println(hash)
 ```
 
-## 列表推导(Comprehensions)
+### 列表推导(Comprehensions)
+===========================
 
 Monkey支持列表推导(列表可以为数组,字符串，Range，Tuple, 哈希)。
 列表推导的返回值均为数组。请看下面的例子:
@@ -1603,7 +1701,8 @@ z5 = {x+1:x+2 for x in (1,2,3)}
 println(z5) // 结果: {4 => 5, 2 => 3, 3 => 4}, 顺序可能不同
 ```
 
-## Grep和map
+### Grep和map
+============
 
 `grep`和`map`类似于perl的`grep`和`map`.
 
@@ -1630,7 +1729,8 @@ let values = map { fields[$_] } grep { $_ =~ pattern } fields.keys()
 println(values)
 ```
 
-## 函数
+### 函数
+=======
 
 在Monkey中，函数和别的基础类型一样，能够作为函数的参数，作为函数的返回值
 
@@ -1735,7 +1835,8 @@ if ret[1] != "" {
 }
 ```
 
-## Pipe操作符
+### Pipe操作符
+=============
 
 `pipe`操作符来自[Elixir](https://elixir-lang.org/).
 
@@ -1754,7 +1855,8 @@ printf("mm=%d\n", mm)
 "Hello %s!\n" |> fmt.printf("world")
 ```
 
-## Spawn 和 channel
+### Spawn 和 channel
+===================
 
 你可以使用`spawn`来创建一个新的线程,  `chan`来和这个线程进行交互.
 
@@ -1770,12 +1872,14 @@ aChan.send("Hello Channel!")
 ```
 
 ## 标准模块介绍
+===============
 
 Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, logger, time, flag, net, http等等。
 
 下面是对monkey的标准模块的一个简短的描述。
 
 ### fmt 模块
+------------
 
 ```swift
 let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
@@ -1793,6 +1897,7 @@ fmt.fprintf(stdout, "Hello %s\n", "world")
 ```
 
 ### time 模块
+-------------
 
 ```swift
 t1 = newTime()
@@ -1806,6 +1911,7 @@ println(t2.toStr(format))
 ```
 
 ### logger 模块
+---------------
 
 ```swift
 #输出到标准输出(stdout)
@@ -1824,6 +1930,7 @@ file.close() //别忘记关闭文件
 ```
 
 ### flag 模块(处理命令行选项)
+-----------------------------
 
 ```swift
 let verV = flag.bool("version", false, "0.1")
@@ -1847,6 +1954,7 @@ if (flag.isSet("age")) {
 ```
 
 ### json 模块( json序列化(marshal)和反序列化(unmarshal) )
+---------------------------------------------------------
 
 ```swift
 let hsJson = {"key1" => 10,
@@ -1872,6 +1980,7 @@ println(arr1Json)
 ```
 
 ### net 模块
+------------
 
 ```swift
 //简单的TCP客户端
@@ -1914,6 +2023,7 @@ if (ret == false) {
 ```
 
 ### linq 模块
+--------------
 
 在Monkey中, `linq`模块支持下面的其中类型的对象:
 
@@ -2007,6 +2117,7 @@ println('["st", "ng"] selectManyByIndexed() = {result}')
 ```
 
 ### Linq for file支持
+---------------------
 
 现在，monkey有了一个支持`linq for file`的功能。这个功能类似awk。
 请看下面的代码:
@@ -2075,6 +2186,7 @@ r.close() //别忘记关闭Reader
 ```
 
 ### csv 模块
+------------
 
 ```swift
 //测试 csv reader
@@ -2108,8 +2220,8 @@ w.flush()
 ofile.close() //do not to forget to close the file
 ```
 
-#### template 模块
-
+### template 模块
+------------------
 `template` 模块包含'text'和'html'模版处理.
 
 使用 `newText(...)` 或者 `parseTextFiles(...)` 来创建一个新的'text'模版。
@@ -2143,6 +2255,7 @@ println('{resultValue}')
 ```
 
 ### sql 模块
+------------
 
 `sql` 模块提供了一个底层封装来操作数据库。
 
@@ -2236,6 +2349,7 @@ os.exit()
 ```
 
 ## 实用工具
+===========
 
 项目还包含了一些使用的工具：`formatter`和`highlighter`。
 
@@ -2249,6 +2363,7 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 ```
 
 ## 语法高亮
+============
 
 目前，monkey支持三种编辑器的语法高亮:
 
@@ -2273,6 +2388,7 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
     [Sublime Text 3](misc/SublimeText3)
 
 ## 未来计划
+===========
 
 下面是对项目的未来计划的描述:
 
@@ -2280,10 +2396,12 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 * 写更多的测试代码!
 
 ## 许可证
+=========
 
 MIT
 
 ## 备注
+=========
 
 如果你喜欢此项目，请点击下面的链接，多多star，fork。谢谢！
 [monkey](https://github.com/haifenghuang/monkey)
