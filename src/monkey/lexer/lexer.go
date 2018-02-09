@@ -6,6 +6,7 @@ import (
 	"monkey/token"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 	_ "fmt"
 )
 
@@ -195,7 +196,7 @@ func (l *Lexer) NextToken() token.Token {
 				} else { //regexp
 					tok.Literal = l.readRegExLiteral()
 					tok.Type = token.REGEX
-					tok.Pos = l.getPos()
+					tok.Pos = pos
 					return tok
 				}
 			}
@@ -478,7 +479,7 @@ func (l *Lexer) readRegExLiteral() (literal string) {
 }
 
 func isLetter(ch rune) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' || ch == '$' || ch == '@' || unicode.IsLetter(ch)
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' || ch == '$' || ch == '@' || ch >= utf8.RuneSelf && unicode.IsLetter(ch)
 }
 
 // scanNumber returns number begining at current position.
@@ -584,7 +585,7 @@ func (l *Lexer) readNumber() (string, bool, error) {
 }
 
 func isDigit(ch rune) bool {
-	return '0' <= ch && ch <= '9' || unicode.IsDigit(ch)
+	return '0' <= ch && ch <= '9' || ch >= utf8.RuneSelf && unicode.IsDigit(ch)
 }
 
 // isHex returns true if the rune is a hex digits.
