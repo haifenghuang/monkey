@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"monkey/ast"
@@ -11,6 +12,19 @@ import (
 	"strconv"
 	"strings"
 )
+
+var numMap = map[rune]rune{
+'𝟎' :'0', '𝟘' :'0', '𝟢' :'0', '𝟬' :'0', '𝟶' :'0', '０' :'0',
+'𝟏' :'1', '𝟙' :'1', '𝟣' :'1', '𝟭' :'1', '𝟷' :'1', '１' :'1',
+'𝟐' :'2', '𝟚' :'2', '𝟤' :'2', '𝟮' :'2', '𝟸' :'2', '２' :'2',
+'𝟑' :'3', '𝟛' :'3', '𝟥' :'3', '𝟯' :'3', '𝟹' :'3', '３' :'3',
+'𝟒' :'4', '𝟜' :'4', '𝟦' :'4', '𝟰' :'4', '𝟺' :'4', '４' :'4',
+'𝟓' :'5', '𝟝' :'5', '𝟧' :'5', '𝟱' :'5', '𝟻' :'5', '５' :'5',
+'𝟔' :'6', '𝟞' :'6', '𝟨' :'6', '𝟲' :'6', '𝟼' :'6', '６' :'6',
+'𝟕' :'7', '𝟟' :'7', '𝟩' :'7', '𝟳' :'7', '𝟽' :'7', '７' :'7',
+'𝟖' :'8', '𝟠' :'8', '𝟪' :'8', '𝟴' :'8', '𝟾' :'8', '８' :'8',
+'𝟗' :'9', '𝟡' :'9', '𝟫' :'9', '𝟵' :'9', '𝟿' :'9', '９' :'9',
+}
 
 const (
 	_ int = iota
@@ -1037,6 +1051,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	var value int64
 	var err error
 
+	p.curToken.Literal = convertNum(p.curToken.Literal)
 	if strings.HasPrefix(p.curToken.Literal, "0b") {
 		value, err = strconv.ParseInt(p.curToken.Literal[2:], 2, 64)
 	} else if strings.HasPrefix(p.curToken.Literal, "0x") {
@@ -1061,6 +1076,7 @@ func (p *Parser) parseUIntegerLiteral() ast.Expression {
 	var value uint64
 	var err error
 
+	p.curToken.Literal = convertNum(p.curToken.Literal)
 	if strings.HasPrefix(p.curToken.Literal, "0b") {
 		value, err = strconv.ParseUint(p.curToken.Literal[2:], 2, 64)
 	} else if strings.HasPrefix(p.curToken.Literal, "0x") {
@@ -1083,6 +1099,7 @@ func (p *Parser) parseUIntegerLiteral() ast.Expression {
 func (p *Parser) parseFloatLiteral() ast.Expression {
 	lit := &ast.FloatLiteral{Token: p.curToken}
 
+	p.curToken.Literal = convertNum(p.curToken.Literal)
 	value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
 		msg := fmt.Sprintf("Syntax Error:%v- could not parse %q as float", p.curToken.Pos, p.curToken.Literal)
@@ -2587,4 +2604,17 @@ func(p *Parser) fixPosCol() token.Position {
 	}
 
 	return pos
+}
+
+//stupid method to convert 'some'(not all) unicode number to ascii number
+func convertNum(numStr string) string {
+	var out bytes.Buffer
+	for _, c := range numStr {
+		if v, ok := numMap[c]; ok {
+			out.WriteRune(v)
+		} else {
+			out.WriteRune(c)
+		}
+	}
+	return out.String()
 }
