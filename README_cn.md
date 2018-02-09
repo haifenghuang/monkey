@@ -974,6 +974,7 @@ Monkey支持简单的面向对象编程, 下面列出了Mokey支持的特性：
 * 索引器
 * 类类别(类似Objective-c的Category)
 * 注解（类似java的annotation）
+* 类的构造器方法和类的普通方法支持多参数和默认参数
 
 monkey解析器(parser)能够正确的处理关键字`public`, `private`, `protected`, 但是解释器(evaluator)会忽略这些。
 也就是说，monkey现在暂时不支持访问限定。

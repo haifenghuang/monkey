@@ -979,6 +979,7 @@ Monkey has limited support for the oop concept, below is a list of features:
 * indexer
 * class category
 * class annotations(limited support)
+* constructor method and normal methods support default value and variadic parameters
 
 The monkey parser could parse `public`, `private`, `protected`, but it has no effect in the evaluation phase.
 That means monkey do not support access modifiers at present.
