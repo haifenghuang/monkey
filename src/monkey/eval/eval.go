@@ -3642,6 +3642,11 @@ func evalStringIndex(str *String, ie *ast.IndexExpression, scope *Scope) Object 
 		idx = o.Int64
 	case *UInteger:
 		idx = int64(o.UInt64)
+	case *Boolean:
+		idx = 0
+		if o == TRUE {
+			idx = 1
+		}
 	}
 
 	if idx >= length || idx < 0 {
@@ -3739,6 +3744,11 @@ func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scop
 		idx = o.Int64
 	case *UInteger:
 		idx = int64(o.UInt64)
+	case *Boolean:
+		idx = 0
+		if o == TRUE {
+			idx = 1
+		}
 	}
 
 	if idx < 0 {
@@ -3762,6 +3772,12 @@ func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scop
 			slice = o.Int64
 		case *UInteger:
 			slice = int64(o.UInt64)
+		case *Boolean:
+			slice = 0
+			if o == TRUE {
+				slice = 1
+			}
+
 		}
 		if slice >= (length+1) || slice < 0 {
 			panic(NewError(se.Pos().Sline(), SLICEERROR, idx, slice))
@@ -3797,6 +3813,11 @@ func evalArrayIndex(array *Array, ie *ast.IndexExpression, scope *Scope) Object 
 		idx = o.Int64
 	case *UInteger:
 		idx = int64(o.UInt64)
+	case *Boolean:
+		idx = 0
+		if o == TRUE {
+			idx = 1
+		}
 	}
 	if idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
@@ -3881,7 +3902,13 @@ func evalTupleIndex(tuple *Tuple, ie *ast.IndexExpression, scope *Scope) Object 
 		idx = o.Int64
 	case *UInteger:
 		idx = int64(o.UInt64)
+	case *Boolean:
+		idx = 0
+		if o == TRUE {
+			idx = 1
+		}
 	}
+
 	if idx < 0 {
 		panic(NewError(ie.Pos().Sline(), INDEXERROR, idx))
 	}
