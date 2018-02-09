@@ -1,8 +1,6 @@
 # Monkey程序语言
-=================
 
 Table of Contents
-=================
 
 * [Monkey程序语言](#monkey%E7%A8%8B%E5%BA%8F%E8%AF%AD%E8%A8%80)
   * [主页](#%E4%B8%BB%E9%A1%B5)
@@ -64,12 +62,10 @@ Table of Contents
 
 
 ## 主页
-=================
 
 [monkey](https://github.com/haifenghuang/monkey)
 
 ## 概述
-=================
 
 Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python, Perl和C#.
 支持常用的控制流程，函数式编程和面向对象编程。
@@ -164,7 +160,6 @@ Property 'LastName' not valid!
 ![REPL](REPL.gif)
 
 ## 总览
-=================
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：
 * 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法,注解)
@@ -208,12 +203,10 @@ Property 'LastName' not valid!
 但是，解析器的速度并不是这个项目考虑的因素
 
 ## 安装
-=================
 
 下载本项目，运行`./run.sh`
 
 ## 基本用法
-=================
 
 你可以如下方式使用REPL:
 
@@ -231,10 +224,8 @@ monkey path/to/file
 ```
 
 ## 语言之旅
-=================
 
 ### 注释
---------
 
 Monkey支持两种形式的单行注释和块注释：
 
@@ -250,7 +241,6 @@ Monkey支持两种形式的单行注释和块注释：
 同时也支持块注释
 
 ### 数据类型
-------------
 
 Monkey支持9种基本类型: `String`, `Int`, `UInt`, `Float`, `Bool`, `Array`, `Hash`, `Tuple`和`Nil`
 
@@ -268,7 +258,6 @@ n = nil
 ```
 
 ### 常量(字面值)
-----------------
 
 Monkey中，主要有11种类型的常量(字面量).
 
@@ -338,7 +327,6 @@ println(f2(1,2))
 ```
 
 ### 变量
---------
 
 你可以使用`let`来声明一个变量，或直接使用赋值的方式来声明并赋值一个变量:`variable=value`.
 
@@ -357,7 +345,6 @@ a, b, c = 1, "hello world", [1,2,3]
 ```
 
 ### 保留字
----------
 
 下面列出了monkey语言的保留字：
 
@@ -384,7 +371,6 @@ a, b, c = 1, "hello world", [1,2,3]
 
 
 ### 类型转换
-------------
 
 你可以使用内置的方法：`int()`, `uint()`, `float()`, `str()`, `array()`, `tuple`, `hash`, `decimal`来进行不同类型之间的转换.
 
@@ -427,7 +413,6 @@ let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
 ```
 
 ### `qw`(Quote word)关键字
---------------------------
 
 `qw`关键字类似perl的`qw`关键字. 当你想使用很多的双引号字符串时,`qw`就是一个好帮手.
 
@@ -441,7 +426,6 @@ fmt.printf("newArr=%v\n", newArr)
 ```
 
 ### `enum`关键字
-----------------
 
 在mokey中，你可以使用`enum`来定义常量.
 
@@ -474,7 +458,6 @@ println(LogOption.getName(LogOption.Lshortfile))
 ```
 
 ### 控制流程
-------------
 
 * if/if-else/if-elif-else/if-elsif-else/if-elseif-else/if-else if-else
 * unless/unless-else
@@ -623,7 +606,6 @@ case i in {
 ```
 
 ### 整型(Integer)
------------------
 
 在Monkey中，整型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
 
@@ -659,7 +641,6 @@ if 9.isOdd() {
 ```
 
 ### 浮点型(Float)
------------------
 
 在Monkey中，浮点型也是一个对象。因此，你可以调用这个对象的方法。请看下面的例子：
 
@@ -675,7 +656,6 @@ println(f2)
 ```
 
 ### Decimal类型
---------------
 
 在Monkey中，Decimal类型表示一个任意精度固定位数的十进数(Arbitrary-precision fixed-point decimal numbers).
 这个类型的代码主要是基于[decimal](https://github.com/shopspring/decimal).
@@ -702,7 +682,6 @@ fmt.println("123.45678901234567/3 = ", d3.div(d2))
 ```
 
 ### 数组(Array)
----------------
 
 在Monkey中, 你可以使用[]来初始化一个空的数组:
 
@@ -791,7 +770,6 @@ println("Reverse Array =", revArr)
 ```
 
 ### 字符串(String)
-------------------
 
 在monkey中, 有三种类型的`string`:
 
@@ -867,7 +845,6 @@ println("Reverse str =", revStr)
 ```
 
 ### 哈希(Hash)
----------------
 
 在monkey中, 使用{}来创建一个空的哈希:
 
@@ -925,7 +902,6 @@ println("Reverse Hash =", revHash)
 ```
 
 ### 元祖(Tuple)
----------------
 
 在Monkey中, `tuple`与数组非常类似, 但一旦你创建了一个元祖，你就不能够更改它。
 
@@ -1049,7 +1025,6 @@ println(revTuple) //结果: (9, 8, 7, 6, 4, 2, 5, 3, 1)
 ```
 
 ### 类
-======
 
 Monkey支持简单的面向对象编程, 下面列出了Mokey支持的特性：
 
@@ -1091,7 +1066,6 @@ class Animal : object {
 ```
 
 #### 继承和多态
----------------
 
 你使用`:`来表示继承关系:
 
@@ -1191,7 +1165,6 @@ oooooooo
 ```
 
 #### 操作符重载
----------------
 
 ```swift
 class Vector {
@@ -1237,7 +1210,6 @@ Vectormain()
 ```
 
 #### 属性(类似C#)
----------------
 
 ```swift
 class Date {
@@ -1298,7 +1270,6 @@ dateObj.getDateInfo()
 ```
 
 #### 索引器
-----------
 
 Monkey还支持类似C#的索引器(`Indexer`)。
 索引器能够让你像访问数组一样访问对象。
@@ -1385,7 +1356,6 @@ Main()
 ```
 
 #### 静态变量/方法/属性
-----------------------
 
 ```swift
 class Test
@@ -1407,7 +1377,6 @@ Test.Main()
 ```
 
 #### 类类别(class category)
---------------------------
 
 Monkey支持类似objective-c的类别（C#中称为extension methods）。
 
@@ -1434,7 +1403,6 @@ animal.Run()
 ```
 
 #### 注解
---------
 
 Monkey也支持非常简单的“注解”：
 
@@ -1536,7 +1504,6 @@ Property 'LastName' not valid!
 
 
 ### 标准输入/输出/错误
-=====================
 
 Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
 
@@ -1551,7 +1518,6 @@ println("Your name is " + name)
 ```
 
 ### 标准库中的错误处理
-=====================
 
 当标准库中的函数返回`nil`或者`false`的时候，你可以使用它们的`message()`方法类获取错误信息:
 
@@ -1578,7 +1544,6 @@ if (ret == false) {
 也许你会觉得奇怪，为什么`nil`或`false`有`message()`方法？ 因为在monkey中, `nil`和`false`两个都是对象，因此它们都有方法。
 
 ### 关于`defer`关键字
-====================
 
 `defer`语句推迟(defer)某个函数的执行直到函数返回。
 
@@ -1602,7 +1567,6 @@ I'm defer1
 ```
 
 ### 不同类型的联接
-=================
 
 Monkey中，你可以联接不同的类型。请看下面的例子:
 
@@ -1648,7 +1612,6 @@ println(hash)
 ```
 
 ### 列表推导(Comprehensions)
-===========================
 
 Monkey支持列表推导(列表可以为数组,字符串，Range，Tuple, 哈希)。
 列表推导的返回值均为数组。请看下面的例子:
@@ -1702,7 +1665,6 @@ println(z5) // 结果: {4 => 5, 2 => 3, 3 => 4}, 顺序可能不同
 ```
 
 ### Grep和map
-============
 
 `grep`和`map`类似于perl的`grep`和`map`.
 
@@ -1730,7 +1692,6 @@ println(values)
 ```
 
 ### 函数
-=======
 
 在Monkey中，函数和别的基础类型一样，能够作为函数的参数，作为函数的返回值
 
@@ -1836,7 +1797,6 @@ if ret[1] != "" {
 ```
 
 ### Pipe操作符
-=============
 
 `pipe`操作符来自[Elixir](https://elixir-lang.org/).
 
@@ -1856,7 +1816,6 @@ printf("mm=%d\n", mm)
 ```
 
 ### Spawn 和 channel
-===================
 
 你可以使用`spawn`来创建一个新的线程,  `chan`来和这个线程进行交互.
 
@@ -1872,14 +1831,12 @@ aChan.send("Hello Channel!")
 ```
 
 ## 标准模块介绍
-===============
 
 Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, logger, time, flag, net, http等等。
 
 下面是对monkey的标准模块的一个简短的描述。
 
 ### fmt 模块
-------------
 
 ```swift
 let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
@@ -1897,7 +1854,6 @@ fmt.fprintf(stdout, "Hello %s\n", "world")
 ```
 
 ### time 模块
--------------
 
 ```swift
 t1 = newTime()
@@ -1911,7 +1867,6 @@ println(t2.toStr(format))
 ```
 
 ### logger 模块
----------------
 
 ```swift
 #输出到标准输出(stdout)
@@ -1930,7 +1885,6 @@ file.close() //别忘记关闭文件
 ```
 
 ### flag 模块(处理命令行选项)
------------------------------
 
 ```swift
 let verV = flag.bool("version", false, "0.1")
@@ -1954,7 +1908,6 @@ if (flag.isSet("age")) {
 ```
 
 ### json 模块( json序列化(marshal)和反序列化(unmarshal) )
----------------------------------------------------------
 
 ```swift
 let hsJson = {"key1" => 10,
@@ -1980,7 +1933,6 @@ println(arr1Json)
 ```
 
 ### net 模块
-------------
 
 ```swift
 //简单的TCP客户端
@@ -2023,7 +1975,6 @@ if (ret == false) {
 ```
 
 ### linq 模块
---------------
 
 在Monkey中, `linq`模块支持下面的其中类型的对象:
 
@@ -2117,7 +2068,6 @@ println('["st", "ng"] selectManyByIndexed() = {result}')
 ```
 
 ### Linq for file支持
----------------------
 
 现在，monkey有了一个支持`linq for file`的功能。这个功能类似awk。
 请看下面的代码:
@@ -2186,7 +2136,6 @@ r.close() //别忘记关闭Reader
 ```
 
 ### csv 模块
-------------
 
 ```swift
 //测试 csv reader
@@ -2221,7 +2170,7 @@ ofile.close() //do not to forget to close the file
 ```
 
 ### template 模块
-------------------
+
 `template` 模块包含'text'和'html'模版处理.
 
 使用 `newText(...)` 或者 `parseTextFiles(...)` 来创建一个新的'text'模版。
@@ -2255,7 +2204,6 @@ println('{resultValue}')
 ```
 
 ### sql 模块
-------------
 
 `sql` 模块提供了一个底层封装来操作数据库。
 
@@ -2349,7 +2297,6 @@ os.exit()
 ```
 
 ## 实用工具
-===========
 
 项目还包含了一些使用的工具：`formatter`和`highlighter`。
 
@@ -2363,7 +2310,6 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 ```
 
 ## 语法高亮
-============
 
 目前，monkey支持三种编辑器的语法高亮:
 
@@ -2388,7 +2334,6 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
     [Sublime Text 3](misc/SublimeText3)
 
 ## 未来计划
-===========
 
 下面是对项目的未来计划的描述:
 
@@ -2396,12 +2341,10 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 * 写更多的测试代码!
 
 ## 许可证
-=========
 
 MIT
 
 ## 备注
-=========
 
 如果你喜欢此项目，请点击下面的链接，多多star，fork。谢谢！
 [monkey](https://github.com/haifenghuang/monkey)
