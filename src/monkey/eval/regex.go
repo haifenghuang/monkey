@@ -40,7 +40,9 @@ func (re *RegEx) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return re.FindStringSubmatchIndex(line, args...)
 	case "numSubexp":
 		return re.NumSubexp(line, args...)
-	case "replaceAllLiteralString":
+	case "replaceFirstString", "sub":
+		return re.ReplaceFirstString(line, args...)
+	case "replaceAllLiteralString", "gsub":
 		return re.ReplaceAllLiteralString(line, args...)
 	case "replaceAllStringFunc":
 		return re.ReplaceAllStringFunc(line, scope, args...)
@@ -312,6 +314,25 @@ func (re *RegEx) ReplaceAllLiteralString(line string, args ...Object) Object {
 	}
 
 	s := re.RegExp.ReplaceAllLiteralString(srcObj.String, replObj.String)
+	return NewString(s)
+}
+
+func (re *RegEx) ReplaceFirstString(line string, args ...Object) Object {
+	if len(args) != 2 {
+		panic(NewError(line, ARGUMENTERROR, "2", len(args)))
+	}
+
+	srcObj, ok := args[0].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "first", "replaceFirstString", "*String", args[0].Type()))
+	}
+
+	replObj, ok := args[1].(*String)
+	if !ok {
+		panic(NewError(line, PARAMTYPEERROR, "second", "replaceFirstString", "*String", args[1].Type()))
+	}
+
+	s := replaceFirstString(re.RegExp, srcObj.String, replObj.String)
 	return NewString(s)
 }
 
@@ -932,3 +953,22 @@ func replFunc(scope *Scope, f *Function, str string) string {
 
 	return ""
 }
+
+func replaceFirstString(re *regexp.Regexp, srcStr, replStr string) string {
+	src  := []byte(srcStr)
+	repl := []byte(replStr)
+
+	if m := re.FindSubmatchIndex(src); m != nil {
+		out := make([]byte, m[0])
+		copy(out, src[0:m[0]])
+		out = re.Expand(out, repl, src, m)
+		if m[1] < len(src) {
+			out = append(out, src[m[1]:]...)
+		}
+		return string(out)
+	}
+	out := make([]byte, len(src))
+	copy(out, src)
+	return string(out)
+}
+
