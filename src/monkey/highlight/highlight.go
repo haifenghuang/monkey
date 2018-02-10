@@ -77,6 +77,7 @@ var keywords = map[string]int{
 	"private":  1,
 	"protected":1,
 	"interface":1,
+	"default":  1,
 }
 
 const (
