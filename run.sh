@@ -14,6 +14,9 @@ echo ""
 echo "Building REPL...(monkey)"
 go build -o monkey main.go
 
+echo "Building mdoc...(mdoc)"
+go build -o mdoc mdoc.go
+
 # run: ./fmt demo.my
 echo "Building Formatter...(fmt)"
 go build -o fmt fmt.go

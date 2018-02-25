@@ -97,7 +97,27 @@ var precedences = map[token.TokenType]int{
 	token.THINARROW:  THINARROW,
 }
 
+// A Mode value is a set of flags (or 0).
+// They control the amount of source code parsed and other optional
+// parser functionality.
+//
+type Mode uint
+
+const (
+	ParseComments Mode  = 1 << iota // parse comments and add them to AST
+	Trace                           // print a trace of parsed productions
+)
+
 type Parser struct {
+	// Tracing/debugging
+	mode   Mode // parsing mode
+	trace  bool // == (mode & Trace != 0)
+	indent int  // indentation used for tracing output
+
+	// Comments
+	comments    []*ast.CommentGroup
+	lineComment *ast.CommentGroup // last line comment
+
 	l      *lexer.Lexer
 	errors []string
 	path   string
@@ -122,6 +142,21 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
+func NewWithDoc(l *lexer.Lexer, wd string) *Parser {
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+		path:   wd,
+		mode: ParseComments,
+	}
+	p.l.SetMode(lexer.ScanComments)
+
+	p.registerAction()
+	p.nextToken()
+	p.nextToken()
+	return p
+}
+
 func New(l *lexer.Lexer, wd string) *Parser {
 	p := &Parser{
 		l:      l,
@@ -129,6 +164,13 @@ func New(l *lexer.Lexer, wd string) *Parser {
 		path:   wd,
 	}
 
+	p.registerAction()
+	p.nextToken()
+	p.nextToken()
+	return p
+}
+
+func (p *Parser) registerAction() {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
@@ -211,10 +253,6 @@ func New(l *lexer.Lexer, wd string) *Parser {
 	p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.PIPE, p.parsePipeExpression)
 	p.registerInfix(token.THINARROW, p.parseThinArrowFunction)
-	p.nextToken()
-	p.nextToken()
-
-	return p
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
@@ -304,6 +342,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 //class @classname : parentClass { block }  //annotation
 func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	stmt := &ast.ClassStatement{Token: p.curToken}
+	stmt.Doc = p.lineComment
 
 	if p.peekTokenIs(token.AT) { //declare an annotion.
 		p.nextToken()
@@ -345,6 +384,7 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
+
 	return stmt
 }
 
@@ -654,6 +694,7 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 //let a; (without assignment, 'a' is assumed to be 'nil')
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
+	stmt.Doc = p.lineComment
 
 	//parse left hand side of the assignment
 	for {
@@ -821,7 +862,12 @@ func (p *Parser) getIncludedStatements(importpath string) (*ast.Program, error) 
 	}
 
 	l := lexer.New(fn, string(f))
-	ps := New(l, path)
+	var ps *Parser
+	if p.mode & ParseComments == 0 {
+		ps = New(l, path)
+	} else {
+		ps = NewWithDoc(l, path)
+	}
 	parsed := ps.ParseProgram()
 	if len(ps.errors) != 0 {
 		p.errors = append(p.errors, ps.errors...)
@@ -1737,6 +1783,7 @@ func (p *Parser) parseCaseExpression() ast.Expression {
 //fn name(paramenters)
 func (p *Parser) parseFunctionStatement() ast.Statement {
 	FnStmt := &ast.FunctionStatement{Token: p.curToken}
+	FnStmt.Doc = p.lineComment
 
 	p.nextToken()
 	FnStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
@@ -1927,6 +1974,8 @@ func (p *Parser) parseNilExpression() ast.Expression {
 func (p *Parser) parseEnumStatement() ast.Statement {
 	oldToken := p.curToken
 	enumStmt := &ast.EnumStatement{Token: p.curToken}
+	enumStmt.Doc = p.lineComment
+
 
 	p.nextToken()
 	enumStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
@@ -2303,6 +2352,7 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag b
 //property xxx default xxx
 func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclStmt {
 	stmt := &ast.PropertyDeclStmt{Token:p.curToken}
+	stmt.Doc = p.lineComment
 
 	if !p.expectPeek(token.IDENT) {  //must be an identifier, it's property name
 		return nil
@@ -2566,8 +2616,23 @@ func (p *Parser) curPrecedence() int {
 }
 
 func (p *Parser) nextToken() {
+	p.lineComment = nil
+
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
+
+	var list []*ast.Comment
+	for p.curToken.Type == token.COMMENT {
+		if p.curToken.Literal[0] != '#' {
+			comment := &ast.Comment{Token: p.curToken, Text: p.curToken.Literal}
+			list = append(list, comment)
+		}
+		p.curToken = p.peekToken
+		p.peekToken = p.l.NextToken()
+	}
+	if list != nil {
+		p.lineComment = &ast.CommentGroup{List: list}
+	}
 }
 
 func (p *Parser) nextInterpToken() {

@@ -55,6 +55,7 @@ Table of Contents
     * [template 模块](#template-%E6%A8%A1%E5%9D%97)
     * [sql 模块](#sql-%E6%A8%A1%E5%9D%97)
   * [实用工具](#%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7)
+  * [Markdown文档生成](#markdown%E6%96%87%E6%A1%A3%E7%94%9F%E6%88%90)
   * [语法高亮](#%E8%AF%AD%E6%B3%95%E9%AB%98%E4%BA%AE)
   * [未来计划](#%E6%9C%AA%E6%9D%A5%E8%AE%A1%E5%88%92)
   * [许可证](#%E8%AE%B8%E5%8F%AF%E8%AF%81)
@@ -2308,6 +2309,26 @@ highlighter工具能够语法高亮monkey语言（提供两种输出：命令行
 ```sh
 ./fmt xx.my | ./highlight  //输出到屏幕(命令行高亮不只是windows)
 ```
+
+## Markdown文档生成
+
+Monkey还包含一个命令行工具`mdoc`，可以从Monkey文件的注释生成markdown类型的文档。
+
+仅仅支持以下语句的注释生成:
+
+* let语句
+* enum语句
+* function语句
+* class语句
+  * let语句
+  * function语句
+  * property语句
+
+```sh
+./mdoc examples/doc.my
+```
+
+生成的文档，请参照[markdown.md](examples/markdown.md)。
 
 ## 语法高亮
 

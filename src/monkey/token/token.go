@@ -90,7 +90,7 @@ const (
 	BREAK
 	CONTINUE
 
-	COMMENT // # (single-line comment)
+	COMMENT // '#' or '//' (single-line comment), '/* */' multiline comment
 	REGEX   // REGEX
 	FOR
 	IN

@@ -13,6 +13,15 @@ import (
 const bom = 0xFEFF // byte order mark, only permitted as very first character
 var prevToken token.Token
 
+// A mode value is a set of flags (or 0).
+// They control scanner behavior.
+//
+type Mode uint
+
+const (
+	ScanComments Mode = 1 << iota // return comments as COMMENT tokens
+)
+
 type Lexer struct {
 	filename     string
 	input        []rune
@@ -20,8 +29,10 @@ type Lexer struct {
 	position     int  //character offset
 	readPosition int  //reading offset
 
-	line           int
-	col            int
+	line         int
+	col          int
+
+	Mode         Mode // scanning mode
 }
 
 func New(filename, input string) *Lexer {
@@ -38,6 +49,10 @@ func New(filename, input string) *Lexer {
 	}
 
 	return l
+}
+
+func (l *Lexer) SetMode(mode Mode) {
+	l.Mode = mode
 }
 
 func (l *Lexer) readNext() {
@@ -174,12 +189,22 @@ func (l *Lexer) NextToken() token.Token {
 				tok = newToken(token.BANG, l.ch)
 			}
 		case token.SLASH:
-			if l.peek() == '/' {
-				l.skipComment()
-				return l.NextToken()
-			} else if l.peek() == '*' {
-				_ = l.skipMultilineComment()
-				return l.NextToken()
+			if l.peek() == '/' || l.peek() == '*' {
+				var comment string
+				if l.peek() == '/' {
+					comment = l.readComment()
+				} else {
+					comment, _ = l.readMultilineComment()
+				}
+				if l.Mode & ScanComments == 0 { //skip comment
+					return l.NextToken()
+				}
+
+				tok.Pos = pos
+				tok.Type = token.COMMENT
+				tok.Literal = comment
+				prevToken = tok
+				return tok
 			} else {
 				if prevToken.Type == token.RBRACE || // impossible?
 					prevToken.Type == token.RPAREN || // (a+c) / b
@@ -230,8 +255,14 @@ func (l *Lexer) NextToken() token.Token {
 				tok = newToken(token.DOT, l.ch)
 			}
 		case token.COMMENT:
-			l.skipComment()
-			return l.NextToken()
+				comment := l.readComment()
+				if l.Mode & ScanComments == 0 { //skip comment
+					return l.NextToken()
+				}
+
+				tok.Type = token.COMMENT
+				tok.Literal = comment
+				return tok
 		case token.BITAND:
 			if l.peek() == '=' {
 				tok = token.Token{Type: token.BITAND_A, Literal: string(l.ch) + string(l.peek())}
@@ -617,15 +648,19 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) skipComment() {
+func (l *Lexer) readComment() string {
+	position := l.position
 	for l.ch != '\n' && l.ch != 0 {
 		l.readNext()
 	}
+	return string(l.input[position:l.position])
 }
 
-func (l *Lexer) skipMultilineComment() error {
+func (l *Lexer) readMultilineComment() (string, error) {
 	var err error
+	position := l.position
 loop:
+
 	for {
 		l.readNext()
 		switch l.ch {
@@ -642,7 +677,7 @@ loop:
 		}
 	}
 
-	return err
+	return string(l.input[position:l.position]), err
 }
 
 func (l *Lexer) getPos() token.Position {
@@ -653,3 +688,4 @@ func (l *Lexer) getPos() token.Position {
 		Col:      l.col,
 	}
 }
+
