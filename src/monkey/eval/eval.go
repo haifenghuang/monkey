@@ -34,13 +34,18 @@ var classMux sync.Mutex
 //REPL with color support
 var REPLColor bool
 
-func Eval(node ast.Node, scope *Scope) Object {
+func Eval(node ast.Node, scope *Scope) (val Object) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch r := r.(type) {
 			case *Error:
 				//if panic is a Error Object, print its contents
-				fmt.Printf("\x1b[31m%s\x1b[0m\n", r.Error())
+				fmt.Fprintf(os.Stderr, "\x1b[31m%s\x1b[0m\n", r.Error())
+				//debug.PrintStack() //debug only
+
+				//WHY return NIL? if we do not return 'NIL', we may get something like below:
+				//    PANIC=runtime error: invalid memory address or nil pointer
+				val = NIL
 				return
 			case runtime.Error:
 				const msgFmt = "%s:%d %s(): A panic occured, but was recovered; Details: %+v;\n\t*** Stack Trace ***\n\t%s*** End Stack Trace ***\n"
@@ -56,6 +61,7 @@ func Eval(node ast.Node, scope *Scope) Object {
 				fmt.Errorf(msgFmt, filename, lineNum, funcName, r, prettyStack)
 				//fmt.Println(r.Error())
 				//panic(r)
+				val = NIL
 				return
 			}
 		}
@@ -3234,12 +3240,10 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 	f := fn.(*Function)
 
 	//check if it's static function
-	if currentInstance == nil { //class static function or normal function:no instance is created
-		_, ok := scope.Get("this")
-		if ok {
-			if !f.Literal.StaticFlag { //class is not static
-				panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
-			}
+	aVal, ok := scope.Get("this")
+	if ok && aVal.Type() == CLASS_OBJ {
+		if !f.Literal.StaticFlag { //not static
+			panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
 		}
 	}
 
@@ -3525,7 +3529,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 						args := evalArgs(o.Arguments, scope)
 						if currentInstance != nil { //inside class body call
 							currentInstance.Scope.Set("parent", clsObj.Parent) //needed ?
-						return evalFunctionDirect(m, args, currentInstance.Scope)
+							return evalFunctionDirect(m, args, currentInstance.Scope)
 						} else { //outside class body call
 							return evalFunctionDirect(m, args, clsObj.Scope)
 						}
@@ -4285,7 +4289,7 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 
 	instance := &ObjectInstance{Class: clsObj, Scope: newScope.parentScope}
 	instance.Scope.Set("this", instance) //make 'this' refer to instance
-		instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
+	instance.Scope.Set("parent", classChain[1]) //make 'parent' refer to instance's parent
 
 	//Is it has a constructor ?
 	init := clsObj.GetMethod("init")
