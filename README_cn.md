@@ -2339,6 +2339,8 @@ HTML文档的生成是调用github的REST API，因此必须在网络连接正�
  * [markdown.md](examples/markdown.md)
  * [markdown.html](examples/markdown.html)
 
+由于github不能够直接浏览html文档，你可以使用(http://htmlpreview.github.io/)来浏览html文档。
+
 ## 语法高亮
 
 目前，monkey支持三种编辑器的语法高亮:
