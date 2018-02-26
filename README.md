@@ -2390,6 +2390,9 @@ The tool only support below statement for document generator:
 
 //generate html file, the generated file is named 'doc.html'
 ./mdoc -html examples/doc.my
+
+//processing all the '.my' files in examples directory, generate html.
+./mdoc -html examples
 ```
 The generating of HTML document is base on github REST API，so you must have network connection to make it work.
 You may also need to set proxy if you behind a firewall(Environ variable:HTTP_PROXY).

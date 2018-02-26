@@ -635,14 +635,40 @@
 <h1>Table of Contents</h1>
 <ul>
 <li>
+<p>Lets</p>
+<ul>
+<li><a href="#center">CENTER</a></li>
+<li><a href="#size">SIZE</a></li>
+</ul>
+</li>
+<li>
 <p>Enums</p>
 <ul>
+<li><a href="#color">Color</a></li>
 <li><a href="#logoption">LogOption</a></li>
+</ul>
+</li>
+<li>
+<p>Functions</p>
+<ul>
+<li><a href="#add">Add</a></li>
+<li><a href="#div">Div</a></li>
+<li><a href="#mul">Mul</a></li>
+<li><a href="#sub">Sub</a></li>
 </ul>
 </li>
 <li>
 <p>Classes</p>
 <ul>
+<li>
+<p><a href="#departmentvalidator">DepartmentValidator</a></p>
+</li>
+<li>
+<p><a href="#minmaxvalidator">MinMaxValidator</a></p>
+</li>
+<li>
+<p><a href="#nospacevalidator">NoSpaceValidator</a></p>
+</li>
 <li>
 <p><a href="#person">Person</a></p>
 <ul>
@@ -662,10 +688,37 @@
 </li>
 </ul>
 </li>
+<li>
+<p><a href="#request">Request</a></p>
+</li>
+<li>
+<p><a href="#requesthandler">RequestHandler</a></p>
+</li>
+<li>
+<p><a href="#requestmain">RequestMain</a></p>
+</li>
 </ul>
 </li>
 </ul>
+<h2>Lets</h2>
+<h3 id="center">CENTER</h3>
+<div class="highlight highlight-source-monkey"><pre>let CENTER <span class="pl-k">=</span> <span class="pl-c1">15.0</span>; </pre></div>
+<p>This is the constant 'CENTER'.</p>
+<h3 id="size">SIZE</h3>
+<div class="highlight highlight-source-monkey"><pre>let SIZE <span class="pl-k">=</span> <span class="pl-c1">10</span>; </pre></div>
+<p>This is the constant 'SIZE'.</p>
 <h2>Enums</h2>
+<h3 id="color">Color</h3>
+<div class="highlight highlight-source-monkey"><pre>enum Color<span class="pl-k">{</span>
+	<span class="pl-e">RED</span> = <span class="pl-c1">0</span>, 
+	<span class="pl-e">BLUE</span> = <span class="pl-c1">1</span>, 
+	<span class="pl-e">YELLOW</span> = <span class="pl-c1">2</span>, 
+	<span class="pl-e">BLACK</span> = <span class="pl-c1">3</span>, 
+	<span class="pl-e">WHITE</span> = <span class="pl-c1">4</span>, 
+	<span class="pl-e">GRAY</span> = <span class="pl-c1">5</span>
+<span class="pl-k">}</span></pre></div>
+<p>Color enum is the color of the image.<br>
+This is just for demo purpose.</p>
 <h3 id="logoption">LogOption</h3>
 <div class="highlight highlight-source-monkey"><pre>enum LogOption<span class="pl-k">{</span>
 	<span class="pl-e">Ldate</span> = (<span class="pl-c1">1</span> &lt;&lt; 0), 
@@ -676,8 +729,34 @@
 	<span class="pl-e">LUTC</span> = (<span class="pl-c1">1</span> &lt;&lt; 5), 
 	<span class="pl-e">LstdFlags</span> = ((<span class="pl-c1">1</span> &lt;&lt; 4) | (1 &lt;&lt; 5))
 <span class="pl-k">}</span></pre></div>
-<p>The LogOption enum is defined for Log options.</p>
+<p>LogOption enum is defined for Log options.</p>
+<h2>Functions</h2>
+<h3 id="add">Add</h3>
+<div class="highlight highlight-source-monkey"><pre>fn Add (x, y) </pre></div>
+<p>Add returns the sum of its two parameters</p>
+<h3 id="div">Div</h3>
+<div class="highlight highlight-source-monkey"><pre>fn Div (x, y) </pre></div>
+<p>Div returns the division of its two parameters</p>
+<h3 id="mul">Mul</h3>
+<div class="highlight highlight-source-monkey"><pre>fn Mul (x, y) </pre></div>
+<p>Mul returns the multiply of its two parameters</p>
+<h3 id="sub">Sub</h3>
+<div class="highlight highlight-source-monkey"><pre>fn Sub (x, y) </pre></div>
+<p>Sub returns the subtraction of its two parameters</p>
 <h2>Classes</h2>
+<h3 id="departmentvalidator">DepartmentValidator</h3>
+<div class="highlight highlight-source-monkey"><pre>class <span class="pl-k">@</span>DepartmentValidator<span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>DepartmentValidator annotation class.<br>
+It is used for checking a list of department.</p>
+<h3 id="minmaxvalidator">MinMaxValidator</h3>
+<div class="highlight highlight-source-monkey"><pre>class <span class="pl-k">@</span>MinMaxValidator<span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>MinMaxValidator annotation class<br>
+It is used for checking min and max length<br>
+The max length has a default value of 10</p>
+<h3 id="nospacevalidator">NoSpaceValidator</h3>
+<div class="highlight highlight-source-monkey"><pre>class <span class="pl-k">@</span>NoSpaceValidator<span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>NoSpaceValidator annotation class(it's a marker annotation).<br>
+It is used for checking spaces.</p>
 <h3 id="person">Person</h3>
 <div class="highlight highlight-source-monkey"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span><span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
 <p>A Persion class which has three private variable:<br>
@@ -699,5 +778,14 @@ and two methods :'init' and 'Msg'.</p>
 <h5 id="init">init</h5>
 <div class="highlight highlight-source-monkey"><pre>fn init (firstname, lastname, nickname) </pre></div>
 <p>This is the constructor of the Person class.</p>
+<h3 id="request">Request</h3>
+<div class="highlight highlight-source-monkey"><pre><span class="pl-k">class</span> <span class="pl-en">Request</span><span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>Request class represent a user made request.</p>
+<h3 id="requesthandler">RequestHandler</h3>
+<div class="highlight highlight-source-monkey"><pre><span class="pl-k">class</span> <span class="pl-en">RequestHandler</span><span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>RequestHandler class is responsible for processing the annotation.</p>
+<h3 id="requestmain">RequestMain</h3>
+<div class="highlight highlight-source-monkey"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span><span class="pl-k">{</span> ... <span class="pl-k">}</span></pre></div>
+<p>RequestMain class. It is the user/client code.</p>
 <hr>
 <p><em>Last updated 2018-02-26</em></p></article></div></body>

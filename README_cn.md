@@ -2330,6 +2330,9 @@ Monkey还包含一个命令行工具`mdoc`，可以从Monkey文件的注释生�
 
 //生成html文件, 生成的文件名为'doc.html'
 ./mdoc -html examples/doc.my
+
+//遍历examples目录下的所有'.my'的文件，生成html
+./mdoc -html examples
 ```
 
 HTML文档的生成是调用github的REST API，因此必须在网络连接正常的情况下才能够生成HTML文档。
