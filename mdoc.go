@@ -2,15 +2,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"monkey/docs"
 	"monkey/lexer"
 	"monkey/parser"
+	"path/filepath"
+	"strings"
 	"os"
 )
 
-func runProgram(filename string) {
+func runProgram(filename string, htmlFlag bool) {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -33,42 +36,61 @@ func runProgram(filename string) {
 
 	//generate markdown docs
 	file := doc.New(filename, program)
-	fmt.Println(doc.MdDocGen(file))
-//	for _, cls := range file.Classes {
-//		fmt.Printf("class name=[%s]\n", cls.Value.Name)
-//		fmt.Printf("class Doc=[%s]\n", cls.Value.Doc)
-//		fmt.Printf("class Text=[%s]\n", cls.Value.Text)
-//		fmt.Printf("------------------------------------------------\n")
-//
-//		for _, fn := range cls.Funcs {
-//			fmt.Printf("func name=[%s]\n", fn.Name)
-//			fmt.Printf("func Doc=[%s]\n", fn.Doc)
-//			fmt.Printf("func Text=[%s]\n", fn.Text)
-//		}
-//		fmt.Printf("------------------------------------------------\n")
-//
-//		for _, let := range cls.Lets {
-//			fmt.Printf("let name=[%s]\n", let.Name)
-//			fmt.Printf("let Doc=[%s]\n", let.Doc)
-//			fmt.Printf("let Text=[%s]\n", let.Text)
-//		}
-//		fmt.Printf("------------------------------------------------\n")
-//
-//		for _, prop := range cls.Props {
-//			fmt.Printf("prop name=[%s]\n", prop.Name)
-//			fmt.Printf("prop Doc=[%s]\n", prop.Doc)
-//			fmt.Printf("prop Text=[%s]\n", prop.Text)
-//		}
-//
-//		fmt.Printf("\n\n\n\n\n")
-//	}
+	md := doc.MdDocGen(file)
+
+	//remove the '.my' extension
+	genFilename := strings.TrimSuffix(filename, filepath.Ext(filename))
+
+	//create markdown file
+	mdFile := genFilename + ".md"
+	outMd, err := os.Create(mdFile)
+	if err != nil {
+		fmt.Printf("Error creating '%s' file, reason:%v\n", mdFile, err)
+		os.Exit(1)
+	}
+	defer outMd.Close()
+
+	//generate markdown file
+	fmt.Fprintln(outMd, md)
+
+	if !htmlFlag {
+		return
+	}
+	
+	//create html file
+	htmlFile := genFilename + ".html"
+	outHtml, err := os.Create(htmlFile)
+	if err != nil {
+		fmt.Printf("Error creating '%s' file, reason:%v\n", htmlFile, err)
+		os.Exit(1)
+	}
+	defer outHtml.Close()
+
+	html := doc.HtmlDocGen(md, file)
+	fmt.Fprintln(outHtml, html)
 }
 
 func main() {
-	args := os.Args[1:]
-	//We must reset `os.Args`, or the `flag` module will not functioning correctly
-	os.Args = os.Args[1:]
-	if len(args) > 0 {
-		runProgram(args[0])
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [monkey file]\n", os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(0)
 	}
+
+	var htmlFlag bool
+	flag.BoolVar(&htmlFlag, "html", false, "Generate html file using github REST API.")
+
+	flag.Parse()
+
+	if len(flag.Args()) != 1 {
+		fmt.Fprintln(os.Stderr, "Invalid number of arguments!")
+		flag.Usage()
+	}
+
+	filename := flag.Arg(0)
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		fmt.Errorf("Specified monkey file does not exist!")
+	}
+
+	runProgram(filename, htmlFlag)
 }

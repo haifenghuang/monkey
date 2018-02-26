@@ -3,8 +3,11 @@ package doc
 
 import (
 	"bytes"
-	_ "fmt"
+	"encoding/json"
+	"fmt"
 	"monkey/ast"
+	"net/http"
+	"io/ioutil"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -33,6 +36,14 @@ type Value struct {
 	Name string //name
 	Doc  string //comment
 	Text string //declaration text
+}
+
+// Request for github REST API
+// URL : https://developer.github.com/v3/markdown/
+type Request struct {
+	Text    string `json:"text"`
+	Mode    string `json:"mode"`
+	Context string `json:"context"`
 }
 
 func New(name string, program *ast.Program) *File {
@@ -91,6 +102,99 @@ func normalize(doc string) string {
 	doc = nlReplace.ReplaceAllString(doc, "\n\n")
 	doc = trimCodes.ReplaceAllString(doc, "\n```")
 	return doc
+}
+
+// ----------------------------------------------------------------------------
+// Html document generator(using github REST API)
+
+// HtmlDocGen generates html documentation from a markdown file.
+func HtmlDocGen(content string, file *File) string {
+	buf, err := json.Marshal(Request{
+		Text:string(content),
+		Mode: "gfm",
+		Context: "github/gollum",
+	})
+	if err != nil {
+		fmt.Errorf("Marshaling request failed, reason=%v\n", err)
+		return ""
+	}
+
+	resp, err := http.Post("https://api.github.com/markdown","application/json", bytes.NewBuffer(buf))
+	if err != nil {
+		fmt.Errorf("Request for github failed, reason:%v\n", err)
+		return ""
+	}
+	defer resp.Body.Close() //must close the 'Body'
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Errorf("Response read failed, reason:%v\n", err)
+		return ""
+	}
+
+	var out bytes.Buffer
+	//doc type
+	out.WriteString("<!DOCTYPE html>")
+	//head
+	out.WriteString("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head>")
+	//css style
+	out.WriteString("<style>")
+	out.WriteString(css)
+	out.WriteString("</style>")
+	//body
+	out.WriteString(`<body><div class="readme"><article class="markdown-body">`)
+	out.WriteString(string(body))
+	out.WriteString("</article></div></body>")
+
+	html := out.String()
+	//The github returned html's inner linking is not working,
+	//so we need to fix this.
+	for _, enum := range file.Enums {
+		enumName := enum.Name
+		src  := fmt.Sprintf("<h3>%s</h3>", enumName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(enumName), enumName)
+		html = strings.Replace(html, src, dest, -1)
+	}
+	for _, let := range file.Lets {
+		letName := let.Name
+		src  := fmt.Sprintf("<h3>%s</h3>", letName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(letName), letName)
+		html = strings.Replace(html, src, dest, -1)
+	}
+	for _, fn := range file.Funcs {
+		fnName := fn.Name
+		src  := fmt.Sprintf("<h3>%s</h3>", fnName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(fnName), fnName)
+		html = strings.Replace(html, src, dest, -1)
+	}
+	
+	for _, cls := range file.Classes {
+		clsName := cls.Value.Name
+		src  := fmt.Sprintf("<h3>%s</h3>", clsName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(clsName), clsName)
+		html = strings.Replace(html, src, dest, -1)
+	
+		for _, prop := range cls.Props {
+			propName := prop.Name
+			src  := fmt.Sprintf("<h5>%s</h5>", propName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(propName), propName)
+			html = strings.Replace(html, src, dest, -1)
+		}
+		for _, let := range cls.Lets {
+			letName := let.Name
+			src  := fmt.Sprintf("<h5>%s</h5>", letName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(letName), letName)
+			html = strings.Replace(html, src, dest, -1)
+		}
+		for _, fn := range cls.Funcs {
+			fnName := fn.Name
+			src  := fmt.Sprintf("<h5>%s</h5>", fnName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(fnName), fnName)
+			html = strings.Replace(html, src, dest, -1)
+		}
+	}
+
+	return html
 }
 
 // ----------------------------------------------------------------------------
