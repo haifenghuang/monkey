@@ -13,7 +13,35 @@ import (
 	"os"
 )
 
-func runProgram(filename string, htmlFlag bool) {
+func genDocs(path string, htmlFlag bool, isDir bool) {
+	if !isDir { //single file
+		genDoc(path, htmlFlag)
+		return
+	}
+
+	//processing directory
+	fd, err := os.Open(path)
+	if err != nil {
+		fmt.Errorf("Open directory '%s' failed, reason:%v\n", path, err)
+		return
+	}
+	defer fd.Close()
+
+	list, err := fd.Readdir(-1)
+	if err != nil {
+		fmt.Errorf("Read directory '%s' failed, reason:%v\n", path, err)
+		return
+	}
+
+	for _, d := range list {
+		if strings.HasSuffix(d.Name(), ".my") {
+			filename := filepath.Join(path, d.Name())
+			genDoc(filename, htmlFlag)
+		}
+	}
+}
+
+func genDoc(filename string, htmlFlag bool) {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -48,10 +76,11 @@ func runProgram(filename string, htmlFlag bool) {
 		fmt.Printf("Error creating '%s' file, reason:%v\n", mdFile, err)
 		os.Exit(1)
 	}
-	defer outMd.Close()
+
 
 	//generate markdown file
 	fmt.Fprintln(outMd, md)
+	outMd.Close()
 
 	if !htmlFlag {
 		return
@@ -68,6 +97,11 @@ func runProgram(filename string, htmlFlag bool) {
 
 	html := doc.HtmlDocGen(md, file)
 	fmt.Fprintln(outHtml, html)
+
+	err = os.Remove(mdFile)
+	if err != nil {
+		fmt.Printf("Error remove file '%s', reason : %v\n", mdFile, err)
+	}
 }
 
 func main() {
@@ -87,10 +121,18 @@ func main() {
 		flag.Usage()
 	}
 
-	filename := flag.Arg(0)
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		fmt.Errorf("Specified monkey file does not exist!")
+	path := flag.Arg(0)
+	fi, err := os.Stat(path)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	runProgram(filename, htmlFlag)
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
+		genDocs(path, htmlFlag, true)
+	case mode.IsRegular():
+		genDocs(path, htmlFlag, false)
+	}
+	
 }
