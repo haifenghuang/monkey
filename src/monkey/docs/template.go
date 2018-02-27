@@ -12,6 +12,9 @@ var (
 
 	funcs = template.FuncMap{
 		"inline": func(txt string) string {
+			if len(txt) == 0 {
+				return txt
+			}
 			return fmt.Sprintf("`%s`", txt)
 		},
 		"codeBlock": func(lang, code string) string {
