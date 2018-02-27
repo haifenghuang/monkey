@@ -710,30 +710,34 @@
 <h2>Enums</h2>
 <h3 id="color">Color</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">Color</span>{
-	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>, 
 	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
 	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>, 
 	RED <span class="pl-k">=</span> <span class="pl-c1">0</span>, 
 	BLUE <span class="pl-k">=</span> <span class="pl-c1">1</span>, 
-	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>
+	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>, 
+	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>
 }</pre></div>
 <p>Color enum is the color of the image.<br>
 This is just for demo purpose.</p>
 <h3 id="logoption">LogOption</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">LogOption</span>{
-	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)), 
-	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
-	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>), 
 	Lmicroseconds <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">2</span>), 
 	Llongfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">3</span>), 
 	Lshortfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>), 
-	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)
+	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>), 
+	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)), 
+	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
+	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>)
 }</pre></div>
 <p>LogOption enum is defined for Log options.</p>
 <h2>Functions</h2>
 <h3 id="add">Add</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Add</span> (x, y) </pre></div>
 <p>Add returns the addition of its two parameters</p>
+<p>This is a example of calling <code>Add</code> with two ints:</p>
+<div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>) <span class="pl-c"><span class="pl-c">//</span>result is 3</span></pre></div>
+<p>This is a example of calling <code>Add</code> with two strings:</p>
+<div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-s"><span class="pl-pds">"</span>Hello <span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>) <span class="pl-c"><span class="pl-c">//</span>result is "Hello world"</span></pre></div>
 <h4>Parameters</h4>
 <table>
 <thead>

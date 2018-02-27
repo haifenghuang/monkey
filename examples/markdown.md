@@ -58,12 +58,12 @@ This is the constant 'SIZE'.
 ### Color
 ```swift
 enum Color{
-	BLACK = 3, 
 	WHITE = 4, 
 	GRAY = 5, 
 	RED = 0, 
 	BLUE = 1, 
-	YELLOW = 2
+	YELLOW = 2, 
+	BLACK = 3
 }
 ```
 Color enum is the color of the image.
@@ -72,13 +72,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
-	LstdFlags = ((1 << 4) | (1 << 5)), 
-	Ldate = (1 << 0), 
-	Ltime = (1 << 1), 
 	Lmicroseconds = (1 << 2), 
 	Llongfile = (1 << 3), 
 	Lshortfile = (1 << 4), 
-	LUTC = (1 << 5)
+	LUTC = (1 << 5), 
+	LstdFlags = ((1 << 4) | (1 << 5)), 
+	Ldate = (1 << 0), 
+	Ltime = (1 << 1)
 }
 ```
 LogOption enum is defined for Log options.
@@ -90,6 +90,16 @@ LogOption enum is defined for Log options.
 fn Add (x, y) 
 ```
 Add returns the addition of its two parameters
+
+This is a example of calling `Add` with two ints:
+```swift
+sum = Add(1, 2) //result is 3
+```
+
+This is a example of calling `Add` with two strings:
+```swift
+sum = Add("Hello ", "world") //result is "Hello world"
+```
 
 #### Parameters
 | Name | Type | Description |

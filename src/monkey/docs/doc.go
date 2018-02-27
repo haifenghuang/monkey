@@ -18,6 +18,7 @@ import (
 
 var (
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
+	regExample = regexp.MustCompile(`@example([^@]+)@`)
 )
 
 // File is the documentation for an entire monkey file.
@@ -264,7 +265,7 @@ func sortedClasses(classes []*ast.ClassStatement) []*Classes {
 		list[i] = &Classes{
 			Value: &Value{
 				Name: c.Name.Value,
-				Doc:  c.Doc.Text(),
+				Doc:  preProcessCommentExamples(c.Doc.Text()),
 				Text: c.Docs(),
 			},
 			Props: sortedProps(props),
@@ -293,7 +294,7 @@ func sortedLets(lets []*ast.LetStatement) []*Value {
 	for _, l := range lets {
 		list[i] = &Value{
 			Name: l.Names[0].Value,
-			Doc:  l.Doc.Text(),
+			Doc:  preProcessCommentExamples(l.Doc.Text()),
 			Text: l.Docs(),
 		}
 		i++
@@ -313,7 +314,7 @@ func sortedEnums(enums []*ast.EnumStatement) []*Value {
 	for _, e := range enums {
 		list[i] = &Value{
 			Name: e.Name.Value,
-			Doc:  e.Doc.Text(),
+			Doc:  preProcessCommentExamples(e.Doc.Text()),
 			Text: e.Docs(),
 		}
 		i++
@@ -331,7 +332,7 @@ func sortedFuncs(funcs []*ast.FunctionStatement) []*Function {
 	list := make([]*Function, len(funcs))
 	i := 0
 	for _, f := range funcs {
-		list[i]= parseFuncComment(f.Name.Value, f.Doc.Text(), f.Docs())
+		list[i]= parseFuncComment(f.Name.Value, preProcessCommentExamples(f.Doc.Text()), f.Docs())
 		i++
 	}
 
@@ -353,7 +354,7 @@ func sortedProps(props []*ast.PropertyDeclStmt) []*Value {
 	for _, p := range props {
 		list[i] = &Value{
 			Name: p.Name.Value,
-			Doc:  p.Doc.Text(),
+			Doc:  preProcessCommentExamples(p.Doc.Text()),
 			Text: p.Docs(),
 		}
 
@@ -398,7 +399,7 @@ func parseFuncComment(name string, docComments string, text string) (*Function){
 				fn.Returns = append(fn.Returns, funcReturn)
 			}
 		} else {
-			buffer.WriteString(comment)
+			buffer.WriteString(comment+"\n")
 		}
 	}
 	fn.Value.Doc = buffer.String()
@@ -452,4 +453,43 @@ func SanitizedAnchorName(text string) string {
 		}
 	}
 	return string(anchorName)
+}
+
+/* Process `@example block @` part, and replace this with 
+```swift
+    block
+```
+*/
+func preProcessCommentExamples(comments string) string {
+	retStr := comments
+	if m := regExample.FindAllStringSubmatch(comments, -1); m != nil {
+		for _, match := range m {
+			var buffer bytes.Buffer
+			buffer.WriteString("\n```swift")
+			buffer.WriteString(match[1])
+			buffer.WriteString("```\n")
+
+			retStr = replaceFirstString(regExample, retStr, buffer.String())
+		}
+		//fmt.Printf("retStr=<%s>\n", retStr) //debugging
+	}
+	return retStr
+}
+
+func replaceFirstString(re *regexp.Regexp, srcStr, replStr string) string {
+	src  := []byte(srcStr)
+	repl := []byte(replStr)
+
+	if m := re.FindSubmatchIndex(src); m != nil {
+		out := make([]byte, m[0])
+		copy(out, src[0:m[0]])
+		out = re.Expand(out, repl, src, m)
+		if m[1] < len(src) {
+			out = append(out, src[m[1]:]...)
+		}
+		return string(out)
+	}
+	out := make([]byte, len(src))
+	copy(out, src)
+	return string(out)
 }
