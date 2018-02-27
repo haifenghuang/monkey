@@ -710,24 +710,24 @@
 <h2>Enums</h2>
 <h3 id="color">Color</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">Color</span>{
-	RED <span class="pl-k">=</span> <span class="pl-c1">0</span>, 
-	BLUE <span class="pl-k">=</span> <span class="pl-c1">1</span>, 
-	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>, 
 	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>, 
 	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
-	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>
+	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>, 
+	RED <span class="pl-k">=</span> <span class="pl-c1">0</span>, 
+	BLUE <span class="pl-k">=</span> <span class="pl-c1">1</span>, 
+	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>
 }</pre></div>
 <p>Color enum is the color of the image.<br>
 This is just for demo purpose.</p>
 <h3 id="logoption">LogOption</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">LogOption</span>{
-	Lshortfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>), 
-	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>), 
 	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)), 
 	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
 	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>), 
 	Lmicroseconds <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">2</span>), 
-	Llongfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">3</span>)
+	Llongfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">3</span>), 
+	Lshortfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>), 
+	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)
 }</pre></div>
 <p>LogOption enum is defined for Log options.</p>
 <h2>Functions</h2>
@@ -812,11 +812,13 @@ The max length has a default value of 10</p>
 It is used for checking spaces.</p>
 <h3 id="person">Person</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span>{ <span class="pl-k">...</span> }</pre></div>
-<p>A Persion class which has three private variable:<br>
-firstName<br>
-lastName<br>
-nickName<br>
-and two methods :'init' and 'Msg'.</p>
+<p>A Persion class which has three private variable:</p>
+<ul>
+<li>firstName</li>
+<li>lastName</li>
+<li>nickName</li>
+</ul>
+<p>and two methods :'init' and 'Msg'.</p>
 <h4>Lets</h4>
 <h5 id="firstname">firstName</h5>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> firstName; </pre></div>

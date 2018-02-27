@@ -58,12 +58,12 @@ This is the constant 'SIZE'.
 ### Color
 ```swift
 enum Color{
-	YELLOW = 2, 
 	BLACK = 3, 
 	WHITE = 4, 
 	GRAY = 5, 
 	RED = 0, 
-	BLUE = 1
+	BLUE = 1, 
+	YELLOW = 2
 }
 ```
 Color enum is the color of the image.
@@ -72,13 +72,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
+	LstdFlags = ((1 << 4) | (1 << 5)), 
+	Ldate = (1 << 0), 
 	Ltime = (1 << 1), 
 	Lmicroseconds = (1 << 2), 
 	Llongfile = (1 << 3), 
 	Lshortfile = (1 << 4), 
-	LUTC = (1 << 5), 
-	LstdFlags = ((1 << 4) | (1 << 5)), 
-	Ldate = (1 << 0)
+	LUTC = (1 << 5)
 }
 ```
 LogOption enum is defined for Log options.
@@ -160,10 +160,11 @@ It is used for checking spaces.
 class Person{ ... }
 ```
  A Persion class which has three private variable:
-      firstName
-      lastName
-      nickName
- and two methods :'init' and 'Msg'.
+* firstName
+* lastName
+* nickName
+
+and two methods :'init' and 'Msg'.
 
 #### Lets
 

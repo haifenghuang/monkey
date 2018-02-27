@@ -1,9 +1,10 @@
 /*
  *  A Persion class which has three private variable:
- *       firstName
- *       lastName
- *       nickName
- *  and two methods :'init' and 'Msg'.
+ ** firstName
+ ** lastName
+ ** nickName
+
+ * and two methods :'init' and 'Msg'.
 */
 class Person {
 	//this is the firstname
