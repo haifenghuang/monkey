@@ -13,6 +13,11 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"unicode"
+)
+
+var (
+	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
 )
 
 // File is the documentation for an entire monkey file.
@@ -21,14 +26,29 @@ type File struct {
 	Classes []*Classes
 	Enums   []*Value
 	Lets    []*Value
-	Funcs   []*Value
+	Funcs   []*Function
 }
 
+/* Classes is the documention for a class */
 type Classes struct {
 	Value *Value
-	Props []*Value  //Properties
-	Lets  []*Value  //Let-statements
-	Funcs []*Value  //Functions
+	Props []*Value     //Properties
+	Lets  []*Value     //Let-statements
+	Funcs []*Function //Function
+}
+
+/* Classes is the documention for a function */
+type Function struct {
+	Value *Value
+	Params []*FuncInfo
+	Returns[]*FuncInfo
+}
+
+//function information(@param/@return/@returns part)
+type FuncInfo struct {
+	Name string //parameter name if @param, or else ""
+	Type string //type
+	Desc string //description
 }
 
 //Value is the documentation for a (possibly grouped) enums, lets, functions, or class declaration.
@@ -152,44 +172,44 @@ func HtmlDocGen(content string, file *File) string {
 	for _, enum := range file.Enums {
 		enumName := enum.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", enumName)
-		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(enumName), enumName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(enumName), enumName)
 		html = strings.Replace(html, src, dest, -1)
 	}
 	for _, let := range file.Lets {
 		letName := let.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", letName)
-		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(letName), letName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(letName), letName)
 		html = strings.Replace(html, src, dest, -1)
 	}
 	for _, fn := range file.Funcs {
-		fnName := fn.Name
+		fnName := fn.Value.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", fnName)
-		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(fnName), fnName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(fnName), fnName)
 		html = strings.Replace(html, src, dest, -1)
 	}
 	
 	for _, cls := range file.Classes {
 		clsName := cls.Value.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", clsName)
-		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, strings.ToLower(clsName), clsName)
+		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(clsName), clsName)
 		html = strings.Replace(html, src, dest, -1)
 	
 		for _, prop := range cls.Props {
 			propName := prop.Name
 			src  := fmt.Sprintf("<h5>%s</h5>", propName)
-			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(propName), propName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, SanitizedAnchorName(propName), propName)
 			html = strings.Replace(html, src, dest, -1)
 		}
 		for _, let := range cls.Lets {
 			letName := let.Name
 			src  := fmt.Sprintf("<h5>%s</h5>", letName)
-			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(letName), letName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, SanitizedAnchorName(letName), letName)
 			html = strings.Replace(html, src, dest, -1)
 		}
 		for _, fn := range cls.Funcs {
-			fnName := fn.Name
+			fnName := fn.Value.Name
 			src  := fmt.Sprintf("<h5>%s</h5>", fnName)
-			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, strings.ToLower(fnName), fnName)
+			dest := fmt.Sprintf(`<h5 id="%s">%s</h5>`, SanitizedAnchorName(fnName), fnName)
 			html = strings.Replace(html, src, dest, -1)
 		}
 	}
@@ -307,21 +327,21 @@ func sortedEnums(enums []*ast.EnumStatement) []*Value {
 	return list
 }
 
-func sortedFuncs(funcs []*ast.FunctionStatement) []*Value {
-	list := make([]*Value, len(funcs))
+func sortedFuncs(funcs []*ast.FunctionStatement) []*Function {
+	list := make([]*Function, len(funcs))
 	i := 0
 	for _, f := range funcs {
-		list[i] = &Value{
-			Name: f.Name.Value,
-			Doc:  f.Doc.Text(),
-			Text: f.Docs(),
-		}
+		list[i]= parseFuncComment(f.Name.Value, f.Doc.Text(), f.Docs())
 		i++
 	}
 
 	sortBy(
-		func(i, j int) bool { return list[i].Name < list[j].Name },
-		func(i, j int) { list[i], list[j] = list[j], list[i] },
+		func(i, j int) bool { return list[i].Value.Name < list[j].Value.Name },
+		func(i, j int) {
+			list[i].Value, list[j].Value = list[j].Value, list[i].Value
+			list[i].Params, list[j].Params = list[j].Params, list[i].Params
+			list[i].Returns, list[j].Returns = list[j].Returns, list[i].Returns
+		},
 		len(list),
 	)
 	return list
@@ -351,4 +371,85 @@ func sortedProps(props []*ast.PropertyDeclStmt) []*Value {
 		len(list),
 	)
 	return list
+}
+
+func parseFuncComment(name string, docComments string, text string) (*Function){
+	fn := &Function{
+		Value:&Value{
+			Name: name,
+			Text: text,
+		},
+		Params : make([]*FuncInfo, 0),
+		Returns: make([]*FuncInfo, 0),
+	}
+
+	var buffer bytes.Buffer
+	comments := strings.Split(docComments, "\n")
+	for _, comment := range comments {
+		if len(comment) > 0 && comment[0] == '@' {
+			splitOnSpaces := strings.Split(comment, " ")
+			label := splitOnSpaces[0]
+			switch label {
+			case "@param":
+				funcParam := parseValue(splitOnSpaces[1:])
+				fn.Params = append(fn.Params, funcParam)
+			case "@return", "@returns":
+				funcReturn := parseValue(splitOnSpaces[1:])
+				fn.Returns = append(fn.Returns, funcReturn)
+			}
+		} else {
+			buffer.WriteString(comment)
+		}
+	}
+	fn.Value.Doc = buffer.String()
+
+	return fn
+}
+
+func parseValue(splitOnSpaces []string) *FuncInfo {
+	name  := ""
+	types := ""
+	var description bytes.Buffer
+
+	description.WriteString("")
+	ret := &FuncInfo{Name:"", Type:"", Desc:""}
+	for _, item := range splitOnSpaces {
+		if m := regexpType.FindStringSubmatch(item); m != nil {
+			types = m[1]
+		} else if len(name) == 0 {
+			if len(item) > 0 && item[0] == '`' {
+				name = item[1:len(item)-1]
+			} else {
+				name = item
+			}
+		} else {
+			description.WriteString(item + " ")
+		}
+	}
+
+	if (len(name) > 0) { ret.Name = name }
+	if (len(types) > 0) { ret.Type = types }
+	ret.Desc = description.String()
+
+	return ret
+}
+
+// SanitizedAnchorName returns a sanitized anchor name for the given text.
+//copied from 'Blackfriday': a markdown processor for Go.
+func SanitizedAnchorName(text string) string {
+	var anchorName []rune
+	futureDash := false
+	for _, r := range text {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsNumber(r):
+			if futureDash && len(anchorName) > 0 {
+				anchorName = append(anchorName, '-')
+			}
+			futureDash = false
+			anchorName = append(anchorName, unicode.ToLower(r))
+		default:
+			futureDash = true
+		}
+	}
+	return string(anchorName)
 }

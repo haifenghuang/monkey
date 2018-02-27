@@ -19,7 +19,11 @@ class Person {
 		this.nickName = nickname
 	}
 
-	//Method 'Msg' demonstrate function default values and variable arguements
+	/* Method 'Msg' demonstrate function default values and variable arguements
+	 * @param {string} extra1  this is extra1
+	 * @param {string} extra2  this is extra2, it has default value "extra2"
+	 * @param {array}  args this is args
+	*/
 	fn Msg(extra1, extra2="extra2", args...) {
 		printf("firstName=%s, lastName=%s, nickName=%s\n", firstName, lastName, nickName)
 		printf("extra1=%s, extra2=%s\n", extra1, extra2)
@@ -58,12 +62,21 @@ let SIZE = 10
 //This is the constant 'CENTER'.
 let CENTER = 15.0
 
-//Add returns the sum of its two parameters
+/* Add returns the addition of its two parameters
+ * @param {int} x  this is the first parameter
+ * @param {int} y  this is the second parameter
+ * @return {int} retuns the addition of it's two parameters if both parameters are ints.
+ * @return {string} retuns the string concatenation of it's two parameters if both parameters are strings
+*/
 fn Add(x,y) {
 	return x + y
 }
 
-//Sub returns the subtraction of its two parameters
+/* Sub returns the subtraction of its two parameters
+ * @param {int} x  this is the first parameter
+ * @param {int} y  this is the second parameter
+ * @return {int} retuns the subtraction of it's two parameters
+*/
 fn Sub(x,y) {
 	return x - y
 }

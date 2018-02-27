@@ -2850,7 +2850,7 @@ func (anno *AnnotationStmt) String() string {
 // A Comment node represents a single //-style or /*-style comment.
 type Comment struct {
 	Token token.Token
-	Text  string  // comment text (excluding '\n' for //-style comments)
+	Text  string  // comment text
 }
 
 func (c *Comment) Pos() token.Position { return c.Token.Pos }
@@ -2922,9 +2922,16 @@ func (g *CommentGroup) Text() string {
 			tmpline := l
 
 			if len(tmpline) != 0 {
-				tmpline = strings.TrimPrefix(l, " ")
-
-				if tmpline[0] == '*' {
+				tmpline = strings.TrimLeftFunc(l, func(r rune) bool{
+					return r == ' ' || r == '\t'
+				})
+			
+				if len(tmpline) > 0 && tmpline[0] == '*' {
+					// strip first '*'
+					tmpline = tmpline[1:]
+				}
+				if len(tmpline) > 0 && tmpline[0] == ' ' {
+					//strip first space
 					tmpline  = tmpline[1:]
 				}
 			}

@@ -3,7 +3,6 @@ package doc
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -18,7 +17,7 @@ var (
 		"codeBlock": func(lang, code string) string {
 			return fmt.Sprintf("```%s\n%s\n```", lang, code)
 		},
-		"lower": strings.ToLower,
+		"sanitizedAnchorName": SanitizedAnchorName,
 		"genDate": func() string {
 			return time.Now().Format("2006-01-02")
 		},
@@ -39,34 +38,34 @@ _Last updated {{genDate}}_`
 
 {{if gt (len .Lets) 0}}
 * Lets{{range $idx, $let := .Lets}}
-  * [{{$let.Name}}](#{{lower $let.Name}}){{end}}
+  * [{{$let.Name}}](#{{sanitizedAnchorName $let.Name}}){{end}}
 {{end}}
 
 {{if gt (len .Enums) 0}}
 * Enums{{range $idx, $enum := .Enums}}
-  * [{{$enum.Name}}](#{{lower $enum.Name}}){{end}}
+  * [{{$enum.Name}}](#{{sanitizedAnchorName $enum.Name}}){{end}}
 {{end}}
 
 {{if gt (len .Funcs) 0}}
 * Functions{{range $idx, $fn := .Funcs}}
-  * [{{$fn.Name}}](#{{lower $fn.Name}}){{end}}
+  * [{{$fn.Value.Name}}](#{{sanitizedAnchorName $fn.Value.Name}}){{end}}
 {{end}}
 
 {{if gt (len .Classes) 0}}
 * Classes{{range $idx, $cls := .Classes}}
-  * [{{$cls.Value.Name}}](#{{lower $cls.Value.Name}})
+  * [{{$cls.Value.Name}}](#{{sanitizedAnchorName $cls.Value.Name}})
 {{if gt (len $cls.Lets) 0}}
     * Lets{{range $idx, $let := $cls.Lets}}
-      * [{{$let.Name}}](#{{lower $let.Name}}){{end}}
+      * [{{$let.Name}}](#{{sanitizedAnchorName $let.Name}}){{end}}
 {{end}}
 {{if gt (len $cls.Props) 0}}
     * Properties{{range $idx, $prop := $cls.Props}}
-      * [{{$prop.Name}}](#{{lower $prop.Name}}){{end}}
+      * [{{$prop.Name}}](#{{sanitizedAnchorName $prop.Name}}){{end}}
 {{end}}
 
 {{if gt (len $cls.Funcs) 0}}
     * Functions{{range $idx, $func := $cls.Funcs}}
-      * [{{$func.Name}}](#{{lower $func.Name}}){{end}}
+      * [{{$func.Value.Name}}](#{{sanitizedAnchorName $func.Value.Name}}){{end}}
 {{end}}
 
 {{end}}
@@ -81,7 +80,7 @@ _Last updated {{genDate}}_`
 ## Lets
   {{range $idx, $let := .Lets}}
 ### {{$let.Name}}
-{{codeBlock "monkey" $let.Text}}
+{{codeBlock "swift" $let.Text}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -94,7 +93,7 @@ _Last updated {{genDate}}_`
 ## Enums
   {{range $idx, $enum := .Enums}}
 ### {{$enum.Name}}
-{{codeBlock "monkey" $enum.Text}}
+{{codeBlock "swift" $enum.Text}}
 {{$enum.Doc}}
   {{end}}
 {{end}}
@@ -106,9 +105,23 @@ _Last updated {{genDate}}_`
 
 ## Functions
   {{range $idx, $fn := .Funcs}}
-### {{$fn.Name}}
-{{codeBlock "monkey" $fn.Text}}
-{{$fn.Doc}}
+### {{$fn.Value.Name}}
+{{codeBlock "swift" $fn.Value.Text}}
+{{$fn.Value.Doc}}
+
+    {{if gt (len $fn.Params) 0}}
+#### Parameters
+| Name | Type | Description |
+| ---- | ---- | ----------- |{{range $idx, $param := $fn.Params}}
+{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
+    {{end}}
+
+    {{if gt (len $fn.Returns) 0}}
+#### Returns
+        {{range $idx, $ret := $fn.Returns}}
+- {{inline $ret.Type}} {{$ret.Desc}}
+        {{end}}
+    {{end}}
 
   {{end}}
 {{end}}
@@ -121,7 +134,7 @@ _Last updated {{genDate}}_`
 ## Classes
   {{range $idx, $cls := .Classes}}
 ### {{$cls.Value.Name}}
-{{codeBlock "monkey" $cls.Value.Text}}
+{{codeBlock "swift" $cls.Value.Text}}
 {{$cls.Value.Doc}}
 
 {{if gt (len .Lets) 0}}
@@ -129,7 +142,7 @@ _Last updated {{genDate}}_`
 #### Lets
   {{range $idx, $let := .Lets}}
 ##### {{$let.Name}}
-{{codeBlock "monkey" $let.Text}}
+{{codeBlock "swift" $let.Text}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -139,7 +152,7 @@ _Last updated {{genDate}}_`
 #### Properties
   {{range $idx, $prop := .Props}}
 ##### {{$prop.Name}}
-{{codeBlock "monkey" $prop.Text}}
+{{codeBlock "swift" $prop.Text}}
 {{$prop.Doc}}
   {{end}}
 {{end}}
@@ -148,9 +161,24 @@ _Last updated {{genDate}}_`
 
 #### Functions
   {{range $idx, $fn := .Funcs}}
-##### {{$fn.Name}}
-{{codeBlock "monkey" $fn.Text}}
-{{$fn.Doc}}
+##### {{$fn.Value.Name}}
+{{codeBlock "swift" $fn.Value.Text}}
+{{$fn.Value.Doc}}
+
+    {{if gt (len $fn.Params) 0}}
+#### Parameters
+| Name | Type | Description |
+| ---- | ---- | ----------- |{{range $idx, $param := $fn.Params}}
+{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
+    {{end}}
+
+    {{if gt (len $fn.Returns) 0}}
+#### Returns
+        {{range $idx, $ret := $fn.Returns}}
+- {{inline $ret.Type}} {{$ret.Desc}}
+        {{end}}
+    {{end}}
+
   {{end}}
 {{end}}
 
