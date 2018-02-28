@@ -18,7 +18,14 @@ import (
 
 var (
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
-	regExample = regexp.MustCompile(`@example([^@]+)@`)
+	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
+
+	//table of contents
+	toc = `<p><div>
+<a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a>
+<div id="table-of-contents" style="display:none;">`
+	//PlaceHolder line, used only in html output.
+	PlaceHolder = "<p>__TOC_PLACEHOLDER_LINE__</p>"
 )
 
 // File is the documentation for an entire monkey file.
@@ -122,6 +129,7 @@ func normalize(doc string) string {
 	trimCodes := regexp.MustCompile("\n{2,}```")
 	doc = nlReplace.ReplaceAllString(doc, "\n\n")
 	doc = trimCodes.ReplaceAllString(doc, "\n```")
+
 	return doc
 }
 
@@ -157,7 +165,16 @@ func HtmlDocGen(content string, file *File) string {
 	//doc type
 	out.WriteString("<!DOCTYPE html>")
 	//head
-	out.WriteString("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head>")
+	out.WriteString("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">")
+	out.WriteString(`<script type="text/javascript">
+function toggle_toc() {
+    var toc=document.getElementById('table-of-contents');
+    var btn=document.getElementById('btn-text');
+    toc.style.display=(toc.style.display=='none')?'block':'none';
+    btn.innerHTML=(toc.style.display=='none')?'&#x25BC;':'&#x25B2;';
+}
+</script>`)
+	out.WriteString("</head>")
 	//css style
 	out.WriteString("<style>")
 	out.WriteString(css)
@@ -188,13 +205,13 @@ func HtmlDocGen(content string, file *File) string {
 		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(fnName), fnName)
 		html = strings.Replace(html, src, dest, -1)
 	}
-	
+
 	for _, cls := range file.Classes {
 		clsName := cls.Value.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", clsName)
 		dest := fmt.Sprintf(`<h3 id="%s">%s</h3>`, SanitizedAnchorName(clsName), clsName)
 		html = strings.Replace(html, src, dest, -1)
-	
+
 		for _, prop := range cls.Props {
 			propName := prop.Name
 			src  := fmt.Sprintf("<h5>%s</h5>", propName)
@@ -215,6 +232,8 @@ func HtmlDocGen(content string, file *File) string {
 		}
 	}
 
+	html = strings.Replace(html, "<h1>Table of Contents</h1>", toc, 1)
+	html = strings.Replace(html, PlaceHolder, "</div>", 1)
 	return html
 }
 

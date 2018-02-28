@@ -77,7 +77,10 @@ func genDoc(filename string, htmlFlag bool) {
 		os.Exit(1)
 	}
 
-
+	if !htmlFlag {
+		//Remove placeholder line, it's only used in HTML output.
+		md = strings.Replace(md, doc.PlaceHolder, "", 1)
+	}
 	//generate markdown file
 	fmt.Fprintln(outMd, md)
 	outMd.Close()

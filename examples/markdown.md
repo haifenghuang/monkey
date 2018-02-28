@@ -39,6 +39,8 @@ Table of Contents
 
   * [RequestMain](#requestmain)
 
+
+
 ## Lets
 
 ### CENTER
@@ -58,12 +60,12 @@ This is the constant 'SIZE'.
 ### Color
 ```swift
 enum Color{
-	WHITE = 4, 
-	GRAY = 5, 
 	RED = 0, 
 	BLUE = 1, 
 	YELLOW = 2, 
-	BLACK = 3
+	BLACK = 3, 
+	WHITE = 4, 
+	GRAY = 5
 }
 ```
 Color enum is the color of the image.
@@ -72,13 +74,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
+	Ldate = (1 << 0), 
+	Ltime = (1 << 1), 
 	Lmicroseconds = (1 << 2), 
 	Llongfile = (1 << 3), 
 	Lshortfile = (1 << 4), 
 	LUTC = (1 << 5), 
-	LstdFlags = ((1 << 4) | (1 << 5)), 
-	Ldate = (1 << 0), 
-	Ltime = (1 << 1)
+	LstdFlags = ((1 << 4) | (1 << 5))
 }
 ```
 LogOption enum is defined for Log options.
@@ -230,4 +232,4 @@ class RequestMain{ ... }
 RequestMain class. It is the user/client code.
 
 ***
-_Last updated 2018-02-27_
+_Last updated 2018-02-28_

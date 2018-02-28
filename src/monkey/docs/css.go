@@ -634,4 +634,7 @@ const css = `@font-face {
 	z-index: 1;
 	position: relative;
 	border-color: #4183c4;
-}`
+}
+a.toc-button:hover{color:#A88C3F;background:#E8E4D9;}
+a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0.5em 0.5em;border-radius:3px;}
+`

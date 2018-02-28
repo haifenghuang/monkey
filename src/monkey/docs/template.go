@@ -30,6 +30,7 @@ var (
 Table of Contents
 =================
 {{block "index" .}}_no index_{{end}}
+<p>__TOC_PLACEHOLDER_LINE__</p>
 {{block "lets" .}}_no lets_{{end}}
 {{block "enums" .}}_no enums_{{end}}
 {{block "functions" .}}_no functions_{{end}}

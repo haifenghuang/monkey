@@ -1,4 +1,11 @@
-<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><style>@font-face {
+<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><script type="text/javascript">
+function toggle_toc() {
+    var toc=document.getElementById('table-of-contents');
+    var btn=document.getElementById('btn-text');
+    toc.style.display=(toc.style.display=='none')?'block':'none';
+    btn.innerHTML=(toc.style.display=='none')?'&#x25BC;':'&#x25B2;';
+}
+</script></head><style>@font-face {
 	font-family: octicons-anchor;
 	src: url(data:font/woff;charset=utf-8;base64,d09GRgABAAAAAAYcAA0AAAAACjQAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABwAAAAca8vGTk9TLzIAAAFMAAAARAAAAFZG1VHVY21hcAAAAZAAAAA+AAABQgAP9AdjdnQgAAAB0AAAAAQAAAAEACICiGdhc3AAAAHUAAAACAAAAAj//wADZ2x5ZgAAAdwAAADRAAABEKyikaNoZWFkAAACsAAAAC0AAAA2AtXoA2hoZWEAAALgAAAAHAAAACQHngNFaG10eAAAAvwAAAAQAAAAEAwAACJsb2NhAAADDAAAAAoAAAAKALIAVG1heHAAAAMYAAAAHwAAACABEAB2bmFtZQAAAzgAAALBAAAFu3I9x/Nwb3N0AAAF/AAAAB0AAAAvaoFvbwAAAAEAAAAAzBdyYwAAAADP2IQvAAAAAM/bz7t4nGNgZGFgnMDAysDB1Ml0hoGBoR9CM75mMGLkYGBgYmBlZsAKAtJcUxgcPsR8iGF2+O/AEMPsznAYKMwIkgMA5REMOXicY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChED+h5j//yEk/3KoSgZGNgYYk4GRCUgwMaACRoZhDwCs7QgGAAAAIgKIAAAAAf//AAJ4nHWMMQrCQBBF/0zWrCCIKUQsTDCL2EXMohYGSSmorScInsRGL2DOYJe0Ntp7BK+gJ1BxF1stZvjz/v8DRghQzEc4kIgKwiAppcA9LtzKLSkdNhKFY3HF4lK69ExKslx7Xa+vPRVS43G98vG1DnkDMIBUgFN0MDXflU8tbaZOUkXUH0+U27RoRpOIyCKjbMCVejwypzJJG4jIwb43rfl6wbwanocrJm9XFYfskuVC5K/TPyczNU7b84CXcbxks1Un6H6tLH9vf2LRnn8Ax7A5WQAAAHicY2BkYGAA4teL1+yI57f5ysDNwgAC529f0kOmWRiYVgEpDgYmEA8AUzEKsQAAAHicY2BkYGB2+O/AEMPCAAJAkpEBFbAAADgKAe0EAAAiAAAAAAQAAAAEAAAAAAAAKgAqACoAiAAAeJxjYGRgYGBhsGFgYgABEMkFhAwM/xn0QAIAD6YBhwB4nI1Ty07cMBS9QwKlQapQW3VXySvEqDCZGbGaHULiIQ1FKgjWMxknMfLEke2A+IJu+wntrt/QbVf9gG75jK577Lg8K1qQPCfnnnt8fX1NRC/pmjrk/zprC+8D7tBy9DHgBXoWfQ44Av8t4Bj4Z8CLtBL9CniJluPXASf0Lm4CXqFX8Q84dOLnMB17N4c7tBo1AS/Qi+hTwBH4rwHHwN8DXqQ30XXAS7QaLwSc0Gn8NuAVWou/gFmnjLrEaEh9GmDdDGgL3B4JsrRPDU2hTOiMSuJUIdKQQayiAth69r6akSSFqIJuA19TrzCIaY8sIoxyrNIrL//pw7A2iMygkX5vDj+G+kuoLdX4GlGK/8Lnlz6/h9MpmoO9rafrz7ILXEHHaAx95s9lsI7AHNMBWEZHULnfAXwG9/ZqdzLI08iuwRloXE8kfhXYAvE23+23DU3t626rbs8/8adv+9DWknsHp3E17oCf+Z48rvEQNZ78paYM38qfk3v/u3l3u3GXN2Dmvmvpf1Srwk3pB/VSsp512bA/GG5i2WJ7wu430yQ5K3nFGiOqgtmSB5pJVSizwaacmUZzZhXLlZTq8qGGFY2YcSkqbth6aW1tRmlaCFs2016m5qn36SbJrqosG4uMV4aP2PHBmB3tjtmgN2izkGQyLWprekbIntJFing32a5rKWCN/SdSoga45EJykyQ7asZvHQ8PTm6cslIpwyeyjbVltNikc2HTR7YKh9LBl9DADC0U/jLcBZDKrMhUBfQBvXRzLtFtjU9eNHKin0x5InTqb8lNpfKv1s1xHzTXRqgKzek/mb7nB8RZTCDhGEX3kK/8Q75AmUM/eLkfA+0Hi908Kx4eNsMgudg5GLdRD7a84npi+YxNr5i5KIbW5izXas7cHXIMAau1OueZhfj+cOcP3P8MNIWLyYOBuxL6DRylJ4cAAAB4nGNgYoAALjDJyIAOWMCiTIxMLDmZedkABtIBygAAAA==) format('woff');
 }
@@ -631,8 +638,13 @@
 	z-index: 1;
 	position: relative;
 	border-color: #4183c4;
-}</style><body><div class="readme"><article class="markdown-body"><h1>File <code>doc.my</code></h1>
-<h1>Table of Contents</h1>
+}
+a.toc-button:hover{color:#A88C3F;background:#E8E4D9;}
+a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0.5em 0.5em;border-radius:3px;}
+</style><body><div class="readme"><article class="markdown-body"><h1>File <code>doc.my</code></h1>
+<p><div>
+<a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a>
+<div id="table-of-contents" style="display:none;">
 <ul>
 <li>
 <p>Lets</p>
@@ -700,6 +712,7 @@
 </ul>
 </li>
 </ul>
+</div>
 <h2>Lets</h2>
 <h3 id="center">CENTER</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> CENTER <span class="pl-k">=</span> <span class="pl-c1">15.0</span>; </pre></div>
@@ -710,24 +723,24 @@
 <h2>Enums</h2>
 <h3 id="color">Color</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">Color</span>{
-	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
-	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>, 
 	RED <span class="pl-k">=</span> <span class="pl-c1">0</span>, 
 	BLUE <span class="pl-k">=</span> <span class="pl-c1">1</span>, 
 	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>, 
-	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>
+	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>, 
+	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
+	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>
 }</pre></div>
 <p>Color enum is the color of the image.<br>
 This is just for demo purpose.</p>
 <h3 id="logoption">LogOption</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">LogOption</span>{
+	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
+	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>), 
 	Lmicroseconds <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">2</span>), 
 	Llongfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">3</span>), 
 	Lshortfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>), 
 	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>), 
-	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)), 
-	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
-	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>)
+	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>))
 }</pre></div>
 <p>LogOption enum is defined for Log options.</p>
 <h2>Functions</h2>
@@ -872,4 +885,4 @@ It is used for checking spaces.</p>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>RequestMain class. It is the user/client code.</p>
 <hr>
-<p><em>Last updated 2018-02-27</em></p></article></div></body>
+<p><em>Last updated 2018-02-28</em></p></article></div></body>
