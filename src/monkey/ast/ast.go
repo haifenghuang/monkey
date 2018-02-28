@@ -65,6 +65,7 @@ func (p *Program) String() string {
 type BlockStatement struct {
 	Token      token.Token
 	Statements []Statement
+	RBraceToken token.Token
 }
 
 func (bs *BlockStatement) Pos() token.Position {
@@ -72,12 +73,16 @@ func (bs *BlockStatement) Pos() token.Position {
 
 }
 
+//func (bs *BlockStatement) End() token.Position {
+//	aLen := len(bs.Statements)
+//	if aLen > 0 {
+//		return bs.Statements[aLen-1].End()
+//	}
+//	return bs.Token.Pos
+//}
+
 func (bs *BlockStatement) End() token.Position {
-	aLen := len(bs.Statements)
-	if aLen > 0 {
-		return bs.Statements[aLen-1].End()
-	}
-	return bs.Token.Pos
+	return token.Position{Line: bs.RBraceToken.Pos.Line, Col: bs.RBraceToken.Pos.Col + 1}
 }
 
 func (bs *BlockStatement) expressionNode()      {}
@@ -356,7 +361,7 @@ func (i *Identifier) Pos() token.Position {
 
 func (i *Identifier) End() token.Position {
 	length := utf8.RuneCountInString(i.Value)
-	return token.Position{Line: i.Token.Pos.Line, Col: i.Token.Pos.Col + length - 1}
+	return token.Position{Line: i.Token.Pos.Line, Col: i.Token.Pos.Col + length}
 }
 
 func (i *Identifier) expressionNode()      {}
@@ -530,29 +535,34 @@ func (ul *UnlessExpression) String() string {
 type HashLiteral struct {
 	Token token.Token
 	Pairs map[Expression]Expression
+	RBraceToken token.Token
 }
 
 func (h *HashLiteral) Pos() token.Position {
 	return h.Token.Pos
 }
 
+//func (h *HashLiteral) End() token.Position {
+//	maxLineMap := make(map[int]Expression)
+//
+//	for _, value := range h.Pairs {
+//		v := value.(Expression)
+//		maxLineMap[v.End().Line] = v
+//	}
+//
+//	maxLine := 0
+//	for line, _ := range maxLineMap {
+//		if line > maxLine {
+//			maxLine = line
+//		}
+//	}
+//
+//	ret := maxLineMap[maxLine].(Expression)
+//	return ret.End()
+//}
+
 func (h *HashLiteral) End() token.Position {
-	maxLineMap := make(map[int]Expression)
-
-	for _, value := range h.Pairs {
-		v := value.(Expression)
-		maxLineMap[v.End().Line] = v
-	}
-
-	maxLine := 0
-	for line, _ := range maxLineMap {
-		if line > maxLine {
-			maxLine = line
-		}
-	}
-
-	ret := maxLineMap[maxLine].(Expression)
-	return ret.End()
+	return token.Position{Line: h.RBraceToken.Pos.Line, Col: h.RBraceToken.Pos.Col + 1}
 }
 
 func (h *HashLiteral) expressionNode()      {}
@@ -585,7 +595,7 @@ func (n *NilLiteral) Pos() token.Position {
 func (n *NilLiteral) End() token.Position {
 	length := len(n.Token.Literal)
 	pos := n.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (n *NilLiteral) expressionNode()      {}
@@ -607,7 +617,7 @@ func (il *IntegerLiteral) Pos() token.Position {
 func (il *IntegerLiteral) End() token.Position {
 	length := utf8.RuneCountInString(il.Token.Literal)
 	pos := il.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (il *IntegerLiteral) expressionNode()      {}
@@ -629,7 +639,7 @@ func (il *UIntegerLiteral) Pos() token.Position {
 func (il *UIntegerLiteral) End() token.Position {
 	length := utf8.RuneCountInString(il.Token.Literal)
 	pos := il.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (il *UIntegerLiteral) expressionNode()      {}
@@ -651,7 +661,7 @@ func (fl *FloatLiteral) Pos() token.Position {
 func (fl *FloatLiteral) End() token.Position {
 	length := utf8.RuneCountInString(fl.Token.Literal)
 	pos := fl.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (fl *FloatLiteral) expressionNode()      {}
@@ -673,7 +683,7 @@ func (b *Boolean) Pos() token.Position {
 func (b *Boolean) End() token.Position {
 	length := utf8.RuneCountInString(b.Token.Literal)
 	pos := b.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (b *Boolean) expressionNode()      {}
@@ -692,7 +702,15 @@ func (rel *RegExLiteral) Pos() token.Position {
 	return rel.Token.Pos
 }
 
+//func (rel *RegExLiteral) End() token.Position {
+//	return rel.Token.Pos
+//}
+
 func (rel *RegExLiteral) End() token.Position {
+	length := utf8.RuneCountInString(rel.Token.Literal)
+	pos := rel.Token.Pos
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
+
 	return rel.Token.Pos
 }
 
@@ -718,7 +736,12 @@ func (a *ArrayLiteral) End() token.Position {
 	if aLen > 0 {
 		return a.Members[aLen-1].End()
 	}
-	return a.Token.Pos
+	if a.CreationCount == nil {
+		ret := a.Token.Pos
+		ret.Col = ret.Col + 1
+		return ret
+	}
+	return a.CreationCount.End()
 }
 
 func (a *ArrayLiteral) expressionNode()      {}
@@ -905,7 +928,8 @@ func (s *StringLiteral) Pos() token.Position {
 }
 
 func (s *StringLiteral) End() token.Position {
-	return s.Token.Pos
+	length := utf8.RuneCountInString(s.Value)
+	return token.Position{Line: s.Token.Pos.Line, Col: s.Token.Pos.Col + length}
 }
 
 func (s *StringLiteral) expressionNode()      {}
@@ -926,7 +950,8 @@ func (is *InterpolatedString) Pos() token.Position {
 }
 
 func (is *InterpolatedString) End() token.Position {
-	return is.Token.Pos
+	length := utf8.RuneCountInString(is.Value)
+	return token.Position{Line: is.Token.Pos.Line, Col: is.Token.Pos.Col + length}
 }
 
 func (is *InterpolatedString) expressionNode()      {}
@@ -950,7 +975,7 @@ func (t *TryStmt) Pos() token.Position {
 
 func (t *TryStmt) End() token.Position {
 	if t.Finally != nil {
-		t.Finally.End()
+		return t.Finally.End()
 	}
 
 	aLen := len(t.Catches)
@@ -1080,29 +1105,34 @@ func (ts *ThrowStmt) String() string {
 type StructLiteral struct {
 	Token token.Token
 	Pairs map[Expression]Expression
+	RBraceToken token.Token
 }
 
 func (s *StructLiteral) Pos() token.Position {
 	return s.Token.Pos
 }
 
+//func (s *StructLiteral) End() token.Position {
+//	maxLineMap := make(map[int]Expression)
+//
+//	for _, value := range s.Pairs {
+//		v := value.(Expression)
+//		maxLineMap[v.End().Line] = v
+//	}
+//
+//	maxLine := 0
+//	for line, _ := range maxLineMap {
+//		if line > maxLine {
+//			maxLine = line
+//		}
+//	}
+//
+//	ret := maxLineMap[maxLine].(Expression)
+//	return ret.End()
+//}
+
 func (s *StructLiteral) End() token.Position {
-	maxLineMap := make(map[int]Expression)
-
-	for _, value := range s.Pairs {
-		v := value.(Expression)
-		maxLineMap[v.End().Line] = v
-	}
-
-	maxLine := 0
-	for line, _ := range maxLineMap {
-		if line > maxLine {
-			maxLine = line
-		}
-	}
-
-	ret := maxLineMap[maxLine].(Expression)
-	return ret.End()
+	return token.Position{Line: s.RBraceToken.Pos.Line, Col: s.RBraceToken.Pos.Col + 1}
 }
 
 func (s *StructLiteral) expressionNode()      {}
@@ -1163,7 +1193,10 @@ func (rs *ReturnStatement) Pos() token.Position {
 }
 
 func (rs *ReturnStatement) End() token.Position {
-	return rs.ReturnValue.End()
+	if rs.ReturnValue != nil {
+		return rs.ReturnValue.End()
+	}
+	return token.Position{Line: rs.Token.Pos.Line, Col: rs.Token.Pos.Col + len(rs.Token.Literal)}
 }
 
 func (rs *ReturnStatement) statementNode()       {}
@@ -1237,7 +1270,8 @@ func (ls *LetStatement) End() token.Position {
 	if aLen > 0 {
 		return ls.Values[aLen-1].End()
 	}
-	return ls.Token.Pos
+	
+	return ls.Names[0].End()
 }
 
 func (ls *LetStatement) statementNode()       {}
@@ -1327,7 +1361,7 @@ func (be *BreakExpression) Pos() token.Position {
 func (be *BreakExpression) End() token.Position {
 	length := utf8.RuneCountInString(be.Token.Literal)
 	pos := be.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (be *BreakExpression) expressionNode()      {}
@@ -1349,7 +1383,7 @@ func (ce *ContinueExpression) Pos() token.Position {
 func (ce *ContinueExpression) End() token.Position {
 	length := utf8.RuneCountInString(ce.Token.Literal)
 	pos := ce.Token.Pos
-	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length - 1}
+	return token.Position{Filename: pos.Filename, Line: pos.Line, Col: pos.Col + length}
 }
 
 func (ce *ContinueExpression) expressionNode()      {}
@@ -1410,7 +1444,7 @@ func (ge *GrepExpr) End() token.Position {
 	if ge.Expr == nil {
 		return ge.Block.End()
 	}
-	return ge.Token.Pos
+	return ge.Token.Pos //should never happen
 }
 
 func (ge *GrepExpr) expressionNode()      {}
@@ -1456,7 +1490,7 @@ func (me *MapExpr) End() token.Position {
 	if me.Expr == nil {
 		return me.Block.End()
 	}
-	return me.Token.Pos
+	return me.Token.Pos //should never happen
 }
 
 func (me *MapExpr) expressionNode()      {}
@@ -1557,7 +1591,9 @@ func (pe *PostfixExpression) Pos() token.Position {
 }
 
 func (pe *PostfixExpression) End() token.Position {
-	return pe.Left.End()
+	ret := pe.Left.End()
+	ret.Col = ret.Col + len(pe.Operator)
+	return ret
 }
 
 func (pe *PostfixExpression) expressionNode() {}
@@ -1794,7 +1830,11 @@ func (se *SliceExpression) Pos() token.Position {
 }
 
 func (se *SliceExpression) End() token.Position {
-	return se.EndIndex.End()
+	if se.EndIndex != nil {
+		return se.EndIndex.End()
+	}
+
+	return se.StartIndex.End()
 }
 
 func (se *SliceExpression) expressionNode()      {}
@@ -1910,53 +1950,6 @@ func (y *YieldExpression) String() string {
 }
 
 ///////////////////////////////////////////////////////////
-//                      FIELD LITERAL                   //
-///////////////////////////////////////////////////////////
-type FieldLiteral struct {
-	Token token.Token
-	Pairs map[Expression]Expression
-}
-
-func (f *FieldLiteral) Pos() token.Position {
-	return f.Token.Pos
-}
-
-func (f *FieldLiteral) End() token.Position {
-	maxLineMap := make(map[int]Expression)
-
-	for _, value := range f.Pairs {
-		v := value.(Expression)
-		maxLineMap[v.End().Line] = v
-	}
-
-	maxLine := 0
-	for line, _ := range maxLineMap {
-		if line > maxLine {
-			maxLine = line
-		}
-	}
-
-	ret := maxLineMap[maxLine].(Expression)
-	return ret.End()
-}
-
-func (f *FieldLiteral) expressionNode()      {}
-func (f *FieldLiteral) TokenLiteral() string { return f.Token.Literal }
-func (f *FieldLiteral) String() string {
-	var out bytes.Buffer
-
-	pairs := []string{}
-	for key, value := range f.Pairs {
-		pairs = append(pairs, key.String()+"=>"+value.String())
-	}
-	out.WriteString("{")
-	out.WriteString(strings.Join(pairs, ", "))
-	out.WriteString("}")
-
-	return out.String()
-}
-
-///////////////////////////////////////////////////////////
 //                  PIPE OPERATOR                        //
 ///////////////////////////////////////////////////////////
 // Pipe operator.
@@ -1992,29 +1985,36 @@ func (p *Pipe) String() string {
 type EnumLiteral struct {
 	Token token.Token
 	Pairs map[Expression]Expression
+	RBraceToken token.Token
 }
 
 func (e *EnumLiteral) Pos() token.Position {
 	return e.Token.Pos
 }
 
+//func (e *EnumLiteral) End() token.Position {
+//	maxLineMap := make(map[int]Expression)
+//
+//	for _, value := range e.Pairs {
+//		v := value.(Expression)
+//		maxLineMap[v.End().Line] = v
+//	}
+//
+//	maxLine := 0
+//	for line, _ := range maxLineMap {
+//		if line > maxLine {
+//			maxLine = line
+//		}
+//	}
+//
+//	ret := maxLineMap[maxLine].(Expression)
+//	return ret.End()
+//}
+
 func (e *EnumLiteral) End() token.Position {
-	maxLineMap := make(map[int]Expression)
-
-	for _, value := range e.Pairs {
-		v := value.(Expression)
-		maxLineMap[v.End().Line] = v
-	}
-
-	maxLine := 0
-	for line, _ := range maxLineMap {
-		if line > maxLine {
-			maxLine = line
-		}
-	}
-
-	ret := maxLineMap[maxLine].(Expression)
-	return ret.End()
+	ret := e.RBraceToken.Pos
+	ret.Col = ret.Col + 1
+	return ret
 }
 
 func (e *EnumLiteral) expressionNode()      {}
@@ -2369,18 +2369,23 @@ func (mc *HashMapComprehension) String() string {
 type TupleLiteral struct {
 	Token   token.Token
 	Members []Expression
+	RParenToken token.Token
 }
 
 func (t *TupleLiteral) Pos() token.Position {
 	return t.Token.Pos
 }
 
+//func (t *TupleLiteral) End() token.Position {
+//	aLen := len(t.Members)
+//	if aLen > 0 {
+//		return t.Members[aLen-1].End()
+//	}
+//	return t.Token.Pos
+//}
+
 func (t *TupleLiteral) End() token.Position {
-	aLen := len(t.Members)
-	if aLen > 0 {
-		return t.Members[aLen-1].End()
-	}
-	return t.Token.Pos
+	return t.RParenToken.Pos
 }
 
 func (t *TupleLiteral) expressionNode()      {}

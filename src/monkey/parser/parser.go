@@ -485,7 +485,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 		}
 
 		//empty tuple, e.g. 'x = ()'
-		return &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}}
+		return &ast.TupleLiteral{Token: curToken, Members: []ast.Expression{}, RParenToken: p.curToken}
 	}
 
 	exp := p.parseExpression(LOWEST)
@@ -510,14 +510,14 @@ func (p *Parser)parseTupleExpression(tok token.Token, expr ast.Expression) ast.E
 	for {
 		switch p.curToken.Type {
 		case token.RPAREN:
-			ret := &ast.TupleLiteral{Token: tok, Members: members}
+			ret := &ast.TupleLiteral{Token: tok, Members: members, RParenToken:p.curToken}
 			return ret
 		case token.COMMA:
 			p.nextToken()
 			//For a 1-tuple: "(1,)", the trailing comma is necessary to distinguish it
 			//from the parenthesized expression (1).
 			if p.curTokenIs(token.RPAREN) {  //e.g.  let x = (1,)
-				ret := &ast.TupleLiteral{Token: tok, Members: members}
+				ret := &ast.TupleLiteral{Token: tok, Members: members, RParenToken:p.curToken}
 				return ret
 			}
 			members = append(members, p.parseExpression(LOWEST))
@@ -774,6 +774,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.errors = append(p.errors, msg)
 	}
 
+	expression.RBraceToken = p.curToken
 	return expression
 }
 
@@ -1402,7 +1403,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 
 	if p.peekTokenIs(token.RBRACE) { //empty hash
 		p.nextToken()
-		hash := &ast.HashLiteral{Token: curToken}
+		hash := &ast.HashLiteral{Token: curToken, RBraceToken:p.curToken}
 		hash.Pairs = make(map[ast.Expression]ast.Expression)
 
 		return hash
@@ -1460,6 +1461,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 				break
 			}
 		}
+		hash.RBraceToken = p.curToken
 		return hash
 	} else {
 		pos := p.fixPosCol()
@@ -1564,6 +1566,7 @@ func (p *Parser) parseStructExpression() ast.Expression {
 		}
 		p.nextToken()
 	}
+	s.RBraceToken = p.curToken
 	return s
 }
 
@@ -2005,6 +2008,7 @@ func (p *Parser) parseEnumExpression() ast.Expression {
 		//check for empty `enum`
 		if p.peekTokenIs(token.RBRACE) {
 			p.nextToken()
+			e.RBraceToken = p.curToken
 			return e
 		}
 
@@ -2060,6 +2064,7 @@ func (p *Parser) parseEnumExpression() ast.Expression {
 		p.nextToken()
 	}
 
+	e.RBraceToken = p.curToken
 	return e
 }
 
