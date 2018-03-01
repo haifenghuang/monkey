@@ -385,6 +385,7 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement {
 		p.nextToken()
 	}
 
+	stmt.SrcEndToken = p.curToken
 	return stmt
 }
 
@@ -714,6 +715,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	if p.curTokenIs(token.SEMICOLON) { //let x;
+		stmt.SrcEndToken = p.curToken
 		return stmt
 	}
 
@@ -740,6 +742,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		i += 1
 	}
 
+	stmt.SrcEndToken = p.curToken
 	return stmt
 }
 
@@ -1797,6 +1800,7 @@ func (p *Parser) parseFunctionStatement() ast.Statement {
 		p.nextToken()
 	}
 
+	FnStmt.SrcEndToken = p.curToken
 	return FnStmt
 }
 
@@ -1990,6 +1994,7 @@ func (p *Parser) parseEnumStatement() ast.Statement {
 		p.nextToken()
 	}
 
+	enumStmt.SrcEndToken = p.curToken
 	return enumStmt
 }
 
@@ -2384,6 +2389,7 @@ func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclSt
 				p.nextToken()
 			}
 		}
+		stmt.SrcEndToken = p.curToken
 		return stmt
 	}
 
@@ -2440,6 +2446,7 @@ func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclSt
 		return nil
 	}
 
+	stmt.SrcEndToken = p.curToken
 	return stmt
 }
 

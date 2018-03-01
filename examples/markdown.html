@@ -650,6 +650,7 @@ a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0
 <p>Lets</p>
 <ul>
 <li><a href="#center">CENTER</a></li>
+<li><a href="#parse">Parse</a></li>
 <li><a href="#size">SIZE</a></li>
 </ul>
 </li>
@@ -715,10 +716,16 @@ a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0
 </div>
 <h2>Lets</h2>
 <h3 id="center">CENTER</h3>
-<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> CENTER <span class="pl-k">=</span> <span class="pl-c1">15.0</span>; </pre></div>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> CENTER <span class="pl-k">=</span> <span class="pl-c1">15.0</span></pre></div>
 <p>This is the constant 'CENTER'.</p>
+<h3 id="parse">Parse</h3>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> Parse <span class="pl-k">=</span> <span class="pl-c1">fn</span>(lexer) {
+	fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>This is the parser part!<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>) <span class="pl-c"><span class="pl-c">//</span>just a demo</span>
+<span class="pl-c"></span>	fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>The parser take a lexer as input, and generate an AST<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>)
+}</pre></div>
+<p>This is a demo parser</p>
 <h3 id="size">SIZE</h3>
-<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> SIZE <span class="pl-k">=</span> <span class="pl-c1">10</span>; </pre></div>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> SIZE <span class="pl-k">=</span> <span class="pl-c1">10</span></pre></div>
 <p>This is the constant 'SIZE'.</p>
 <h2>Enums</h2>
 <h3 id="color">Color</h3>
@@ -751,6 +758,10 @@ This is just for demo purpose.</p>
 <div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>) <span class="pl-c"><span class="pl-c">//</span>result is 3</span></pre></div>
 <p>This is a example of calling <code>Add</code> with two strings:</p>
 <div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-s"><span class="pl-pds">"</span>Hello <span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>) <span class="pl-c"><span class="pl-c">//</span>result is "Hello world"</span></pre></div>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Add</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">+</span> y
+}</pre></div>
 <h4>Parameters</h4>
 <table>
 <thead>
@@ -783,12 +794,24 @@ This is just for demo purpose.</p>
 <h3 id="div">Div</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Div</span> (x, y) </pre></div>
 <p>Div returns the division of its two parameters</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Div</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">/</span> y
+}</pre></div>
 <h3 id="mul">Mul</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Mul</span> (x, y) </pre></div>
 <p>Mul returns the multiply of its two parameters</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Mul</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">*</span> y
+}</pre></div>
 <h3 id="sub">Sub</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Sub</span> (x, y) </pre></div>
 <p>Sub returns the subtraction of its two parameters</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Sub</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">-</span> y
+}</pre></div>
 <h4>Parameters</h4>
 <table>
 <thead>
@@ -818,15 +841,26 @@ This is just for demo purpose.</p>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@DepartmentValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>DepartmentValidator annotation class.<br>
 It is used for checking a list of department.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@DepartmentValidator</span> {
+  property Department
+}</pre></div>
 <h3 id="minmaxvalidator">MinMaxValidator</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@MinMaxValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>MinMaxValidator annotation class<br>
 It is used for checking min and max length<br>
 The max length has a default value of 10</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@MinMaxValidator</span> {
+  property MinLength
+  property MaxLength <span class="pl-k">default</span> <span class="pl-c1">10</span>
+}</pre></div>
 <h3 id="nospacevalidator">NoSpaceValidator</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@NoSpaceValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>NoSpaceValidator annotation class(it's a marker annotation).<br>
 It is used for checking spaces.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@NoSpaceValidator</span> {}</pre></div>
 <h3 id="person">Person</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>A Persion class which has three private variable:</p>
@@ -875,14 +909,101 @@ It is used for checking spaces.</p>
 <h5 id="init">init</h5>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-k">init</span> (firstname, lastname, nickname) </pre></div>
 <p>This is the constructor of the Person class.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span> {
+	<span class="pl-c"><span class="pl-c">//</span>this is the firstname</span>
+<span class="pl-c"></span>	<span class="pl-k">let</span> firstName;
+	<span class="pl-c"><span class="pl-c">//</span>this is the last name</span>
+<span class="pl-c"></span>	<span class="pl-k">let</span> lastName;
+	<span class="pl-k">let</span> nickName; #this <span class="pl-k">is</span> the nick <span class="pl-c1">name</span>(# comment will not included <span class="pl-k">in</span> doc)
+
+	<span class="pl-c"><span class="pl-c">//</span>This is the constructor of the Person class.</span>
+<span class="pl-c"></span>	fn <span class="pl-k">init</span>(firstname, lastname="huang", nickname="mike") {
+		this.<span class="pl-smi">firstName</span> <span class="pl-k">=</span> firstname
+		this.<span class="pl-smi">lastName</span> <span class="pl-k">=</span> lastname
+		this.<span class="pl-smi">nickName</span> <span class="pl-k">=</span> nickname
+	}
+
+	<span class="pl-c"><span class="pl-c">/*</span> Method 'Msg' demonstrate function default values and variable arguements</span>
+<span class="pl-c">	 * @param {string} extra1  this is extra1</span>
+<span class="pl-c">	 * @param {string} extra2  this is extra2, it has default value "extra2"</span>
+<span class="pl-c">	 * @param {array}  args this is args</span>
+<span class="pl-c">	<span class="pl-c">*/</span></span>
+	fn <span class="pl-c1">Msg</span>(extra1, extra2<span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>extra2<span class="pl-pds">"</span></span>, args<span class="pl-k">...</span>) {
+		<span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>firstName=%s, lastName=%s, nickName=%s<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, firstName, lastName, nickName)
+		<span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>extra1=%s, extra2=%s<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, extra1, extra2)
+		<span class="pl-k">for</span> i <span class="pl-k">in</span> args {
+			<span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>i=%v<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, i)
+		}
+	}
+}</pre></div>
 <h3 id="request">Request</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Request</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>Request class represent a user made request.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Request</span> {
+  <span class="pl-c"><span class="pl-c">/*</span> FirstName property, it's value's length should be between 1(minlenght) and 10(maxlength). <span class="pl-c">*/</span></span>
+  <span class="pl-k">@MinMaxValidator</span>(MinLength<span class="pl-k">=</span><span class="pl-c1">1</span>)
+  property FirstName;
+
+  <span class="pl-c"><span class="pl-c">//</span>LastName property, it's value should contain no space.</span>
+<span class="pl-c"></span>  <span class="pl-k">@NoSpaceValidator</span>
+  property LastName;
+
+  <span class="pl-c"><span class="pl-c">//</span>Dept property, it's value should be in a list ["Department of Education", "Department of Labors"].</span>
+<span class="pl-c"></span>  <span class="pl-k">@DepartmentValidator</span>(Department<span class="pl-k">=</span>[<span class="pl-s"><span class="pl-pds">"</span>Department of Education<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Department of Labors<span class="pl-pds">"</span></span>])
+  property Dept;
+}</pre></div>
 <h3 id="requesthandler">RequestHandler</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestHandler</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>RequestHandler class is responsible for processing the annotation.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestHandler</span> {
+  <span class="pl-c"><span class="pl-c">//</span>handle is the real logic of processing the annotations.</span>
+<span class="pl-c"></span>  <span class="pl-k">static</span> fn <span class="pl-c1">handle</span>(o) {
+    props <span class="pl-k">=</span> o.<span class="pl-c1">getProperties</span>()
+    <span class="pl-k">for</span> p <span class="pl-k">in</span> props {
+      annos <span class="pl-k">=</span> p.<span class="pl-c1">getAnnotations</span>()
+      <span class="pl-k">for</span> anno <span class="pl-k">in</span> annos {
+        <span class="pl-k">if</span> anno.<span class="pl-c1">instanceOf</span>(MinMaxValidator) {
+          <span class="pl-c"><span class="pl-c">//</span>p.value is the property real value.</span>
+<span class="pl-c"></span>          <span class="pl-k">if</span> <span class="pl-c1">len</span>(p.<span class="pl-c1">value</span>) <span class="pl-k">&gt;</span> anno.<span class="pl-smi">MaxLength</span> <span class="pl-k">||</span> <span class="pl-c1">len</span>(p.<span class="pl-c1">value</span>) <span class="pl-k">&lt;</span> anno.<span class="pl-smi">MinLength</span> {
+            <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>Property '%s' is not valid!<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, p.<span class="pl-smi">name</span>)
+          }
+        } elseif anno.<span class="pl-c1">instanceOf</span>(NoSpaceValidator) {
+          <span class="pl-k">for</span> c <span class="pl-k">in</span> p.<span class="pl-c1">value</span> {
+            <span class="pl-k">if</span> c <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> <span class="pl-k">||</span> c <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\t</span><span class="pl-pds">"</span></span> {
+              <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>Property '%s' is not valid!<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, p.<span class="pl-smi">name</span>)
+              <span class="pl-k">break</span>
+            }
+          }
+        } elseif anno.<span class="pl-c1">instanceOf</span>(DepartmentValidator) {
+          found <span class="pl-k">=</span> <span class="pl-c1">false</span>
+          <span class="pl-k">for</span> d <span class="pl-k">in</span> anno.<span class="pl-smi">Department</span> {
+            <span class="pl-k">if</span> p.<span class="pl-c1">value</span> <span class="pl-k">==</span> d {
+              found <span class="pl-k">=</span> <span class="pl-c1">true</span>
+            }
+          }
+          <span class="pl-k">if</span> <span class="pl-k">!</span>found {
+            <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>Property '%s' is not valid!<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, p.<span class="pl-smi">name</span>)
+          }
+        }
+      }
+    }
+  }
+}</pre></div>
 <h3 id="requestmain">RequestMain</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>RequestMain class. It is the user/client code.</p>
+<h4>Source</h4>
+<div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span> {
+  <span class="pl-k">static</span> fn <span class="pl-c1">main</span>() {
+    request <span class="pl-k">=</span> new <span class="pl-c1">Request</span>()
+    request.<span class="pl-smi">FirstName</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Haifeng123456789<span class="pl-pds">"</span></span>
+    request.<span class="pl-smi">LastName</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Huang     <span class="pl-pds">"</span></span>
+    request.<span class="pl-smi">Dept</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Department of Labors<span class="pl-pds">"</span></span>
+    RequestHandler.<span class="pl-c1">handle</span>(request)
+  }
+}</pre></div>
 <hr>
-<p><em>Last updated 2018-02-28</em></p></article></div></body>
+<p><em>Last updated 2018-03-01</em></p></article></div></body>

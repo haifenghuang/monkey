@@ -7,6 +7,12 @@ import (
 	"unicode/utf8"
 )
 
+//Source interface is used in documentation for printing source code.
+type Source interface {
+	SrcStart() token.Position
+	SrcEnd()   token.Position
+}
+
 type Node interface {
 	Pos() token.Position // position of first character belonging to the node
 	End() token.Position // position of first character immediately after the node
@@ -849,7 +855,10 @@ type FunctionStatement struct {
 	Name            *Identifier
 	FunctionLiteral *FunctionLiteral
 	Annotations     []*AnnotationStmt
+
+	//Doc related
 	Doc             *CommentGroup // associated documentation; or nil
+	SrcEndToken     token.Token //used for printing source code
 }
 
 func (f *FunctionStatement) Pos() token.Position {
@@ -859,6 +868,19 @@ func (f *FunctionStatement) Pos() token.Position {
 func (f *FunctionStatement) End() token.Position {
 	return f.FunctionLiteral.Body.End()
 }
+
+//Below two methods implements 'Source' interface.
+func (f *FunctionStatement) SrcStart() token.Position {
+	return f.Pos()
+}
+
+func (f *FunctionStatement) SrcEnd() token.Position {
+	ret := f.SrcEndToken.Pos
+	length := utf8.RuneCountInString(f.SrcEndToken.Literal)
+	ret.Offset += length
+	return ret
+}
+
 
 func (f *FunctionStatement) statementNode() {}
 func (f *FunctionStatement) TokenLiteral() string { return f.Token.Literal }
@@ -1258,7 +1280,9 @@ type LetStatement struct {
 	ModifierLevel ModifierLevel //used in 'class'
 	Annotations []*AnnotationStmt
 
+	//Doc related
 	Doc *CommentGroup // associated documentation; or nil
+	SrcEndToken token.Token
 }
 
 func (ls *LetStatement) Pos() token.Position {
@@ -1272,6 +1296,18 @@ func (ls *LetStatement) End() token.Position {
 	}
 	
 	return ls.Names[0].End()
+}
+
+//Below two methods implements 'Source' interface.
+func (ls *LetStatement) SrcStart() token.Position {
+	return ls.Pos()
+}
+
+func (ls *LetStatement) SrcEnd() token.Position {
+	ret := ls.SrcEndToken.Pos
+	length := utf8.RuneCountInString(ls.SrcEndToken.Literal)
+	ret.Offset += length
+	return ret
 }
 
 func (ls *LetStatement) statementNode()       {}
@@ -2060,7 +2096,9 @@ type EnumStatement struct {
 	Name  *Identifier
 	EnumLiteral *EnumLiteral
 
+	//Doc related
 	Doc *CommentGroup // associated documentation; or nil
+	SrcEndToken token.Token
 }
 
 func (e *EnumStatement) Pos() token.Position {
@@ -2069,6 +2107,18 @@ func (e *EnumStatement) Pos() token.Position {
 
 func (e *EnumStatement) End() token.Position {
 	return e.EnumLiteral.End()
+}
+
+//Below two methods implements 'Source' interface.
+func (e *EnumStatement) SrcStart() token.Position {
+	return e.Pos()
+}
+
+func (e *EnumStatement) SrcEnd() token.Position {
+	ret := e.SrcEndToken.Pos
+	length := utf8.RuneCountInString(e.SrcEndToken.Literal)
+	ret.Offset += length
+	return ret
 }
 
 func (e *EnumStatement) statementNode() {}
@@ -2483,7 +2533,10 @@ type ClassStatement struct {
 	CategoryName    *Identifier
 	ClassLiteral    *ClassLiteral
 	IsAnnotation    bool //class is a annotation class
+
+	//Doc related
 	Doc             *CommentGroup // associated documentation; or nil
+	SrcEndToken     token.Token
 }
 
 func (c *ClassStatement) Pos() token.Position {
@@ -2492,6 +2545,18 @@ func (c *ClassStatement) Pos() token.Position {
 
 func (c *ClassStatement) End() token.Position {
 	return c.ClassLiteral.Block.End()
+}
+
+//Below two methods implements 'Source' interface.
+func (c *ClassStatement) SrcStart() token.Position {
+	return c.Pos()
+}
+
+func (c *ClassStatement) SrcEnd() token.Position {
+	ret := c.SrcEndToken.Pos
+	length := utf8.RuneCountInString(c.SrcEndToken.Literal)
+	ret.Offset += length
+	return ret
 }
 
 func (c *ClassStatement) statementNode() {}
@@ -2599,7 +2664,9 @@ type PropertyDeclStmt struct {
 	Annotations   []*AnnotationStmt
 	Default       Expression
 
+	//Doc related
 	Doc *CommentGroup // associated documentation; or nil
+	SrcEndToken token.Token
 }
 
 func (p *PropertyDeclStmt) Pos() token.Position {
@@ -2612,6 +2679,19 @@ func (p *PropertyDeclStmt) End() token.Position {
 	}
 	return p.Getter.End()
 }
+
+//Below two methods implements 'Source' interface.
+func (p *PropertyDeclStmt) SrcStart() token.Position {
+	return p.Pos()
+}
+
+func (p *PropertyDeclStmt) SrcEnd() token.Position {
+	ret := p.SrcEndToken.Pos
+	length := utf8.RuneCountInString(p.SrcEndToken.Literal)
+	ret.Offset += length
+	return ret
+}
+
 
 func (p *PropertyDeclStmt) statementNode()       {}
 func (p *PropertyDeclStmt) TokenLiteral() string { return p.Token.Literal }

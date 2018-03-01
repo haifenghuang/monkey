@@ -2391,6 +2391,9 @@ The tool only support below statement for document generator:
 //generate html file, the generated file is named 'doc.html'
 ./mdoc -html examples/doc.my
 
+//generate html file, also generate source code of classes and functions. the generated file is named 'doc.html'
+./mdoc -html -showsource examples/doc.my
+
 //processing all the '.my' files in examples directory, generate html.
 ./mdoc -html examples
 ```

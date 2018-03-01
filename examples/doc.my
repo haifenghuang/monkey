@@ -57,6 +57,12 @@ enum Color {
 	GRAY = 5
 };
 
+//This is a demo parser
+let Parse = fn(lexer) {
+	fmt.Printf("This is the parser part!\n") //just a demo
+	fmt.Printf("The parser take a lexer as input, and generate an AST\n")
+}
+
 //This is the constant 'SIZE'.
 let SIZE = 10
 

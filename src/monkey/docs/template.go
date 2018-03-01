@@ -30,7 +30,7 @@ var (
 Table of Contents
 =================
 {{block "index" .}}_no index_{{end}}
-<p>__TOC_PLACEHOLDER_LINE__</p>
+<p>__TOC_PLACEHOLDER_LINE_END__</p>
 {{block "lets" .}}_no lets_{{end}}
 {{block "enums" .}}_no enums_{{end}}
 {{block "functions" .}}_no functions_{{end}}
@@ -84,7 +84,7 @@ _Last updated {{genDate}}_`
 ## Lets
   {{range $idx, $let := .Lets}}
 ### {{$let.Name}}
-{{codeBlock "swift" $let.Text}}
+{{codeBlock "swift" $let.Src}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -112,6 +112,11 @@ _Last updated {{genDate}}_`
 ### {{$fn.Value.Name}}
 {{codeBlock "swift" $fn.Value.Text}}
 {{$fn.Value.Doc}}
+
+{{if eq .Value.ShowSrc 1}}
+#### Source
+{{codeBlock "swift" $fn.Value.Src}}
+{{end}}
 
     {{if gt (len $fn.Params) 0}}
 #### Parameters
@@ -182,10 +187,13 @@ _Last updated {{genDate}}_`
 - {{inline $ret.Type}} {{$ret.Desc}}
         {{end}}
     {{end}}
-
   {{end}}
 {{end}}
 
+  {{if eq .Value.ShowSrc 1}}
+#### Source
+{{codeBlock "swift" $cls.Value.Src}}
+  {{end}}
   {{end}}
   {{end}}
 {{end}}`

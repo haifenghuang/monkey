@@ -13,9 +13,9 @@ import (
 	"os"
 )
 
-func genDocs(path string, htmlFlag bool, isDir bool) {
+func genDocs(path string, htmlFlag bool, showSrcFlag bool, isDir bool) {
 	if !isDir { //single file
-		genDoc(path, htmlFlag)
+		genDoc(path, htmlFlag, showSrcFlag)
 		return
 	}
 
@@ -36,12 +36,12 @@ func genDocs(path string, htmlFlag bool, isDir bool) {
 	for _, d := range list {
 		if strings.HasSuffix(d.Name(), ".my") {
 			filename := filepath.Join(path, d.Name())
-			genDoc(filename, htmlFlag)
+			genDoc(filename, htmlFlag, showSrcFlag)
 		}
 	}
 }
 
-func genDoc(filename string, htmlFlag bool) {
+func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -62,6 +62,11 @@ func genDoc(filename string, htmlFlag bool) {
 		os.Exit(1)
 	}
 
+	doc.ShowSrcComment = 0
+	if showSrcFlag {
+		doc.ShowSrcComment = 1
+	}
+
 	//generate markdown docs
 	file := doc.New(filename, program)
 	md := doc.MdDocGen(file)
@@ -78,8 +83,8 @@ func genDoc(filename string, htmlFlag bool) {
 	}
 
 	if !htmlFlag {
-		//Remove placeholder line, it's only used in HTML output.
-		md = strings.Replace(md, doc.PlaceHolder, "", 1)
+		//Remove TOC line, it's only used in HTML output.
+		md = strings.Replace(md, doc.PlaceHolderTOC, "", 1)
 	}
 	//generate markdown file
 	fmt.Fprintln(outMd, md)
@@ -117,6 +122,9 @@ func main() {
 	var htmlFlag bool
 	flag.BoolVar(&htmlFlag, "html", false, "Generate html file using github REST API.")
 
+	var showSrcFlag bool
+	flag.BoolVar(&showSrcFlag, "showsource", false, "Show class and function source code in Generated file.")
+
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
@@ -133,9 +141,9 @@ func main() {
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		genDocs(path, htmlFlag, true)
+		genDocs(path, htmlFlag, showSrcFlag, true)
 	case mode.IsRegular():
-		genDocs(path, htmlFlag, false)
+		genDocs(path, htmlFlag, showSrcFlag, false)
 	}
 	
 }

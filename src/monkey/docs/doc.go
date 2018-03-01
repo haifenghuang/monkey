@@ -8,6 +8,7 @@ import (
 	"monkey/ast"
 	"net/http"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -17,6 +18,7 @@ import (
 )
 
 var (
+	ShowSrcComment int
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
 	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
 
@@ -24,8 +26,9 @@ var (
 	toc = `<p><div>
 <a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a>
 <div id="table-of-contents" style="display:none;">`
+
 	//PlaceHolder line, used only in html output.
-	PlaceHolder = "<p>__TOC_PLACEHOLDER_LINE__</p>"
+	PlaceHolderTOC = "<p>__TOC_PLACEHOLDER_LINE_END__</p>"
 )
 
 // File is the documentation for an entire monkey file.
@@ -64,6 +67,9 @@ type Value struct {
 	Name string //name
 	Doc  string //comment
 	Text string //declaration text
+
+	ShowSrc int //should source or not
+	Src  string //Source code text
 }
 
 // Request for github REST API
@@ -80,6 +86,8 @@ func New(name string, program *ast.Program) *File {
 	var lets    []*ast.LetStatement
 	var funcs   []*ast.FunctionStatement
 
+	fh, _ := os.Open(name)
+	defer fh.Close()
 	for _, statement := range program.Statements {
 		switch s := statement.(type) {
 		case *ast.ClassStatement:
@@ -103,10 +111,10 @@ func New(name string, program *ast.Program) *File {
 
 	return &File{
 		Name:    filepath.Base(name),
-		Classes: sortedClasses(classes),
-		Enums:   sortedEnums(enums),
-		Lets:    sortedLets(lets),
-		Funcs:   sortedFuncs(funcs),
+		Classes: sortedClasses(classes, fh),
+		Enums:   sortedEnums(enums, fh),
+		Lets:    sortedLets(lets, fh),
+		Funcs:   sortedFuncs(funcs, fh),
 	}
 }
 
@@ -120,7 +128,10 @@ func MdDocGen(f *File) string {
 	for _, templ := range templs[1:] {
 		tmpl, _ = template.Must(tmpl.Clone()).Parse(templ)
 	}
-	tmpl.Execute(&buffer, f)
+	err := tmpl.Execute(&buffer, f)
+	if err != nil {
+		fmt.Printf("Template executing error:%v\n", err)
+	}
 	return normalize(buffer.String())
 }
 
@@ -184,9 +195,16 @@ function toggle_toc() {
 	out.WriteString(string(body))
 	out.WriteString("</article></div></body>")
 
-	html := out.String()
 	//The github returned html's inner linking is not working,
 	//so we need to fix this.
+	return postProcessingHtml(out.String(), file)
+}
+
+func postProcessingHtml(htmlStr string, file *File) string {
+	html := htmlStr
+	//--------------------------------------------
+	// Fix link
+	//--------------------------------------------
 	for _, enum := range file.Enums {
 		enumName := enum.Name
 		src  := fmt.Sprintf("<h3>%s</h3>", enumName)
@@ -232,8 +250,12 @@ function toggle_toc() {
 		}
 	}
 
+	//--------------------------------------------
+	// Replace placeholder
+	//--------------------------------------------
 	html = strings.Replace(html, "<h1>Table of Contents</h1>", toc, 1)
-	html = strings.Replace(html, PlaceHolder, "</div>", 1)
+	html = strings.Replace(html, PlaceHolderTOC, "</div>", 1)
+
 	return html
 }
 
@@ -255,7 +277,7 @@ func sortBy(less func(i, j int) bool, swap func(i, j int), n int) {
 	sort.Sort(&data{n, swap, less})
 }
 
-func sortedClasses(classes []*ast.ClassStatement) []*Classes {
+func sortedClasses(classes []*ast.ClassStatement, fh *os.File) []*Classes {
 	list := make([]*Classes, len(classes))
 	i := 0
 	for _, c := range classes {
@@ -283,13 +305,15 @@ func sortedClasses(classes []*ast.ClassStatement) []*Classes {
 
 		list[i] = &Classes{
 			Value: &Value{
-				Name: c.Name.Value,
-				Doc:  preProcessCommentExamples(c.Doc.Text()),
-				Text: c.Docs(),
+				Name:    c.Name.Value,
+				Doc:     preProcessCommentExamples(c.Doc.Text()),
+				Text:    c.Docs(),
+				ShowSrc: ShowSrcComment,
+				Src:     genSourceText(c, fh),
 			},
-			Props: sortedProps(props),
-			Lets:  sortedLets(lets),
-			Funcs: sortedFuncs(funcs),
+			Props: sortedProps(props, fh),
+			Lets:  sortedLets(lets, fh),
+			Funcs: sortedFuncs(funcs, fh),
 		}
 		i++
 	}
@@ -307,14 +331,16 @@ func sortedClasses(classes []*ast.ClassStatement) []*Classes {
 	return list
 }
 
-func sortedLets(lets []*ast.LetStatement) []*Value {
+func sortedLets(lets []*ast.LetStatement, fh *os.File) []*Value {
 	list := make([]*Value, len(lets))
 	i := 0
 	for _, l := range lets {
 		list[i] = &Value{
-			Name: l.Names[0].Value,
-			Doc:  preProcessCommentExamples(l.Doc.Text()),
-			Text: l.Docs(),
+			Name:    l.Names[0].Value,
+			Doc:     preProcessCommentExamples(l.Doc.Text()),
+			Text:    l.Docs(),
+			ShowSrc: ShowSrcComment,
+			Src:     genSourceText(l, fh),
 		}
 		i++
 	}
@@ -327,14 +353,16 @@ func sortedLets(lets []*ast.LetStatement) []*Value {
 	return list
 }
 
-func sortedEnums(enums []*ast.EnumStatement) []*Value {
+func sortedEnums(enums []*ast.EnumStatement, fh *os.File) []*Value {
 	list := make([]*Value, len(enums))
 	i := 0
 	for _, e := range enums {
 		list[i] = &Value{
-			Name: e.Name.Value,
-			Doc:  preProcessCommentExamples(e.Doc.Text()),
-			Text: e.Docs(),
+			Name:    e.Name.Value,
+			Doc:     preProcessCommentExamples(e.Doc.Text()),
+			Text:    e.Docs(),
+			ShowSrc: ShowSrcComment,
+			Src:     genSourceText(e, fh),
 		}
 		i++
 	}
@@ -347,11 +375,13 @@ func sortedEnums(enums []*ast.EnumStatement) []*Value {
 	return list
 }
 
-func sortedFuncs(funcs []*ast.FunctionStatement) []*Function {
+func sortedFuncs(funcs []*ast.FunctionStatement, fh *os.File) []*Function {
 	list := make([]*Function, len(funcs))
 	i := 0
 	for _, f := range funcs {
 		list[i]= parseFuncComment(f.Name.Value, preProcessCommentExamples(f.Doc.Text()), f.Docs())
+		list[i].Value.Src = genSourceText(f, fh)
+		list[i].Value.ShowSrc = ShowSrcComment
 		i++
 	}
 
@@ -367,14 +397,16 @@ func sortedFuncs(funcs []*ast.FunctionStatement) []*Function {
 	return list
 }
 
-func sortedProps(props []*ast.PropertyDeclStmt) []*Value {
+func sortedProps(props []*ast.PropertyDeclStmt, fh *os.File) []*Value {
 	list := make([]*Value, len(props))
 	i := 0
 	for _, p := range props {
 		list[i] = &Value{
-			Name: p.Name.Value,
-			Doc:  preProcessCommentExamples(p.Doc.Text()),
-			Text: p.Docs(),
+			Name:    p.Name.Value,
+			Doc:     preProcessCommentExamples(p.Doc.Text()),
+			Text:    p.Docs(),
+			ShowSrc: ShowSrcComment,
+			Src:     genSourceText(p, fh),
 		}
 
 		if strings.HasPrefix(p.Name.Value, "this") {
@@ -511,4 +543,15 @@ func replaceFirstString(re *regexp.Regexp, srcStr, replStr string) string {
 	out := make([]byte, len(src))
 	copy(out, src)
 	return string(out)
+}
+
+//Generate source text from AST
+func genSourceText(src ast.Source, fh *os.File) string {
+	tStart := src.SrcStart()
+	tEnd := src.SrcEnd()
+
+	buf := make([]byte, tEnd.Offset - tStart.Offset)
+	fh.ReadAt(buf, int64(tStart.Offset))
+
+	return string(buf)
 }
