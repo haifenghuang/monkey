@@ -67,6 +67,10 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
 		doc.ShowSrcComment = 1
 	}
 
+	if htmlFlag {
+		doc.GenHTML = 1
+	}
+
 	//generate markdown docs
 	file := doc.New(filename, program)
 	md := doc.MdDocGen(file)
@@ -82,10 +86,10 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
 		os.Exit(1)
 	}
 
-	if !htmlFlag {
-		//Remove TOC line, it's only used in HTML output.
-		md = strings.Replace(md, doc.PlaceHolderTOC, "", 1)
-	}
+//	if !htmlFlag {
+//		//Remove TOC line, it's only used in HTML output.
+//		md = strings.Replace(md, doc.PlaceHolderTOC, "", 1)
+//	}
 	//generate markdown file
 	fmt.Fprintln(outMd, md)
 	outMd.Close()
@@ -93,7 +97,7 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
 	if !htmlFlag {
 		return
 	}
-	
+
 	//create html file
 	htmlFile := genFilename + ".html"
 	outHtml, err := os.Create(htmlFile)

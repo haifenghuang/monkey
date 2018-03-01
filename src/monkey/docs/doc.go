@@ -18,9 +18,11 @@ import (
 )
 
 var (
-	ShowSrcComment int
+	ShowSrcComment int //1:if show source comment
+	GenHTML int //1: if generate html-style document
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
 	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
+	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
 
 	//table of contents
 	toc = `<p><div>
@@ -29,6 +31,7 @@ var (
 
 	//PlaceHolder line, used only in html output.
 	PlaceHolderTOC = "<p>__TOC_PLACEHOLDER_LINE_END__</p>"
+	PlaceHolderShowSourceEnd = "<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>"
 )
 
 // File is the documentation for an entire monkey file.
@@ -38,6 +41,7 @@ type File struct {
 	Enums   []*Value
 	Lets    []*Value
 	Funcs   []*Function
+	GenHTML int
 }
 
 /* Classes is the documention for a class */
@@ -68,8 +72,9 @@ type Value struct {
 	Doc  string //comment
 	Text string //declaration text
 
-	ShowSrc int //should source or not
+	ShowSrc int //should source or not, 1: show
 	Src  string //Source code text
+	GenHTML int //1: if generate html-style document
 }
 
 // Request for github REST API
@@ -115,6 +120,7 @@ func New(name string, program *ast.Program) *File {
 		Enums:   sortedEnums(enums, fh),
 		Lets:    sortedLets(lets, fh),
 		Funcs:   sortedFuncs(funcs, fh),
+		GenHTML: GenHTML,
 	}
 }
 
@@ -184,7 +190,14 @@ function toggle_toc() {
     toc.style.display=(toc.style.display=='none')?'block':'none';
     btn.innerHTML=(toc.style.display=='none')?'&#x25BC;':'&#x25B2;';
 }
+function toggle_source(name) {
+    var showsource=document.getElementById('showsource-' + name);
+    var btn=document.getElementById('btn-text-'+ name);
+    showsource.style.display=(showsource.style.display=='none')?'block':'none';
+    btn.innerHTML=(showsource.style.display=='none')?'&#x25BC;':'&#x25B2;';
+}
 </script>`)
+
 	out.WriteString("</head>")
 	//css style
 	out.WriteString("<style>")
@@ -253,8 +266,26 @@ func postProcessingHtml(htmlStr string, file *File) string {
 	//--------------------------------------------
 	// Replace placeholder
 	//--------------------------------------------
+	//Replace 'Table of Contents'
 	html = strings.Replace(html, "<h1>Table of Contents</h1>", toc, 1)
-	html = strings.Replace(html, PlaceHolderTOC, "</div>", 1)
+	html = strings.Replace(html, PlaceHolderTOC, "</div></br>", 1)
+
+	//Replace 'Show Source'
+	if m := regExpShowSourceBegin.FindAllStringSubmatch(html, -1); m != nil {
+		for _, match := range m {
+			var buffer bytes.Buffer
+			buffer.WriteString(`<p><div><a id="source-button" class="source-button" onclick="toggle_source('`)
+			buffer.WriteString(match[2])
+			buffer.WriteString(`')"><span id="btn-text-`)
+			buffer.WriteString(match[2])
+			buffer.WriteString(`">&#x25BC;</span>&nbsp;Show source</a>`)
+			buffer.WriteString(`<div id="showsource-`)
+			buffer.WriteString(match[2])
+			buffer.WriteString(`" style="display:none;">`)
+			html = strings.Replace(html, match[1], buffer.String(), 1)
+		}
+	}
+	html = strings.Replace(html, PlaceHolderShowSourceEnd, "</div></br>", -1)
 
 	return html
 }
@@ -310,6 +341,7 @@ func sortedClasses(classes []*ast.ClassStatement, fh *os.File) []*Classes {
 				Text:    c.Docs(),
 				ShowSrc: ShowSrcComment,
 				Src:     genSourceText(c, fh),
+				GenHTML: GenHTML,
 			},
 			Props: sortedProps(props, fh),
 			Lets:  sortedLets(lets, fh),
@@ -341,6 +373,7 @@ func sortedLets(lets []*ast.LetStatement, fh *os.File) []*Value {
 			Text:    l.Docs(),
 			ShowSrc: ShowSrcComment,
 			Src:     genSourceText(l, fh),
+			GenHTML: GenHTML,
 		}
 		i++
 	}
@@ -363,6 +396,7 @@ func sortedEnums(enums []*ast.EnumStatement, fh *os.File) []*Value {
 			Text:    e.Docs(),
 			ShowSrc: ShowSrcComment,
 			Src:     genSourceText(e, fh),
+			GenHTML: GenHTML,
 		}
 		i++
 	}
@@ -382,6 +416,7 @@ func sortedFuncs(funcs []*ast.FunctionStatement, fh *os.File) []*Function {
 		list[i]= parseFuncComment(f.Name.Value, preProcessCommentExamples(f.Doc.Text()), f.Docs())
 		list[i].Value.Src = genSourceText(f, fh)
 		list[i].Value.ShowSrc = ShowSrcComment
+		list[i].Value.GenHTML = GenHTML
 		i++
 	}
 
@@ -407,6 +442,7 @@ func sortedProps(props []*ast.PropertyDeclStmt, fh *os.File) []*Value {
 			Text:    p.Docs(),
 			ShowSrc: ShowSrcComment,
 			Src:     genSourceText(p, fh),
+			GenHTML: GenHTML,
 		}
 
 		if strings.HasPrefix(p.Name.Value, "this") {

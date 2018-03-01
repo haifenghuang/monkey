@@ -30,7 +30,7 @@ var (
 Table of Contents
 =================
 {{block "index" .}}_no index_{{end}}
-<p>__TOC_PLACEHOLDER_LINE_END__</p>
+{{if eq 1 .GenHTML}}<p>__TOC_PLACEHOLDER_LINE_END__</p>{{end}}
 {{block "lets" .}}_no lets_{{end}}
 {{block "enums" .}}_no enums_{{end}}
 {{block "functions" .}}_no functions_{{end}}
@@ -113,11 +113,6 @@ _Last updated {{genDate}}_`
 {{codeBlock "swift" $fn.Value.Text}}
 {{$fn.Value.Doc}}
 
-{{if eq .Value.ShowSrc 1}}
-#### Source
-{{codeBlock "swift" $fn.Value.Src}}
-{{end}}
-
     {{if gt (len $fn.Params) 0}}
 #### Parameters
 | Name | Type | Description |
@@ -130,7 +125,11 @@ _Last updated {{genDate}}_`
         {{range $idx, $ret := $fn.Returns}}
 - {{inline $ret.Type}} {{$ret.Desc}}
         {{end}}
-    {{end}}
+    {{end}}{{if eq .Value.ShowSrc 1}}
+{{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$fn.Value.Name}}{{else}}#### Source{{end}}
+{{codeBlock "swift" $fn.Value.Src}}
+{{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
+{{end}}
 
   {{end}}
 {{end}}
@@ -188,11 +187,11 @@ _Last updated {{genDate}}_`
         {{end}}
     {{end}}
   {{end}}
-{{end}}
-
-  {{if eq .Value.ShowSrc 1}}
-#### Source
+{{end}}{{if eq .Value.ShowSrc 1}}
+{{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$cls.Value.Name}}{{else}}#### Source{{end}}
 {{codeBlock "swift" $cls.Value.Src}}
+
+{{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
   {{end}}
   {{end}}
   {{end}}

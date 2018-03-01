@@ -5,6 +5,12 @@ function toggle_toc() {
     toc.style.display=(toc.style.display=='none')?'block':'none';
     btn.innerHTML=(toc.style.display=='none')?'&#x25BC;':'&#x25B2;';
 }
+function toggle_source(name) {
+    var showsource=document.getElementById('showsource-' + name);
+    var btn=document.getElementById('btn-text-'+ name);
+    showsource.style.display=(showsource.style.display=='none')?'block':'none';
+    btn.innerHTML=(showsource.style.display=='none')?'&#x25BC;':'&#x25B2;';
+}
 </script></head><style>@font-face {
 	font-family: octicons-anchor;
 	src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
@@ -640,7 +646,9 @@ function toggle_toc() {
 	border-color: #4183c4;
 }
 a.toc-button:hover{color:#A88C3F;background:#E8E4D9;}
-a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0.5em 0.5em;border-radius:3px;}
+a.toc-button{color:#465DA6;cursor:pointer;font-weight: bold;font-size:large;padding: 0.3em 0.5em 0.5em 0.5em;border-radius:3px;}
+a.source-button:hover{color:#A88C3F;background:#E8E4D9;}
+a.source-button{color:#465DA6;cursor:pointer;font-weight: bold;font-size:large;border-radius:3px;}
 </style><body><div class="readme"><article class="markdown-body"><h1>File <code>doc.my</code></h1>
 <p><div>
 <a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a>
@@ -713,7 +721,7 @@ a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0
 </ul>
 </li>
 </ul>
-</div>
+</div></br>
 <h2>Lets</h2>
 <h3 id="center">CENTER</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">let</span> CENTER <span class="pl-k">=</span> <span class="pl-c1">15.0</span></pre></div>
@@ -730,24 +738,24 @@ a.toc-button{color:#465DA6;cursor:pointer;font-size:large;padding: 0.3em 0.5em 0
 <h2>Enums</h2>
 <h3 id="color">Color</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">Color</span>{
+	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
+	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>, 
 	RED <span class="pl-k">=</span> <span class="pl-c1">0</span>, 
 	BLUE <span class="pl-k">=</span> <span class="pl-c1">1</span>, 
 	YELLOW <span class="pl-k">=</span> <span class="pl-c1">2</span>, 
-	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>, 
-	WHITE <span class="pl-k">=</span> <span class="pl-c1">4</span>, 
-	GRAY <span class="pl-k">=</span> <span class="pl-c1">5</span>
+	BLACK <span class="pl-k">=</span> <span class="pl-c1">3</span>
 }</pre></div>
 <p>Color enum is the color of the image.<br>
 This is just for demo purpose.</p>
 <h3 id="logoption">LogOption</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">enum</span> <span class="pl-en">LogOption</span>{
+	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)), 
 	Ldate <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">0</span>), 
 	Ltime <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">1</span>), 
 	Lmicroseconds <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">2</span>), 
 	Llongfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">3</span>), 
 	Lshortfile <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>), 
-	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>), 
-	LstdFlags <span class="pl-k">=</span> ((<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">4</span>) <span class="pl-k">|</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>))
+	LUTC <span class="pl-k">=</span> (<span class="pl-c1">1</span> <span class="pl-k">&lt;&lt;</span> <span class="pl-c1">5</span>)
 }</pre></div>
 <p>LogOption enum is defined for Log options.</p>
 <h2>Functions</h2>
@@ -758,10 +766,6 @@ This is just for demo purpose.</p>
 <div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>) <span class="pl-c"><span class="pl-c">//</span>result is 3</span></pre></div>
 <p>This is a example of calling <code>Add</code> with two strings:</p>
 <div class="highlight highlight-source-swift"><pre>sum <span class="pl-k">=</span> <span class="pl-c1">Add</span>(<span class="pl-s"><span class="pl-pds">"</span>Hello <span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>) <span class="pl-c"><span class="pl-c">//</span>result is "Hello world"</span></pre></div>
-<h4>Source</h4>
-<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Add</span>(x,y) {
-	<span class="pl-k">return</span> x <span class="pl-k">+</span> y
-}</pre></div>
 <h4>Parameters</h4>
 <table>
 <thead>
@@ -791,27 +795,30 @@ This is just for demo purpose.</p>
 <p><code>string</code> the string concatenation of it's two parameters if both parameters are strings</p>
 </li>
 </ul>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Add')"><span id="btn-text-Add">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Add" style="display:none;">
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Add</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">+</span> y
+}</pre></div>
+</div></br>
 <h3 id="div">Div</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Div</span> (x, y) </pre></div>
 <p>Div returns the division of its two parameters</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Div')"><span id="btn-text-Div">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Div" style="display:none;">
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Div</span>(x,y) {
 	<span class="pl-k">return</span> x <span class="pl-k">/</span> y
 }</pre></div>
+</div></br>
 <h3 id="mul">Mul</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Mul</span> (x, y) </pre></div>
 <p>Mul returns the multiply of its two parameters</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Mul')"><span id="btn-text-Mul">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Mul" style="display:none;">
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Mul</span>(x,y) {
 	<span class="pl-k">return</span> x <span class="pl-k">*</span> y
 }</pre></div>
+</div></br>
 <h3 id="sub">Sub</h3>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Sub</span> (x, y) </pre></div>
 <p>Sub returns the subtraction of its two parameters</p>
-<h4>Source</h4>
-<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Sub</span>(x,y) {
-	<span class="pl-k">return</span> x <span class="pl-k">-</span> y
-}</pre></div>
 <h4>Parameters</h4>
 <table>
 <thead>
@@ -836,31 +843,39 @@ This is just for demo purpose.</p>
 <ul>
 <li><code>int</code> the subtraction of it's two parameters</li>
 </ul>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Sub')"><span id="btn-text-Sub">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Sub" style="display:none;">
+<div class="highlight highlight-source-swift"><pre>fn <span class="pl-c1">Sub</span>(x,y) {
+	<span class="pl-k">return</span> x <span class="pl-k">-</span> y
+}</pre></div>
+</div></br>
 <h2>Classes</h2>
 <h3 id="departmentvalidator">DepartmentValidator</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@DepartmentValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>DepartmentValidator annotation class.<br>
 It is used for checking a list of department.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('DepartmentValidator')"><span id="btn-text-DepartmentValidator">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-DepartmentValidator" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@DepartmentValidator</span> {
   property Department
 }</pre></div>
+</div></br>
 <h3 id="minmaxvalidator">MinMaxValidator</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@MinMaxValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>MinMaxValidator annotation class<br>
 It is used for checking min and max length<br>
 The max length has a default value of 10</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('MinMaxValidator')"><span id="btn-text-MinMaxValidator">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-MinMaxValidator" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@MinMaxValidator</span> {
   property MinLength
   property MaxLength <span class="pl-k">default</span> <span class="pl-c1">10</span>
 }</pre></div>
+</div></br>
 <h3 id="nospacevalidator">NoSpaceValidator</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@NoSpaceValidator</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>NoSpaceValidator annotation class(it's a marker annotation).<br>
 It is used for checking spaces.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('NoSpaceValidator')"><span id="btn-text-NoSpaceValidator">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-NoSpaceValidator" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-k">@NoSpaceValidator</span> {}</pre></div>
+</div></br>
 <h3 id="person">Person</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>A Persion class which has three private variable:</p>
@@ -909,7 +924,7 @@ It is used for checking spaces.</p>
 <h5 id="init">init</h5>
 <div class="highlight highlight-source-swift"><pre>fn <span class="pl-k">init</span> (firstname, lastname, nickname) </pre></div>
 <p>This is the constructor of the Person class.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Person')"><span id="btn-text-Person">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Person" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Person</span> {
 	<span class="pl-c"><span class="pl-c">//</span>this is the firstname</span>
 <span class="pl-c"></span>	<span class="pl-k">let</span> firstName;
@@ -937,10 +952,11 @@ It is used for checking spaces.</p>
 		}
 	}
 }</pre></div>
+</div></br>
 <h3 id="request">Request</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Request</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>Request class represent a user made request.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('Request')"><span id="btn-text-Request">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-Request" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">Request</span> {
   <span class="pl-c"><span class="pl-c">/*</span> FirstName property, it's value's length should be between 1(minlenght) and 10(maxlength). <span class="pl-c">*/</span></span>
   <span class="pl-k">@MinMaxValidator</span>(MinLength<span class="pl-k">=</span><span class="pl-c1">1</span>)
@@ -954,10 +970,11 @@ It is used for checking spaces.</p>
 <span class="pl-c"></span>  <span class="pl-k">@DepartmentValidator</span>(Department<span class="pl-k">=</span>[<span class="pl-s"><span class="pl-pds">"</span>Department of Education<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Department of Labors<span class="pl-pds">"</span></span>])
   property Dept;
 }</pre></div>
+</div></br>
 <h3 id="requesthandler">RequestHandler</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestHandler</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>RequestHandler class is responsible for processing the annotation.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('RequestHandler')"><span id="btn-text-RequestHandler">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-RequestHandler" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestHandler</span> {
   <span class="pl-c"><span class="pl-c">//</span>handle is the real logic of processing the annotations.</span>
 <span class="pl-c"></span>  <span class="pl-k">static</span> fn <span class="pl-c1">handle</span>(o) {
@@ -992,10 +1009,11 @@ It is used for checking spaces.</p>
     }
   }
 }</pre></div>
+</div></br>
 <h3 id="requestmain">RequestMain</h3>
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span>{ <span class="pl-k">...</span> }</pre></div>
 <p>RequestMain class. It is the user/client code.</p>
-<h4>Source</h4>
+<p><div><a id="source-button" class="source-button" onclick="toggle_source('RequestMain')"><span id="btn-text-RequestMain">&#x25BC;</span>&nbsp;Show source</a><div id="showsource-RequestMain" style="display:none;">
 <div class="highlight highlight-source-swift"><pre><span class="pl-k">class</span> <span class="pl-en">RequestMain</span> {
   <span class="pl-k">static</span> fn <span class="pl-c1">main</span>() {
     request <span class="pl-k">=</span> new <span class="pl-c1">Request</span>()
@@ -1005,5 +1023,6 @@ It is used for checking spaces.</p>
     RequestHandler.<span class="pl-c1">handle</span>(request)
   }
 }</pre></div>
+</div></br>
 <hr>
 <p><em>Last updated 2018-03-01</em></p></article></div></body>

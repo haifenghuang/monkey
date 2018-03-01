@@ -40,8 +40,6 @@ Table of Contents
 
   * [RequestMain](#requestmain)
 
-
-
 ## Lets
 
 ### CENTER
@@ -70,12 +68,12 @@ This is the constant 'SIZE'.
 ### Color
 ```swift
 enum Color{
-	GRAY = 5, 
-	RED = 0, 
 	BLUE = 1, 
 	YELLOW = 2, 
 	BLACK = 3, 
-	WHITE = 4
+	WHITE = 4, 
+	GRAY = 5, 
+	RED = 0
 }
 ```
 Color enum is the color of the image.
@@ -84,13 +82,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
+	Llongfile = (1 << 3), 
+	Lshortfile = (1 << 4), 
 	LUTC = (1 << 5), 
 	LstdFlags = ((1 << 4) | (1 << 5)), 
 	Ldate = (1 << 0), 
 	Ltime = (1 << 1), 
-	Lmicroseconds = (1 << 2), 
-	Llongfile = (1 << 3), 
-	Lshortfile = (1 << 4)
+	Lmicroseconds = (1 << 2)
 }
 ```
 LogOption enum is defined for Log options.
@@ -113,13 +111,6 @@ This is a example of calling `Add` with two strings:
 sum = Add("Hello ", "world") //result is "Hello world"
 ```
 
-#### Source
-```swift
-fn Add(x,y) {
-	return x + y
-}
-```
-
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -131,6 +122,13 @@ y|`int`| this is the second parameter |
 - `int` the addition of it's two parameters if both parameters are ints. 
 
 - `string` the string concatenation of it's two parameters if both parameters are strings 
+
+#### Source
+```swift
+fn Add(x,y) {
+	return x + y
+}
+```
 
 ### Div
 ```swift
@@ -164,13 +162,6 @@ fn Sub (x, y)
 ```
 Sub returns the subtraction of its two parameters
 
-#### Source
-```swift
-fn Sub(x,y) {
-	return x - y
-}
-```
-
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -180,6 +171,13 @@ y|`int`| this is the second parameter |
 #### Returns
 
 - `int` the subtraction of it's two parameters 
+
+#### Source
+```swift
+fn Sub(x,y) {
+	return x - y
+}
+```
 
 ## Classes
 
