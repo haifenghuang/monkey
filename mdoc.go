@@ -13,9 +13,9 @@ import (
 	"os"
 )
 
-func genDocs(path string, htmlFlag bool, showSrcFlag bool, cssStyle int, isDir bool) {
+func genDocs(path string, cfg doc.Config, isDir bool) {
 	if !isDir { //single file
-		genDoc(path, htmlFlag, showSrcFlag, cssStyle)
+		genDoc(path, cfg)
 		return
 	}
 
@@ -36,12 +36,12 @@ func genDocs(path string, htmlFlag bool, showSrcFlag bool, cssStyle int, isDir b
 	for _, d := range list {
 		if strings.HasSuffix(d.Name(), ".my") {
 			filename := filepath.Join(path, d.Name())
-			genDoc(filename, htmlFlag, showSrcFlag, cssStyle)
+			genDoc(filename, cfg)
 		}
 	}
 }
 
-func genDoc(filename string, htmlFlag bool, showSrcFlag bool, cssStyle int) {
+func genDoc(filename string, cfg doc.Config) {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -62,20 +62,6 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool, cssStyle int) {
 		os.Exit(1)
 	}
 
-	doc.ShowSrcComment = 0
-	if showSrcFlag {
-		doc.ShowSrcComment = 1
-	}
-
-	if cssStyle > len(doc.BuiltinCssStyle)-1 || cssStyle < 0 {
-		cssStyle = 0 //default
-	}
-	doc.CssStyle = cssStyle
-
-	if htmlFlag {
-		doc.GenHTML = 1
-	}
-
 	//generate markdown docs
 	file := doc.New(filename, program)
 	md := doc.MdDocGen(file)
@@ -91,15 +77,11 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool, cssStyle int) {
 		os.Exit(1)
 	}
 
-//	if !htmlFlag {
-//		//Remove TOC line, it's only used in HTML output.
-//		md = strings.Replace(md, doc.PlaceHolderTOC, "", 1)
-//	}
 	//generate markdown file
 	fmt.Fprintln(outMd, md)
 	outMd.Close()
 
-	if !htmlFlag {
+	if cfg.GenHTML == 0 {
 		return
 	}
 
@@ -138,6 +120,10 @@ func main() {
 	msg := fmt.Sprintf("Set css style(Avialable: 0-%d) to use for html output.", len(doc.BuiltinCssStyle))
 	flag.IntVar(&cssStyle, "css", 0, msg)
 
+	var cssFile string
+	flag.StringVar(&cssFile, "cssfile", "", "Css file to use for generating html file.")
+
+	//parse the command line options
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
@@ -152,11 +138,34 @@ func main() {
 		return
 	}
 
+	if htmlFlag {
+		doc.Cfg.GenHTML = 1
+
+		if cssFile != "" {
+			cssContents, err := ioutil.ReadFile(cssFile)
+			if err != nil {
+				fmt.Println("Error reading css file: ", err.Error())
+				//do not exits
+			} else {
+				doc.Cfg.CssContents = string(cssContents)
+			}
+		}
+
+		if cssStyle > len(doc.BuiltinCssStyle)-1 || cssStyle < 0 {
+			cssStyle = 0 //default
+		}
+		doc.Cfg.CssStyle = cssStyle
+
+	}
+
+	if showSrcFlag {
+		doc.Cfg.ShowSrcComment = 1
+	}
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		genDocs(path, htmlFlag, showSrcFlag, cssStyle, true)
+		genDocs(path, doc.Cfg, true)
 	case mode.IsRegular():
-		genDocs(path, htmlFlag, showSrcFlag, cssStyle, false)
+		genDocs(path, doc.Cfg, false)
 	}
 	
 }

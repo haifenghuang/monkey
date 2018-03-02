@@ -2398,7 +2398,7 @@ The tool only support below statement for document generator:
 //generate html file, also generate source code of classes and functions. the generated file is named 'doc.html'
 ./mdoc -html -showsource examples/doc.my
 
-//Use the some builtin css types to styling the generated html
+//Use the some builtin css types for styling the generated html
 //    0 - GitHub
 //    1 - Zenburn
 //    2 - Lake
@@ -2408,6 +2408,11 @@ The tool only support below statement for document generator:
 //    6 - Atom Dark
 
 ./mdoc -html -showsource -css 1 examples/doc.my
+
+//Using external css file for styling the generated html file.
+//The '-cssfile' option has higher priority than the '-css' option.
+//If the supplied css file does not exists, then the '-css' option will be used.
+./mdoc -html -showsource -css 1 -cssfile ./examples/github-markdown.css examples/doc.my
 
 //processing all the '.my' files in examples directory, generate html.
 ./mdoc -html examples
@@ -2424,7 +2429,7 @@ Because github can not render html directly, you could use(http://htmlpreview.gi
 
 ## Syntax Highlight
 
-Currently there are three kind of syntax highlight for editors:
+Currently there are below kinds of syntax highlight for editors:
 
 1. vim
 

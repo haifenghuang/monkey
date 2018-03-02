@@ -18,9 +18,6 @@ import (
 )
 
 var (
-	ShowSrcComment int //1:if show source comment
-	GenHTML int //1: if generate html-style document
-	CssStyle int // default css style to use. Available is 0-5
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
 	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
 	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
@@ -33,7 +30,16 @@ var (
 	//PlaceHolder line, used only in html output.
 	PlaceHolderTOC = "<p>__TOC_PLACEHOLDER_LINE_END__</p>"
 	PlaceHolderShowSourceEnd = "<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>"
+
+	Cfg = Config{}
 )
+
+type Config struct {
+	ShowSrcComment int    //1:if show source comment
+	GenHTML        int    //1: if generate html-style document
+	CssStyle       int    // default css style to use.(See css.go for builtin css styles)
+	CssContents    string //User supplied css file contents for styling generated html file
+}
 
 // File is the documentation for an entire monkey file.
 type File struct {
@@ -121,7 +127,7 @@ func New(name string, program *ast.Program) *File {
 		Enums:   sortedEnums(enums, fh),
 		Lets:    sortedLets(lets, fh),
 		Funcs:   sortedFuncs(funcs, fh),
-		GenHTML: GenHTML,
+		GenHTML: Cfg.GenHTML,
 	}
 }
 
@@ -200,13 +206,17 @@ function toggle_source(name) {
 </script>`)
 
 	out.WriteString("</head>")
-	//css style
-	out.WriteString("<style>")
 
-	//There are 6 default css style for now
-	css := fmt.Sprintf(cssGeneral, strArr2IntfArr(BuiltinCssStyle[CssStyle])...)
+	//css style
+	var css string
+	out.WriteString("<style>")
+	css = Cfg.CssContents
+	if Cfg.CssContents == "" {
+		css = fmt.Sprintf(cssGeneral, strArr2IntfArr(BuiltinCssStyle[Cfg.CssStyle])...)
+	}
 	out.WriteString(css)
 	out.WriteString("</style>")
+
 	//body
 	out.WriteString(`<body><div class="readme"><article class="markdown-body">`)
 	out.WriteString(string(body))
@@ -343,9 +353,9 @@ func sortedClasses(classes []*ast.ClassStatement, fh *os.File) []*Classes {
 				Name:    c.Name.Value,
 				Doc:     preProcessCommentExamples(c.Doc.Text()),
 				Text:    c.Docs(),
-				ShowSrc: ShowSrcComment,
+				ShowSrc: Cfg.ShowSrcComment,
 				Src:     genSourceText(c, fh),
-				GenHTML: GenHTML,
+				GenHTML: Cfg.GenHTML,
 			},
 			Props: sortedProps(props, fh),
 			Lets:  sortedLets(lets, fh),
@@ -375,9 +385,9 @@ func sortedLets(lets []*ast.LetStatement, fh *os.File) []*Value {
 			Name:    l.Names[0].Value,
 			Doc:     preProcessCommentExamples(l.Doc.Text()),
 			Text:    l.Docs(),
-			ShowSrc: ShowSrcComment,
+			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(l, fh),
-			GenHTML: GenHTML,
+			GenHTML: Cfg.GenHTML,
 		}
 		i++
 	}
@@ -398,9 +408,9 @@ func sortedEnums(enums []*ast.EnumStatement, fh *os.File) []*Value {
 			Name:    e.Name.Value,
 			Doc:     preProcessCommentExamples(e.Doc.Text()),
 			Text:    e.Docs(),
-			ShowSrc: ShowSrcComment,
+			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(e, fh),
-			GenHTML: GenHTML,
+			GenHTML: Cfg.GenHTML,
 		}
 		i++
 	}
@@ -419,8 +429,8 @@ func sortedFuncs(funcs []*ast.FunctionStatement, fh *os.File) []*Function {
 	for _, f := range funcs {
 		list[i]= parseFuncComment(f.Name.Value, preProcessCommentExamples(f.Doc.Text()), f.Docs())
 		list[i].Value.Src = genSourceText(f, fh)
-		list[i].Value.ShowSrc = ShowSrcComment
-		list[i].Value.GenHTML = GenHTML
+		list[i].Value.ShowSrc = Cfg.ShowSrcComment
+		list[i].Value.GenHTML = Cfg.GenHTML
 		i++
 	}
 
@@ -444,9 +454,9 @@ func sortedProps(props []*ast.PropertyDeclStmt, fh *os.File) []*Value {
 			Name:    p.Name.Value,
 			Doc:     preProcessCommentExamples(p.Doc.Text()),
 			Text:    p.Docs(),
-			ShowSrc: ShowSrcComment,
+			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(p, fh),
-			GenHTML: GenHTML,
+			GenHTML: Cfg.GenHTML,
 		}
 
 		if strings.HasPrefix(p.Name.Value, "this") {
@@ -547,7 +557,7 @@ func SanitizedAnchorName(text string) string {
 }
 
 /* Process `@example block @` part, and replace this with 
-```swift
+```javascript
     block
 ```
 */
@@ -556,7 +566,7 @@ func preProcessCommentExamples(comments string) string {
 	if m := regExample.FindAllStringSubmatch(comments, -1); m != nil {
 		for _, match := range m {
 			var buffer bytes.Buffer
-			buffer.WriteString("\n```swift")
+			buffer.WriteString("\n```javascript")
 			buffer.WriteString(match[1])
 			buffer.WriteString("```\n")
 

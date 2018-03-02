@@ -2349,6 +2349,11 @@ Monkey还包含一个命令行工具`mdoc`，可以从Monkey文件的注释生�
 
 ./mdoc -html -showsource -css 1 examples/doc.my
 
+//使用外部css文件来修饰html文档(优先级高于'-css'选项)
+//'-cssfile'选项的优先级高于'-css'选项
+//如果提供的css文件不存在或者文件读取错误,则使用'-css'选项
+./mdoc -html -showsource -css 1 -cssfile ./examples/github-markdown.css examples/doc.my
+
 //遍历examples目录下的所有'.my'的文件，生成html
 ./mdoc -html examples
 ```
@@ -2364,7 +2369,7 @@ HTML文档的生成是调用github的REST API，因此必须在网络连接正�
 
 ## 语法高亮
 
-目前，monkey支持三种编辑器的语法高亮:
+目前，monkey支持以下几种编辑器的语法高亮:
 
 1. vim
 
