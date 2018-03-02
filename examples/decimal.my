@@ -23,10 +23,10 @@ fmt.println(i)
 f = float(d3)
 fmt.println(f)
 
-//Be careful with below sentence, it will output '125.12512312312312¡¯,
+//Be careful with below sentence, it will output '125.12512312312312',
 //not '125.1251231231231231231231231231231231231', because you use
 // 'fromFloat', the golang runtime will first convert 
-//'125.1251231231231231231231231231231231231' to '125.12512312312312¡¯.
+//'125.1251231231231231231231231231231231231' to '125.12512312312312'.
 //You should use decimal.fromString("125.1251231231231231231231231231231231231")
 //instead.
 println(decimal.fromFloat(125.1251231231231231231231231231231231231)) //not what you expected
