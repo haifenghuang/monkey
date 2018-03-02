@@ -204,21 +204,7 @@ function toggle_source(name) {
 	out.WriteString("<style>")
 
 	//There are 6 default css style for now
-	var css string
-	switch CssStyle {
-	case 0:
-		css = cssGitHub
-	case 1:
-		css = cssZenburn
-	case 2:
-		css = cssLake
-	case 3:
-		css = cssSeaSide
-	case 4:
-		css = cssKimbieLight
-	case 5:
-		css = cssLightBlue
-	}
+	css := fmt.Sprintf(cssGeneral, strArr2IntfArr(BuiltinCssStyle[CssStyle])...)
 	out.WriteString(css)
 	out.WriteString("</style>")
 	//body
@@ -608,4 +594,13 @@ func genSourceText(src ast.Source, fh *os.File) string {
 	fh.ReadAt(buf, int64(tStart.Offset))
 
 	return string(buf)
+}
+
+//convert '[]string' to '[]interface{}'
+func strArr2IntfArr(strArr []string) ([]interface{}) {
+	var intfArr []interface{}
+	for _, str := range strArr {
+		intfArr = append(intfArr, str)
+	}
+	return intfArr
 }

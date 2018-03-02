@@ -17,8 +17,8 @@ var (
 			}
 			return fmt.Sprintf("`%s`", txt)
 		},
-		"codeBlock": func(lang, code string) string {
-			return fmt.Sprintf("```%s\n%s\n```", lang, code)
+		"codeBlock": func(code string) string {
+			return fmt.Sprintf("```javascript\n%s\n```", code)
 		},
 		"sanitizedAnchorName": SanitizedAnchorName,
 		"genDate": func() string {
@@ -84,7 +84,7 @@ _Last updated {{genDate}}_`
 ## Lets
   {{range $idx, $let := .Lets}}
 ### {{$let.Name}}
-{{codeBlock "swift" $let.Src}}
+{{codeBlock $let.Src}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -97,7 +97,7 @@ _Last updated {{genDate}}_`
 ## Enums
   {{range $idx, $enum := .Enums}}
 ### {{$enum.Name}}
-{{codeBlock "swift" $enum.Text}}
+{{codeBlock $enum.Text}}
 {{$enum.Doc}}
   {{end}}
 {{end}}
@@ -110,7 +110,7 @@ _Last updated {{genDate}}_`
 ## Functions
   {{range $idx, $fn := .Funcs}}
 ### {{$fn.Value.Name}}
-{{codeBlock "swift" $fn.Value.Text}}
+{{codeBlock $fn.Value.Text}}
 {{$fn.Value.Doc}}
 
     {{if gt (len $fn.Params) 0}}
@@ -127,7 +127,7 @@ _Last updated {{genDate}}_`
         {{end}}
     {{end}}{{if eq .Value.ShowSrc 1}}
 {{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$fn.Value.Name}}{{else}}#### Source{{end}}
-{{codeBlock "swift" $fn.Value.Src}}
+{{codeBlock $fn.Value.Src}}
 {{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
 {{end}}
 
@@ -142,7 +142,7 @@ _Last updated {{genDate}}_`
 ## Classes
   {{range $idx, $cls := .Classes}}
 ### {{$cls.Value.Name}}
-{{codeBlock "swift" $cls.Value.Text}}
+{{codeBlock $cls.Value.Text}}
 {{$cls.Value.Doc}}
 
 {{if gt (len .Lets) 0}}
@@ -150,7 +150,7 @@ _Last updated {{genDate}}_`
 #### Lets
   {{range $idx, $let := .Lets}}
 ##### {{$let.Name}}
-{{codeBlock "swift" $let.Text}}
+{{codeBlock $let.Text}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -160,7 +160,7 @@ _Last updated {{genDate}}_`
 #### Properties
   {{range $idx, $prop := .Props}}
 ##### {{$prop.Name}}
-{{codeBlock "swift" $prop.Text}}
+{{codeBlock $prop.Text}}
 {{$prop.Doc}}
   {{end}}
 {{end}}
@@ -170,7 +170,7 @@ _Last updated {{genDate}}_`
 #### Functions
   {{range $idx, $fn := .Funcs}}
 ##### {{$fn.Value.Name}}
-{{codeBlock "swift" $fn.Value.Text}}
+{{codeBlock $fn.Value.Text}}
 {{$fn.Value.Doc}}
 
     {{if gt (len $fn.Params) 0}}
@@ -189,7 +189,7 @@ _Last updated {{genDate}}_`
   {{end}}
 {{end}}{{if eq .Value.ShowSrc 1}}
 {{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$cls.Value.Name}}{{else}}#### Source{{end}}
-{{codeBlock "swift" $cls.Value.Src}}
+{{codeBlock $cls.Value.Src}}
 
 {{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
   {{end}}

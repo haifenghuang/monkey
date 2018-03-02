@@ -67,7 +67,7 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool, cssStyle int) {
 		doc.ShowSrcComment = 1
 	}
 
-	if cssStyle > 5 || cssStyle < 0 {
+	if cssStyle > len(doc.BuiltinCssStyle)-1 || cssStyle < 0 {
 		cssStyle = 0 //default
 	}
 	doc.CssStyle = cssStyle
@@ -135,7 +135,8 @@ func main() {
 	flag.BoolVar(&showSrcFlag, "showsource", false, "Show class and function source code in Generated file.")
 
 	var cssStyle int
-	flag.IntVar(&cssStyle, "css", 0, "Set css style(Avialable: 0-5) to use for html output.")
+	msg := fmt.Sprintf("Set css style(Avialable: 0-%d) to use for html output.", len(doc.BuiltinCssStyle))
+	flag.IntVar(&cssStyle, "css", 0, msg)
 
 	flag.Parse()
 

@@ -2334,13 +2334,14 @@ Monkey还包含一个命令行工具`mdoc`，可以从Monkey文件的注释生�
 //生成html文件, 同时生成函数和类的代码，生成的文件名为'doc.html'
 ./mdoc -html -showsource examples/doc.my
 
-//使用内置的六种css格式修饰html文档(范围0-5)
+//使用内置的css格式修饰html文档
 //    0 - GitHub
 //    1 - Zenburn
 //    2 - Lake
 //    3 - Sea Side
 //    4 - Kimbie Light
 //    5 - Light Blue
+//    6 - Atom Dark
 
 ./mdoc -html -showsource -css 1 examples/doc.my
 
