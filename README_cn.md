@@ -160,6 +160,10 @@ Property 'LastName' not valid!
 
 ![REPL](REPL.gif)
 
+下面是使用mdoc生成的html文档:
+
+![HTML DOC](doc.png)
+
 ## 总览
 
 此项目是基于mayoms的项目 [monkey](https://github.com/mayoms/monkey)，修改了其中的一些bug，同时增加了许多语言特性：

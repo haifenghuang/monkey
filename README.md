@@ -160,6 +160,10 @@ Below is the REPL with real time syntax highlight:
 
 ![REPL](REPL.gif)
 
+Below is the html document generated using the `mdoc` tool:
+
+![HTML DOC](doc.png)
+
 ## Overview
 
 This project is based on mayoms's project [monkey](https://github.com/mayoms/monkey) with some bug fixes and a lot of new features including:
