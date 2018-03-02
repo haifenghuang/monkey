@@ -13,9 +13,9 @@ import (
 	"os"
 )
 
-func genDocs(path string, htmlFlag bool, showSrcFlag bool, isDir bool) {
+func genDocs(path string, htmlFlag bool, showSrcFlag bool, cssStyle int, isDir bool) {
 	if !isDir { //single file
-		genDoc(path, htmlFlag, showSrcFlag)
+		genDoc(path, htmlFlag, showSrcFlag, cssStyle)
 		return
 	}
 
@@ -36,12 +36,12 @@ func genDocs(path string, htmlFlag bool, showSrcFlag bool, isDir bool) {
 	for _, d := range list {
 		if strings.HasSuffix(d.Name(), ".my") {
 			filename := filepath.Join(path, d.Name())
-			genDoc(filename, htmlFlag, showSrcFlag)
+			genDoc(filename, htmlFlag, showSrcFlag, cssStyle)
 		}
 	}
 }
 
-func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
+func genDoc(filename string, htmlFlag bool, showSrcFlag bool, cssStyle int) {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -66,6 +66,11 @@ func genDoc(filename string, htmlFlag bool, showSrcFlag bool) {
 	if showSrcFlag {
 		doc.ShowSrcComment = 1
 	}
+
+	if cssStyle > 5 || cssStyle < 0 {
+		cssStyle = 0 //default
+	}
+	doc.CssStyle = cssStyle
 
 	if htmlFlag {
 		doc.GenHTML = 1
@@ -129,6 +134,9 @@ func main() {
 	var showSrcFlag bool
 	flag.BoolVar(&showSrcFlag, "showsource", false, "Show class and function source code in Generated file.")
 
+	var cssStyle int
+	flag.IntVar(&cssStyle, "css", 0, "Set css style(Avialable: 0-5) to use for html output.")
+
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
@@ -145,9 +153,9 @@ func main() {
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		genDocs(path, htmlFlag, showSrcFlag, true)
+		genDocs(path, htmlFlag, showSrcFlag, cssStyle, true)
 	case mode.IsRegular():
-		genDocs(path, htmlFlag, showSrcFlag, false)
+		genDocs(path, htmlFlag, showSrcFlag, cssStyle, false)
 	}
 	
 }

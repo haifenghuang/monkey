@@ -2394,6 +2394,16 @@ The tool only support below statement for document generator:
 //generate html file, also generate source code of classes and functions. the generated file is named 'doc.html'
 ./mdoc -html -showsource examples/doc.my
 
+//Use the six builtin css types to styling the generated html(range : 0-5)
+//    0 - GitHub
+//    1 - Zenburn
+//    2 - Lake
+//    3 - Sea Side
+//    4 - Kimbie Light
+//    5 - Light Blue
+
+./mdoc -html -showsource -css 1 examples/doc.my
+
 //processing all the '.my' files in examples directory, generate html.
 ./mdoc -html examples
 ```

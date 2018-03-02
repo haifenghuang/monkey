@@ -20,6 +20,7 @@ import (
 var (
 	ShowSrcComment int //1:if show source comment
 	GenHTML int //1: if generate html-style document
+	CssStyle int // default css style to use. Available is 0-5
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
 	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
 	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
@@ -201,6 +202,23 @@ function toggle_source(name) {
 	out.WriteString("</head>")
 	//css style
 	out.WriteString("<style>")
+
+	//There are 6 default css style for now
+	var css string
+	switch CssStyle {
+	case 0:
+		css = cssGitHub
+	case 1:
+		css = cssZenburn
+	case 2:
+		css = cssLake
+	case 3:
+		css = cssSeaSide
+	case 4:
+		css = cssKimbieLight
+	case 5:
+		css = cssLightBlue
+	}
 	out.WriteString(css)
 	out.WriteString("</style>")
 	//body

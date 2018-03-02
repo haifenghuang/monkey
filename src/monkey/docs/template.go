@@ -117,7 +117,7 @@ _Last updated {{genDate}}_`
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |{{range $idx, $param := $fn.Params}}
-{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
+|{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
     {{end}}
 
     {{if gt (len $fn.Returns) 0}}
@@ -177,7 +177,7 @@ _Last updated {{genDate}}_`
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |{{range $idx, $param := $fn.Params}}
-{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
+|{{$param.Name}}|{{inline $param.Type}}|{{$param.Desc}}|{{end}}
     {{end}}
 
     {{if gt (len $fn.Returns) 0}}
