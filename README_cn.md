@@ -152,8 +152,8 @@ RequestMain.main()
 下面是处理结果：
 
 ```
-Property 'FirstName' not valid!
-Property 'LastName' not valid!
+Property 'FirstName' is not valid!
+Property 'LastName' is not valid!
 ```
 
 下面是一个实时语法高亮REPL:
@@ -257,7 +257,7 @@ u = 10u                # uint
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
-h = { "a"=>1, "b"=>2}  # hash
+h = {"a"=>1, "b"=>2}   # hash
 t = (1,2,3)            # tuple
 n = nil
 ```
@@ -2346,6 +2346,7 @@ Monkey还包含一个命令行工具`mdoc`，可以从Monkey文件的注释生�
 //    4 - Kimbie Light
 //    5 - Light Blue
 //    6 - Atom Dark
+//    7 - Forgotten Light
 
 ./mdoc -html -showsource -css 1 examples/doc.my
 

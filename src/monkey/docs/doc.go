@@ -19,7 +19,9 @@ import (
 
 var (
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
-	regExample = regexp.MustCompile(`@example([^@]+)@[\r\n]`)
+	regExample = regexp.MustCompile(`@example[\r\n]([^@]+)@[\r\n]`) //@examples
+	regNote    = regexp.MustCompile(`@note[\r\n]([^@]+)@[\r\n]`)    //@note
+	regWarning = regexp.MustCompile(`@warn[\r\n]([^@]+)@[\r\n]`)    //@warn
 	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
 
 	//table of contents
@@ -351,7 +353,7 @@ func sortedClasses(classes []*ast.ClassStatement, fh *os.File) []*Classes {
 		list[i] = &Classes{
 			Value: &Value{
 				Name:    c.Name.Value,
-				Doc:     preProcessCommentExamples(c.Doc.Text()),
+				Doc:     preProcessCommentSpecial(c.Doc.Text()),
 				Text:    c.Docs(),
 				ShowSrc: Cfg.ShowSrcComment,
 				Src:     genSourceText(c, fh),
@@ -383,7 +385,7 @@ func sortedLets(lets []*ast.LetStatement, fh *os.File) []*Value {
 	for _, l := range lets {
 		list[i] = &Value{
 			Name:    l.Names[0].Value,
-			Doc:     preProcessCommentExamples(l.Doc.Text()),
+			Doc:     preProcessCommentSpecial(l.Doc.Text()),
 			Text:    l.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(l, fh),
@@ -406,7 +408,7 @@ func sortedEnums(enums []*ast.EnumStatement, fh *os.File) []*Value {
 	for _, e := range enums {
 		list[i] = &Value{
 			Name:    e.Name.Value,
-			Doc:     preProcessCommentExamples(e.Doc.Text()),
+			Doc:     preProcessCommentSpecial(e.Doc.Text()),
 			Text:    e.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(e, fh),
@@ -427,7 +429,7 @@ func sortedFuncs(funcs []*ast.FunctionStatement, fh *os.File) []*Function {
 	list := make([]*Function, len(funcs))
 	i := 0
 	for _, f := range funcs {
-		list[i]= parseFuncComment(f.Name.Value, preProcessCommentExamples(f.Doc.Text()), f.Docs())
+		list[i]= parseFuncComment(f.Name.Value, preProcessCommentSpecial(f.Doc.Text()), f.Docs())
 		list[i].Value.Src = genSourceText(f, fh)
 		list[i].Value.ShowSrc = Cfg.ShowSrcComment
 		list[i].Value.GenHTML = Cfg.GenHTML
@@ -452,7 +454,7 @@ func sortedProps(props []*ast.PropertyDeclStmt, fh *os.File) []*Value {
 	for _, p := range props {
 		list[i] = &Value{
 			Name:    p.Name.Value,
-			Doc:     preProcessCommentExamples(p.Doc.Text()),
+			Doc:     preProcessCommentSpecial(p.Doc.Text()),
 			Text:    p.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
 			Src:     genSourceText(p, fh),
@@ -557,16 +559,17 @@ func SanitizedAnchorName(text string) string {
 }
 
 /* Process `@example block @` part, and replace this with 
-```javascript
+```swift
     block
 ```
 */
-func preProcessCommentExamples(comments string) string {
+func preProcessCommentSpecial(comments string) string {
 	retStr := comments
+	//@example
 	if m := regExample.FindAllStringSubmatch(comments, -1); m != nil {
 		for _, match := range m {
 			var buffer bytes.Buffer
-			buffer.WriteString("\n```javascript")
+			buffer.WriteString("\n```swift")
 			buffer.WriteString(match[1])
 			buffer.WriteString("```\n")
 
@@ -574,6 +577,47 @@ func preProcessCommentExamples(comments string) string {
 		}
 		//fmt.Printf("retStr=<%s>\n", retStr) //debugging
 	}
+
+	//@note
+	if m := regNote.FindAllStringSubmatch(comments, -1); m != nil {
+		for _, match := range m {
+			var buffer bytes.Buffer
+			if Cfg.GenHTML == 0 {
+				buffer.WriteString("#### Note\n")
+				buffer.WriteString(match[1])
+			} else {
+				buffer.WriteString(`<div id="user-content-note">&nbsp;:bulb: Note<p>`)
+				tmpContents := strings.Split(match[1], "\n")
+				for _, line := range tmpContents {
+					buffer.WriteString(line + "</br>")
+				}
+				buffer.WriteString("</p></div>")
+			}
+			retStr = replaceFirstString(regNote, retStr, buffer.String())
+		}
+		//fmt.Printf("retStr=<%s>\n", retStr) //debugging
+	}
+
+	//@warn
+	if m := regWarning.FindAllStringSubmatch(comments, -1); m != nil {
+		for _, match := range m {
+			var buffer bytes.Buffer
+			if Cfg.GenHTML == 0 {
+				buffer.WriteString("#### Warning\n")
+				buffer.WriteString(match[1])
+			} else {
+				buffer.WriteString(`<div id="user-content-warning">&nbsp;:warning: Warning<p>`)
+				tmpContents := strings.Split(match[1], "\n")
+				for _, line := range tmpContents {
+					buffer.WriteString(line + "</br>")
+				}
+				buffer.WriteString("</p></div>")
+			}
+			retStr = replaceFirstString(regWarning, retStr, buffer.String())
+		}
+		//fmt.Printf("retStr=<%s>\n", retStr) //debugging
+	}
+
 	return retStr
 }
 

@@ -68,12 +68,12 @@ This is the constant 'SIZE'.
 ### Color
 ```swift
 enum Color{
+	GRAY = 5, 
+	RED = 0, 
 	BLUE = 1, 
 	YELLOW = 2, 
 	BLACK = 3, 
-	WHITE = 4, 
-	GRAY = 5, 
-	RED = 0
+	WHITE = 4
 }
 ```
 Color enum is the color of the image.
@@ -82,13 +82,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
+	Ltime = (1 << 1), 
+	Lmicroseconds = (1 << 2), 
 	Llongfile = (1 << 3), 
 	Lshortfile = (1 << 4), 
 	LUTC = (1 << 5), 
 	LstdFlags = ((1 << 4) | (1 << 5)), 
-	Ldate = (1 << 0), 
-	Ltime = (1 << 1), 
-	Lmicroseconds = (1 << 2)
+	Ldate = (1 << 0)
 }
 ```
 LogOption enum is defined for Log options.
@@ -102,20 +102,18 @@ fn Add (x, y)
 Add returns the addition of its two parameters
 
 This is a example of calling `Add` with two ints:
-```swift
-sum = Add(1, 2) //result is 3
+```swiftsum = Add(1, 2) //result is 3
 ```
 
 This is a example of calling `Add` with two strings:
-```swift
-sum = Add("Hello ", "world") //result is "Hello world"
+```swiftsum = Add("Hello ", "world") //result is "Hello world"
 ```
 
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-x|`int`| this is the first parameter |
-y|`int`| this is the second parameter |
+|x|`int`| this is the first parameter |
+|y|`int`| this is the second parameter |
 
 #### Returns
 
@@ -165,8 +163,8 @@ Sub returns the subtraction of its two parameters
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-x|`int`| this is the first parameter |
-y|`int`| this is the second parameter |
+|x|`int`| this is the first parameter |
+|y|`int`| this is the second parameter |
 
 #### Returns
 
@@ -259,9 +257,9 @@ Method 'Msg' demonstrate function default values and variable arguements
 #### Parameters
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-extra1|`string`| this is extra1 |
-extra2|`string`| this is extra2, it has default value "extra2" |
-args|`array`|this is args |
+|extra1|`string`| this is extra1 |
+|extra2|`string`| this is extra2, it has default value "extra2" |
+|args|`array`|this is args |
 
 ##### init
 ```swift
@@ -276,7 +274,7 @@ class Person {
 	let firstName;
 	//this is the last name
 	let lastName;
-	let nickName; #this is the nick name(# comment will not included in doc)
+	let nickName; // this is the nick name
 
 	//This is the constructor of the Person class.
 	fn init(firstname, lastname="huang", nickname="mike") {
@@ -372,6 +370,15 @@ class RequestHandler {
 class RequestMain{ ... }
 ```
 RequestMain class. It is the user/client code.
+#### Note
+This is note one.
+This is note two.
+This is note three.
+
+#### Warning
+This is warning one.
+  This is warning two.
+  This is warning three.
 
 #### Source
 ```swift
@@ -387,4 +394,4 @@ class RequestMain {
 ```
 
 ***
-_Last updated 2018-03-01_
+_Last updated 2018-03-05_

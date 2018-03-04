@@ -252,7 +252,7 @@ u = 10u                # uint
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
-h = { "a"=>1, "b"=>2}  # hash
+h = {"a"=>1, "b"=>2}   # hash
 t = (1,2,3)            # tuple
 n = nil
 ```
@@ -1507,8 +1507,8 @@ RequestMain.main()
 Below is the result：
 
 ```
-Property 'FirstName' not valid!
-Property 'LastName' not valid!
+Property 'FirstName' is not valid!
+Property 'LastName' is not valid!
 ```
 
 
@@ -2406,6 +2406,7 @@ The tool only support below statement for document generator:
 //    4 - Kimbie Light
 //    5 - Light Blue
 //    6 - Atom Dark
+//    7 - Forgotten Light
 
 ./mdoc -html -showsource -css 1 examples/doc.my
 

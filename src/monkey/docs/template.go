@@ -18,7 +18,7 @@ var (
 			return fmt.Sprintf("`%s`", txt)
 		},
 		"codeBlock": func(code string) string {
-			return fmt.Sprintf("```javascript\n%s\n```", code)
+			return fmt.Sprintf("```swift\n%s\n```", code)
 		},
 		"sanitizedAnchorName": SanitizedAnchorName,
 		"genDate": func() string {

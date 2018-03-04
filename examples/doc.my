@@ -180,6 +180,18 @@ class RequestHandler {
 }
 
 //RequestMain class. It is the user/client code.
+/* @note
+ * This is note one.
+ * This is note two.
+ * This is note three.
+ * @
+ *
+ * @warn
+ * This is warning one.
+ *   This is warning two.
+ *   This is warning three.
+ * @
+*/
 class RequestMain {
   static fn main() {
     request = new Request()
