@@ -52,7 +52,10 @@ func genDoc(filename string, cfg doc.Config) {
 		fmt.Println("monkey: ", err.Error())
 		os.Exit(1)
 	}
-	l := lexer.New(filename, string(f))
+
+	contents := string(f)
+	l := lexer.New(filename, contents)
+	parser.FileLines = strings.Split(contents, "\n")
 	p := parser.NewWithDoc(l, wd)
 	program := p.ParseProgram()
 	if len(p.Errors()) != 0 {

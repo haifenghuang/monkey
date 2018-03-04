@@ -11,7 +11,7 @@ class Person {
 	let firstName;
 	//this is the last name
 	let lastName;
-	let nickName; #this is the nick name(# comment will not included in doc)
+	let nickName; // this is the nick name
 
 	//This is the constructor of the Person class.
 	fn init(firstname, lastname="huang", nickname="mike") {
@@ -109,8 +109,8 @@ fn Div(x,y) {
 	return x / y
 }
 
-//MinMaxValidator annotation class
-//It is used for checking min and max length
+# MinMaxValidator annotation class
+# It is used for checking min and max length
 //The max length has a default value of 10
 class @MinMaxValidator {
   property MinLength
@@ -128,7 +128,7 @@ class @DepartmentValidator {
   property Department
 }
 
-//Request class represent a user made request.
+# Request class represent a user made request.
 class Request {
   /* FirstName property, it's value's length should be between 1(minlenght) and 10(maxlength). */
   @MinMaxValidator(MinLength=1)

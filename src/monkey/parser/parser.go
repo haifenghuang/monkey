@@ -108,6 +108,10 @@ const (
 	Trace                           // print a trace of parsed productions
 )
 
+var (
+	FileLines []string
+)
+
 type Parser struct {
 	// Tracing/debugging
 	mode   Mode // parsing mode
@@ -2635,7 +2639,8 @@ func (p *Parser) nextToken() {
 
 	var list []*ast.Comment
 	for p.curToken.Type == token.COMMENT {
-		if p.curToken.Literal[0] != '#' {
+		//if p.curToken.Literal[0] != '#' {
+		if p.isDocLine(p.curToken.Pos.Line) {
 			comment := &ast.Comment{Token: p.curToken, Text: p.curToken.Literal}
 			list = append(list, comment)
 		}
@@ -2669,6 +2674,22 @@ func (p *Parser) peekError(t token.TokenType) {
 
 func (p *Parser) Errors() []string {
 	return p.errors
+}
+
+//Is the line document line or not
+func (p *Parser) isDocLine(lineNo int) bool {
+	if len(FileLines) == 0 {
+		return false
+	}
+
+	lineSlice := FileLines[lineNo-1:lineNo]
+	lineStr := strings.TrimLeft(lineSlice[0], "\t ")
+	if len(lineStr) > 0 {
+		if lineStr[0] == '#' || lineStr[0] == '/' {
+			return true
+		}
+	}
+	return false
 }
 
 //fix position column(for error report)

@@ -260,8 +260,10 @@ func (l *Lexer) NextToken() token.Token {
 					return l.NextToken()
 				}
 
+				tok.Pos = pos
 				tok.Type = token.COMMENT
 				tok.Literal = comment
+				prevToken = tok
 				return tok
 		case token.BITAND:
 			if l.peek() == '=' {

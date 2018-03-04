@@ -2986,17 +2986,21 @@ func (g *CommentGroup) Text() string {
 	for _, c := range comments {
 		// Remove comment markers.
 		// The parser has given us exactly the comment text.
-		switch c[1] {
-		case '/':
-			//-style comment (no newline at the end)
-			c = c[2:]
-			// strip first space - required for Example tests
-			if len(c) > 0 && c[0] == ' ' {
-				c = c[1:]
+		if c[0] == '#' {
+			c = c[1:]
+		} else {
+			switch c[1] {
+			case '/':
+				//-style comment (no newline at the end)
+				c = c[2:]
+				// strip first space - required for Example tests
+				if len(c) > 0 && c[0] == ' ' {
+					c = c[1:]
+				}
+			case '*':
+				/*-style comment */
+				c = c[2 : len(c)-2]
 			}
-		case '*':
-			/*-style comment */
-			c = c[2 : len(c)-2]
 		}
 
 		// Split on newlines.
