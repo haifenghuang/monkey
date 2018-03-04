@@ -188,8 +188,8 @@ class RequestHandler {
  *
  * @warn
  * This is warning one.
- *   This is warning two.
- *   This is warning three.
+ * This is warning two.
+ * This is warning three.
  * @
 */
 class RequestMain {

@@ -82,13 +82,13 @@ This is just for demo purpose.
 ### LogOption
 ```swift
 enum LogOption{
+	LUTC = (1 << 5), 
+	LstdFlags = ((1 << 4) | (1 << 5)), 
+	Ldate = (1 << 0), 
 	Ltime = (1 << 1), 
 	Lmicroseconds = (1 << 2), 
 	Llongfile = (1 << 3), 
-	Lshortfile = (1 << 4), 
-	LUTC = (1 << 5), 
-	LstdFlags = ((1 << 4) | (1 << 5)), 
-	Ldate = (1 << 0)
+	Lshortfile = (1 << 4)
 }
 ```
 LogOption enum is defined for Log options.
@@ -371,14 +371,16 @@ class RequestMain{ ... }
 ```
 RequestMain class. It is the user/client code.
 #### Note
-This is note one.
-This is note two.
-This is note three.
+This is note one.</br>
+This is note two.</br>
+This is note three.</br>
+</br>
 
 #### Warning
-This is warning one.
-  This is warning two.
-  This is warning three.
+This is warning one.</br>
+This is warning two.</br>
+This is warning three.</br>
+</br>
 
 #### Source
 ```swift

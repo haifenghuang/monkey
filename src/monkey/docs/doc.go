@@ -584,7 +584,10 @@ func preProcessCommentSpecial(comments string) string {
 			var buffer bytes.Buffer
 			if Cfg.GenHTML == 0 {
 				buffer.WriteString("#### Note\n")
-				buffer.WriteString(match[1])
+				tmpContents := strings.Split(match[1], "\n")
+				for _, line := range tmpContents {
+					buffer.WriteString(line + "</br>\n")
+				}
 			} else {
 				buffer.WriteString(`<div id="user-content-note">&nbsp;:bulb: Note<p>`)
 				tmpContents := strings.Split(match[1], "\n")
@@ -604,7 +607,10 @@ func preProcessCommentSpecial(comments string) string {
 			var buffer bytes.Buffer
 			if Cfg.GenHTML == 0 {
 				buffer.WriteString("#### Warning\n")
-				buffer.WriteString(match[1])
+				tmpContents := strings.Split(match[1], "\n")
+				for _, line := range tmpContents {
+					buffer.WriteString(line + "</br>\n")
+				}
 			} else {
 				buffer.WriteString(`<div id="user-content-warning">&nbsp;:warning: Warning<p>`)
 				tmpContents := strings.Split(match[1], "\n")
