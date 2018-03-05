@@ -569,9 +569,9 @@ func preProcessCommentSpecial(comments string) string {
 	if m := regExample.FindAllStringSubmatch(comments, -1); m != nil {
 		for _, match := range m {
 			var buffer bytes.Buffer
-			buffer.WriteString("\n```swift")
+			buffer.WriteString("\n```swift\n")
 			buffer.WriteString(match[1])
-			buffer.WriteString("```\n")
+			buffer.WriteString("\n```\n")
 
 			retStr = replaceFirstString(regExample, retStr, buffer.String())
 		}
