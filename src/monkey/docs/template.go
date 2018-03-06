@@ -97,7 +97,7 @@ _Last updated {{genDate}}_`
 ## Enums
   {{range $idx, $enum := .Enums}}
 ### {{$enum.Name}}
-{{codeBlock $enum.Text}}
+{{codeBlock $enum.Src}}
 {{$enum.Doc}}
   {{end}}
 {{end}}
