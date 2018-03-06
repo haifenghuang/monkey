@@ -181,15 +181,15 @@ class RequestHandler {
 
 //RequestMain class. It is the user/client code.
 /* @note
- * This is note one.
- * This is note two.
- * This is note three.
+ * This is note one.</br>
+ * This is note two.</br>
+ * This is note three.</br>
  * @
  *
  * @warn
- * This is warning one.
- * This is warning two.
- * This is warning three.
+ * This is warning one.</br>
+ * This is warning two.</br>
+ * This is warning three.</br>
  * @
 */
 class RequestMain {

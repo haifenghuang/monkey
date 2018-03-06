@@ -19,9 +19,9 @@ import (
 
 var (
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
-	regExample = regexp.MustCompile(`@example[\r\n]([^@]+)@[\r\n]`) //@examples
-	regNote    = regexp.MustCompile(`@note[\r\n]([^@]+)@[\r\n]`)    //@note
-	regWarning = regexp.MustCompile(`@warn[\r\n]([^@]+)@[\r\n]`)    //@warn
+	regExample = regexp.MustCompile(`@example\s*[\r\n]([^@]+)@[\r\n]`) //@examples
+	regNote    = regexp.MustCompile(`@note\s*[\r\n]([^@]+)@[\r\n]`)    //@note
+	regWarning = regexp.MustCompile(`@warn\s*[\r\n]([^@]+)@[\r\n]`)    //@warn
 	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
 
 	//table of contents
@@ -586,13 +586,13 @@ func preProcessCommentSpecial(comments string) string {
 				buffer.WriteString("#### Note\n")
 				tmpContents := strings.Split(match[1], "\n")
 				for _, line := range tmpContents {
-					buffer.WriteString(line + "</br>\n")
+					buffer.WriteString(line + "\n")
 				}
 			} else {
 				buffer.WriteString(`<div id="user-content-note">&nbsp;:bulb: Note<p>`)
 				tmpContents := strings.Split(match[1], "\n")
 				for _, line := range tmpContents {
-					buffer.WriteString(line + "</br>")
+					buffer.WriteString(line + "\n")
 				}
 				buffer.WriteString("</p></div>")
 			}
@@ -609,13 +609,13 @@ func preProcessCommentSpecial(comments string) string {
 				buffer.WriteString("#### Warning\n")
 				tmpContents := strings.Split(match[1], "\n")
 				for _, line := range tmpContents {
-					buffer.WriteString(line + "</br>\n")
+					buffer.WriteString(line + "\n")
 				}
 			} else {
 				buffer.WriteString(`<div id="user-content-warning">&nbsp;:warning: Warning<p>`)
 				tmpContents := strings.Split(match[1], "\n")
 				for _, line := range tmpContents {
-					buffer.WriteString(line + "</br>")
+					buffer.WriteString(line)
 				}
 				buffer.WriteString("</p></div>")
 			}
