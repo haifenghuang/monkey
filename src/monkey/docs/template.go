@@ -85,6 +85,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $let := .Lets}}
 ### {{$let.Name}}
 {{codeBlock $let.Src}}
+{{if eq 1 .GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__{{$let.SrcLines}}</p>{{end}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -98,6 +99,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $enum := .Enums}}
 ### {{$enum.Name}}
 {{codeBlock $enum.Src}}
+{{if eq 1 .GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__{{$enum.SrcLines}}</p>{{end}}
 {{$enum.Doc}}
   {{end}}
 {{end}}
@@ -111,6 +113,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $fn := .Funcs}}
 ### {{$fn.Value.Name}}
 {{codeBlock $fn.Value.Text}}
+{{if eq 1 $fn.Value.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__1</p>{{end}}
 {{$fn.Value.Doc}}
 
     {{if gt (len $fn.Params) 0}}
@@ -128,6 +131,7 @@ _Last updated {{genDate}}_`
     {{end}}{{if eq .Value.ShowSrc 1}}
 {{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$fn.Value.Name}}{{else}}#### Source{{end}}
 {{codeBlock $fn.Value.Src}}
+{{if eq 1 .Value.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__{{$fn.Value.SrcLines}}</p>{{end}}
 {{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
 {{end}}
 
@@ -143,6 +147,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $cls := .Classes}}
 ### {{$cls.Value.Name}}
 {{codeBlock $cls.Value.Text}}
+{{if eq 1 $cls.Value.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__1</p>{{end}}
 {{$cls.Value.Doc}}
 
 {{if gt (len .Lets) 0}}
@@ -151,6 +156,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $let := .Lets}}
 ##### {{$let.Name}}
 {{codeBlock $let.Text}}
+{{if eq 1 $let.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__1</p>{{end}}
 {{$let.Doc}}
   {{end}}
 {{end}}
@@ -171,6 +177,7 @@ _Last updated {{genDate}}_`
   {{range $idx, $fn := .Funcs}}
 ##### {{$fn.Value.Name}}
 {{codeBlock $fn.Value.Text}}
+{{if eq 1 $fn.Value.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__1</p>{{end}}
 {{$fn.Value.Doc}}
 
     {{if gt (len $fn.Params) 0}}
@@ -190,7 +197,7 @@ _Last updated {{genDate}}_`
 {{end}}{{if eq .Value.ShowSrc 1}}
 {{if eq 1 .Value.GenHTML}}SHOWSOURCE_PLACEHOLDER_LINE_BEGIN{{$cls.Value.Name}}{{else}}#### Source{{end}}
 {{codeBlock $cls.Value.Src}}
-
+{{if eq 1 .Value.GenHTML}}<p>__LINENUMBER_PLACEHOLDER_LINE__{{$cls.Value.SrcLines}}</p>{{end}}
 {{if eq 1 .Value.GenHTML}}<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>{{end}}
   {{end}}
   {{end}}

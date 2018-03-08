@@ -77,6 +77,8 @@ let CENTER = 15.0
  * This is a example of calling `Add` with two ints:
  * @example
  * sum = Add(1, 2) //result is 3
+ * sum = Add(4, 5) //result is 9
+ * sum = Add(-1, 2) //result is 1
  * @
  *
  * @return {string} retuns the string concatenation of it's two parameters if both parameters are strings
@@ -84,6 +86,8 @@ let CENTER = 15.0
  * This is a example of calling `Add` with two strings:
  * @example
  * sum = Add("Hello ", "world") //result is "Hello world"
+ * sum = Add("Welcome ", "world") //result is "Welcome world"
+ * sum = Add("Hi ", "world") //result is "Hi world"
  * @
 */
 fn Add(x,y) {

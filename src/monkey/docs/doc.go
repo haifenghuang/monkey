@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -19,19 +20,19 @@ import (
 
 var (
 	regexpType = regexp.MustCompile(`^\{(.+)\}$`)
-	regExample = regexp.MustCompile(`@example\s*[\r\n]([^@]+)@[\r\n]`) //@examples
-	regNote    = regexp.MustCompile(`@note\s*[\r\n]([^@]+)@[\r\n]`)    //@note
-	regWarning = regexp.MustCompile(`@warn\s*[\r\n]([^@]+)@[\r\n]`)    //@warn
+	regExample = regexp.MustCompile(`@example[\r\n]([^@]+)@[\r\n]`) //@examples
+	regNote    = regexp.MustCompile(`@note[\r\n]([^@]+)@[\r\n]`)    //@note
+	regWarning = regexp.MustCompile(`@warn[\r\n]([^@]+)@[\r\n]`)    //@warn
 	regExpShowSourceBegin = regexp.MustCompile(`(<p>SHOWSOURCE_PLACEHOLDER_LINE_BEGIN(.*?)</p>)`)
 
 	//table of contents
-	toc = `<p><div>
-<a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a>
-<div id="table-of-contents" style="display:none;">`
+	toc = `<p><div><a id="toc-button" class="toc-button" onclick="toggle_toc()"><span id="btn-text">&#x25BC;</span>&nbsp;Table of Contents</a><div id="table-of-contents" style="display:none;">`
 
 	//PlaceHolder line, used only in html output.
 	PlaceHolderTOC = "<p>__TOC_PLACEHOLDER_LINE_END__</p>"
 	PlaceHolderShowSourceEnd = "<p>__SHOWSOURCE_PLACEHOLDER_LINE_END__</p>"
+	//Line number regexp. Mainly for adding line numbers for code blocks.
+	regLinePlaceHolder = regexp.MustCompile(`</pre></div>[\r\n]<p>__LINENUMBER_PLACEHOLDER_LINE__(\d+)</p>`)
 
 	Cfg = Config{}
 )
@@ -83,6 +84,7 @@ type Value struct {
 
 	ShowSrc int //should source or not, 1: show
 	Src  string //Source code text
+	SrcLines int //number of lines of `Src`.
 	GenHTML int //1: if generate html-style document
 }
 
@@ -302,6 +304,19 @@ func postProcessingHtml(htmlStr string, file *File) string {
 		}
 	}
 	html = strings.Replace(html, PlaceHolderShowSourceEnd, "</div></br>", -1)
+	//`<div class="highlight highlight-source-swift line-numbers"><codeblocks class="highlight-source-swift">`
+	codeBlockBackColor := fmt.Sprintf("<div class=\"highlight highlight-source-swift line-numbers\" style=\"background:%s\"><codeblocks class=\"highlight-source-swift\">", BuiltinCssStyle[Cfg.CssStyle][1])
+	html = strings.Replace(html, `<div class="highlight highlight-source-swift"><pre>`, codeBlockBackColor, -1)
+
+	if m := regLinePlaceHolder.FindAllStringSubmatch(html, -1); m != nil {
+		for _, match := range m {
+			var buffer bytes.Buffer
+			buffer.WriteString(genLineNumberRows(match[1]))
+			buffer.WriteString("</codeblocks></pre></div>\n")
+			html = strings.Replace(html, match[0], buffer.String(), 1)
+		}
+	}
+
 
 	return html
 }
@@ -350,13 +365,15 @@ func sortedClasses(classes []*ast.ClassStatement, fh *os.File) []*Classes {
 			}
 		}
 
+		src, lineSrc := genSourceText(c, fh)
 		list[i] = &Classes{
 			Value: &Value{
 				Name:    c.Name.Value,
 				Doc:     preProcessCommentSpecial(c.Doc.Text()),
 				Text:    c.Docs(),
 				ShowSrc: Cfg.ShowSrcComment,
-				Src:     genSourceText(c, fh),
+				Src:     src,
+				SrcLines: lineSrc,
 				GenHTML: Cfg.GenHTML,
 			},
 			Props: sortedProps(props, fh),
@@ -383,12 +400,14 @@ func sortedLets(lets []*ast.LetStatement, fh *os.File) []*Value {
 	list := make([]*Value, len(lets))
 	i := 0
 	for _, l := range lets {
+		src, lineSrc := genSourceText(l, fh)
 		list[i] = &Value{
 			Name:    l.Names[0].Value,
 			Doc:     preProcessCommentSpecial(l.Doc.Text()),
 			Text:    l.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
-			Src:     genSourceText(l, fh),
+			Src:     src,
+			SrcLines: lineSrc,
 			GenHTML: Cfg.GenHTML,
 		}
 		i++
@@ -406,12 +425,14 @@ func sortedEnums(enums []*ast.EnumStatement, fh *os.File) []*Value {
 	list := make([]*Value, len(enums))
 	i := 0
 	for _, e := range enums {
+		src, lineSrc := genSourceText(e, fh)
 		list[i] = &Value{
 			Name:    e.Name.Value,
 			Doc:     preProcessCommentSpecial(e.Doc.Text()),
 			Text:    e.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
-			Src:     genSourceText(e, fh),
+			Src:     src,
+			SrcLines: lineSrc,
 			GenHTML: Cfg.GenHTML,
 		}
 		i++
@@ -430,7 +451,7 @@ func sortedFuncs(funcs []*ast.FunctionStatement, fh *os.File) []*Function {
 	i := 0
 	for _, f := range funcs {
 		list[i]= parseFuncComment(f.Name.Value, preProcessCommentSpecial(f.Doc.Text()), f.Docs())
-		list[i].Value.Src = genSourceText(f, fh)
+		list[i].Value.Src, list[i].Value.SrcLines = genSourceText(f, fh)
 		list[i].Value.ShowSrc = Cfg.ShowSrcComment
 		list[i].Value.GenHTML = Cfg.GenHTML
 		i++
@@ -452,12 +473,14 @@ func sortedProps(props []*ast.PropertyDeclStmt, fh *os.File) []*Value {
 	list := make([]*Value, len(props))
 	i := 0
 	for _, p := range props {
+		src, lineSrc := genSourceText(p, fh)
 		list[i] = &Value{
 			Name:    p.Name.Value,
 			Doc:     preProcessCommentSpecial(p.Doc.Text()),
 			Text:    p.Docs(),
 			ShowSrc: Cfg.ShowSrcComment,
-			Src:     genSourceText(p, fh),
+			Src:     src,
+			SrcLines:lineSrc,
 			GenHTML: Cfg.GenHTML,
 		}
 
@@ -573,6 +596,14 @@ func preProcessCommentSpecial(comments string) string {
 			buffer.WriteString(match[1])
 			buffer.WriteString("\n```\n")
 
+			//Add line numbers
+			if Cfg.GenHTML == 1 {
+				lines := strings.Split(match[1], "\n")
+				if len(lines) > 1 {
+					buffer.WriteString(fmt.Sprintf("<p>__LINENUMBER_PLACEHOLDER_LINE__%d</p>\n", len(lines) - 1))
+				}
+			}
+
 			retStr = replaceFirstString(regExample, retStr, buffer.String())
 		}
 		//fmt.Printf("retStr=<%s>\n", retStr) //debugging
@@ -584,16 +615,10 @@ func preProcessCommentSpecial(comments string) string {
 			var buffer bytes.Buffer
 			if Cfg.GenHTML == 0 {
 				buffer.WriteString("#### Note\n")
-				tmpContents := strings.Split(match[1], "\n")
-				for _, line := range tmpContents {
-					buffer.WriteString(line + "\n")
-				}
+				buffer.WriteString(match[1])
 			} else {
 				buffer.WriteString(`<div id="user-content-note">&nbsp;:bulb: Note<p>`)
-				tmpContents := strings.Split(match[1], "\n")
-				for _, line := range tmpContents {
-					buffer.WriteString(line + "\n")
-				}
+				buffer.WriteString(match[1])
 				buffer.WriteString("</p></div>")
 			}
 			retStr = replaceFirstString(regNote, retStr, buffer.String())
@@ -607,16 +632,10 @@ func preProcessCommentSpecial(comments string) string {
 			var buffer bytes.Buffer
 			if Cfg.GenHTML == 0 {
 				buffer.WriteString("#### Warning\n")
-				tmpContents := strings.Split(match[1], "\n")
-				for _, line := range tmpContents {
-					buffer.WriteString(line + "\n")
-				}
+				buffer.WriteString(match[1])
 			} else {
 				buffer.WriteString(`<div id="user-content-warning">&nbsp;:warning: Warning<p>`)
-				tmpContents := strings.Split(match[1], "\n")
-				for _, line := range tmpContents {
-					buffer.WriteString(line)
-				}
+				buffer.WriteString(match[1])
 				buffer.WriteString("</p></div>")
 			}
 			retStr = replaceFirstString(regWarning, retStr, buffer.String())
@@ -646,14 +665,26 @@ func replaceFirstString(re *regexp.Regexp, srcStr, replStr string) string {
 }
 
 //Generate source text from AST
-func genSourceText(src ast.Source, fh *os.File) string {
+func genSourceText(src ast.Source, fh *os.File) (string, int) {
 	tStart := src.SrcStart()
 	tEnd := src.SrcEnd()
 
 	buf := make([]byte, tEnd.Offset - tStart.Offset)
 	fh.ReadAt(buf, int64(tStart.Offset))
 
-	return string(buf)
+	return string(buf), tEnd.Line - tStart.Line + 1
+}
+
+func genLineNumberRows(lineCnt string) string{
+	iLineCnt, _ := strconv.Atoi(lineCnt)
+
+	var buffer bytes.Buffer
+	buffer.WriteString(`<span class="line-numbers-rows" style="left: -60px;">`)
+	for i := 0; i < iLineCnt; i++ {
+		buffer.WriteString(`<span></span>`)
+	}
+
+	return buffer.String()
 }
 
 //convert '[]string' to '[]interface{}'
