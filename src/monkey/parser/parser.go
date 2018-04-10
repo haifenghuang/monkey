@@ -697,9 +697,14 @@ func (p *Parser) parseContinueExpression() ast.Expression {
 
 //let a,b,c = 1,2,3 (with assignment)
 //let a; (without assignment, 'a' is assumed to be 'nil')
+//let (a,b,c) = tuple|array|hash
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 	stmt.Doc = p.lineComment
+
+	if p.peekTokenIs(token.LPAREN) {
+		return p.parseLetStatement2(stmt)
+	}
 
 	//parse left hand side of the assignment
 	for {
@@ -748,6 +753,47 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	stmt.SrcEndToken = p.curToken
 	return stmt
+}
+
+//let (a,b,c) = tuple|array|hash
+func (p *Parser) parseLetStatement2(stmt *ast.LetStatement) *ast.LetStatement {
+	stmt.DestructingFlag = true;
+
+	//skip 'let'
+	p.nextToken()
+	//skip '('
+	p.nextToken()
+
+	//parse left hand side of the assignment
+	for {
+		if !p.curTokenIs(token.IDENT) {
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier, got %s instead.", p.curToken.Pos, p.curToken.Type)
+			p.errors = append(p.errors, msg)
+			return stmt
+		}
+		name := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		stmt.Names = append(stmt.Names, name)
+
+		p.nextToken() //skip identifier
+		if p.curTokenIs(token.RPAREN) {
+			break
+		}
+		p.nextToken() //skip ','
+	}
+
+	p.nextToken() //skip the ')'
+	if !p.curTokenIs(token.ASSIGN) {
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be '=', got %s instead.", p.curToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return stmt
+	}
+
+	p.nextToken() //skip the '='
+	v := p.parseExpressionStatement().Expression
+	stmt.Values = append(stmt.Values, v)
+	
+	stmt.SrcEndToken = p.curToken
+	return stmt;
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {

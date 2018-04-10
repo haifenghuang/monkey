@@ -1283,6 +1283,9 @@ type LetStatement struct {
 	//Doc related
 	Doc *CommentGroup // associated documentation; or nil
 	SrcEndToken token.Token
+
+	//destructuring assigment flag
+	DestructingFlag bool
 }
 
 func (ls *LetStatement) Pos() token.Position {
@@ -1321,31 +1324,28 @@ func (ls *LetStatement) String() string {
 		out.WriteString("static ")
 	}
 
-	valuesLen := len(ls.Values)
-
 	out.WriteString(ls.TokenLiteral() + " ")
-	for idx, item := range ls.Names {
-		out.WriteString(item.String())
-
-		if valuesLen > 0 {
-			out.WriteString(" = ")
-		}
-
-		if idx >= valuesLen {
-			out.WriteString("")
-		} else {
-			if ls.Values[idx] != nil {
-				out.WriteString(ls.Values[idx].String())
-			}
-		}
-		if idx != len(ls.Names)-1 {
-			out.WriteString(", ")
-		}
+	if ls.DestructingFlag {
+		out.WriteString("(")
 	}
 
-	if len(ls.Names) == 1 {
-		out.WriteString("; ")
+	names := []string{}
+	for _, name := range ls.Names {
+		names = append(names, name.String())
 	}
+	out.WriteString(strings.Join(names, ", "))
+
+	if ls.DestructingFlag {
+		out.WriteString(")")
+	}
+
+	out.WriteString(" = ")
+
+	values := []string{}
+	for _, value := range ls.Values {
+		values = append(values, value.String())
+	}
+	out.WriteString(strings.Join(values, ", "))
 
 	return out.String()
 }

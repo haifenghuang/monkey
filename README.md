@@ -338,6 +338,24 @@ e = 5
 姓 = "黄"
 ```
 
+You can also use `Destructuring assignment`.
+Note, the left-hand side must be included using the '()'.
+
+```swift
+//righ-hand side is an array
+let (d,e,f) = [1,5,8]
+//d=1, e=5, f=8
+
+//right-hand side is a tuple
+let (g, h, i) = (10, 20, "hhf")
+//g=10, h=20, i=hhf
+
+//righ-hand side is a hash
+let (j, k, l) = {"j"=> 50, "l"=> "good"}
+//j=50, k=nil, l=good
+
+```
+
 Note however, if you do not use the keyword `let`, you could not do multiple variable assignments.
 Below code is not correct：
 

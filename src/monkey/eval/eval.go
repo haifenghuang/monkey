@@ -278,6 +278,68 @@ func evalIncludeStatement(i *ast.IncludeStatement, scope *Scope) Object {
 func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 	valuesLen := len(l.Values)
 
+	if l.DestructingFlag {
+		v := Eval(l.Values[0], scope)
+		valType := v.Type()
+		switch valType {
+		case HASH_OBJ:
+			h := v.(*Hash)
+			for _, item := range l.Names {
+				found := false
+				for _, pair := range h.Pairs{
+					if item.String() == pair.Key.Inspect() {
+						val = pair.Value
+						scope.Set(item.String(), pair.Value)
+						found = true
+					}
+				}
+				if !found {
+					val = NIL
+					scope.Set(item.String(), val)
+				}
+			}
+
+		case ARRAY_OBJ:
+			arr := v.(*Array)
+			valuesLen = len(arr.Members)
+			for idx, item := range l.Names {
+				if idx >= valuesLen { //There are more Values than Names
+					val = NIL
+					scope.Set(item.String(), val)
+				} else {
+					val = arr.Members[idx]
+					if val.Type() != ERROR_OBJ {
+						scope.Set(item.String(), val)
+					} else {
+						return
+					}
+				}
+			}
+
+		case TUPLE_OBJ:
+			tup := v.(*Tuple)
+			valuesLen = len(tup.Members)
+			for idx, item := range l.Names {
+				if idx >= valuesLen { //There are more Values than Names
+					val = NIL
+					scope.Set(item.String(), val)
+				} else {
+					val = tup.Members[idx]
+					if val.Type() != ERROR_OBJ {
+						scope.Set(item.String(), val)
+					} else {
+						return
+					}
+				}
+			}
+
+		default:
+			panic(NewError(l.Pos().Sline(), GENERICERROR, "Only Array|Tuple|Hash is allowed!"))
+		}
+	
+		return
+	}
+
 	for idx, item := range l.Names {
 		if idx >= valuesLen { //There are more Values than Names
 			val = NIL
