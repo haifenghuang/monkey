@@ -1262,7 +1262,7 @@ class Date {
     }
 
     fn getDateInfo() {
-        printf("Year:%v, Month:%v, Day=%v\n", this.Year, this.Month, this.Day) //note here, you need to use 'this.Property', not 'Property'
+        printf("Year:%v, Month:%v, Day:%v\n", this.Year, this.Month, this.Day) //note here, you need to use 'this.Property', not 'Property'
     }
 }
 
