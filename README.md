@@ -1255,7 +1255,7 @@ class Date {
         }
     }
 
-    property Year { get; set;}
+    property Year; //same as 'property Year { get; set;}
 
     property Day { get; }
 
