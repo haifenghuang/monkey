@@ -235,9 +235,25 @@ func (f *Function) CallMethod(line string, scope *Scope, method string, args ...
 	panic(NewError(line, NOMETHODERROR, method, f.Type()))
 }
 
-type ReturnValue struct{ Value Object }
+type ReturnValue struct {
+	Value Object // for old campatibility
+	Values []Object
+}
 
-func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+func (rv *ReturnValue) Inspect() string {
+	//return rv.Value.Inspect()
+
+	var out bytes.Buffer
+	values := []string{}
+	for _, v := range rv.Values {
+		values = append(values, v.Inspect())
+	}
+
+	out.WriteString(strings.Join(values, ", "))
+
+	return out.String()
+}
+
 func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
 func (rv *ReturnValue) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	panic(NewError(line, NOMETHODERROR, method, rv.Type()))

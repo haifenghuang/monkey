@@ -1817,6 +1817,28 @@ if ret[1] != "" {
 }
 ```
 
+从版本5.0开始，Monkey可以使用let语句支持函数返回多个值。
+返回的多个值被包装为一个元祖(tuple)。
+
+```swift
+fn testReturn(a, b, c, d=40) {
+	return a, b, c, d
+}
+
+let (x, y, c, d) = testReturn(10, 20, 30)
+// let x, y, c, d = testReturn(10, 20, 30)  same as above
+
+printf("x=%v, y=%v, c=%v, d=%v\n", x, y, c, d)
+//Result: x=10, y=20, c=30, d=40
+```
+
+注：必须使用`let`才能够支持支持函数的多个返回值，下面的语句无法通过编译。
+
+```swift
+(x, y, c, d) = testReturn(10, 20, 30) // no 'let', compile error
+x, y, c, d = testReturn(10, 20, 30)   // no 'let', compile error
+```
+
 ### Pipe操作符
 
 `pipe`操作符来自[Elixir](https://elixir-lang.org/).

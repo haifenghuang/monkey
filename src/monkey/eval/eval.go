@@ -78,9 +78,9 @@ func Eval(node ast.Node, scope *Scope) (val Object) {
 	case *ast.LetStatement:
 		return evalLetStatement(node, scope)
 	case *ast.ReturnStatement:
-		return evalReturnStatment(node, scope)
+		return evalReturnStatement(node, scope)
 	case *ast.DeferStmt:
-		return evalDeferStatment(node, scope)
+		return evalDeferStatement(node, scope)
 	case *ast.FunctionStatement:
 		return evalFunctionStatement(node, scope)
 	case *ast.Boolean:
@@ -189,7 +189,7 @@ func Eval(node ast.Node, scope *Scope) (val Object) {
 	case *ast.TernaryExpression:
 		return evalTernaryExpression(node, scope)
 	case *ast.SpawnStmt:
-		return evalSpawnStatment(node, scope)
+		return evalSpawnStatement(node, scope)
 	case *ast.YieldExpression:
 		return NIL
 	case *ast.NilLiteral:
@@ -276,8 +276,6 @@ func evalIncludeStatement(i *ast.IncludeStatement, scope *Scope) Object {
 }
 
 func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
-	valuesLen := len(l.Values)
-
 	if l.DestructingFlag {
 		v := Eval(l.Values[0], scope)
 		valType := v.Type()
@@ -301,7 +299,7 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 
 		case ARRAY_OBJ:
 			arr := v.(*Array)
-			valuesLen = len(arr.Members)
+			valuesLen := len(arr.Members)
 			for idx, item := range l.Names {
 				if idx >= valuesLen { //There are more Values than Names
 					val = NIL
@@ -318,7 +316,7 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 
 		case TUPLE_OBJ:
 			tup := v.(*Tuple)
-			valuesLen = len(tup.Members)
+			valuesLen := len(tup.Members)
 			for idx, item := range l.Names {
 				if idx >= valuesLen { //There are more Values than Names
 					val = NIL
@@ -340,12 +338,35 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 		return
 	}
 
+	values := []Object{}
+	valuesLen := 0
+	for _, value := range l.Values {
+		val := Eval(value, scope)
+		if val.Type() == TUPLE_OBJ {
+			tupleObj := val.(*Tuple)
+			if tupleObj.IsMulti {
+				valuesLen += len(tupleObj.Members)
+				for _, tupleItem := range tupleObj.Members {
+					values = append(values, tupleItem)
+				}
+			} else {
+				valuesLen += 1
+				values = append(values, tupleObj)
+			}
+			
+		} else {
+			valuesLen += 1
+			values = append(values, val)
+		}
+	}
+
 	for idx, item := range l.Names {
 		if idx >= valuesLen { //There are more Values than Names
 			val = NIL
 			scope.Set(item.String(), val)
 		} else {
-			val = Eval(l.Values[idx], scope)
+			//val = Eval(l.Values[idx], scope)
+			val = values[idx];
 			if val.Type() != ERROR_OBJ {
 				scope.Set(item.String(), val)
 			} else {
@@ -896,6 +917,28 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 				return evalClassIndexerAssignExpression(a, aObj, nodeType, val, scope)
 			}
 		}
+//	case *ast.TupleLiteral:
+//		if val.Type() != TUPLE_OBJ {
+//			panic(NewError(a.Pos().Sline(), GENERICERROR, "The right part must be a tuple"))
+//		}
+//		
+//		tupleObj := val.(*Tuple)
+//		valuesLen := len(tupleObj.Members)
+//
+//		for idx, item := range nodeType.Members {
+//			if idx >= valuesLen { //There are more Values than Names
+//				val = NIL
+//				scope.Set(item.String(), val)
+//			} else {
+//				val = tupleObj.Members[idx];
+//				if val.Type() != ERROR_OBJ {
+//					scope.Set(item.String(), val)
+//				} else {
+//					return
+//				}
+//			}
+//		}
+//		return
 	}
 
 	if a.Token.Literal == "=" {
@@ -938,15 +981,22 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 	panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 }
 
-func evalReturnStatment(r *ast.ReturnStatement, scope *Scope) Object {
-	if value := Eval(r.ReturnValue, scope); value != nil {
-		return &ReturnValue{Value: value}
+func evalReturnStatement(r *ast.ReturnStatement, scope *Scope) Object {
+	ret := &ReturnValue{Values: []Object{}}
+	for _, value := range r.ReturnValues {
+		ret.Values = append(ret.Values, Eval(value, scope))
+	}
+
+	// for old campatibility
+	if len(ret.Values) > 0 {
+		ret.Value = ret.Values[0]
+		return ret
 	}
 
 	return NIL
 }
 
-func evalDeferStatment(d *ast.DeferStmt, scope *Scope) Object {
+func evalDeferStatement(d *ast.DeferStmt, scope *Scope) Object {
 	frame := scope.CurrentFrame()
 	if frame == nil {
 		panic(NewError(d.Pos().Sline(), DEFERERROR))
@@ -3355,17 +3405,21 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 		f.Scope.Set("@_", NewInteger(int64(len(f.Literal.Parameters))))
 	}
 
-	extendedScope := extendFunctionScope(f, newScope, args)
 	oldInstance := currentInstance
 	currentInstance = f.Instance
 
-	r := Eval(f.Literal.Body, extendedScope)
+	r := Eval(f.Literal.Body, newScope)
 	currentInstance = oldInstance
 	if r.Type() == ERROR_OBJ {
 		return r
 	}
 
 	if obj, ok := r.(*ReturnValue); ok {
+		// if function returns multiple-values
+		// returns a tuple instead.
+		if len(obj.Values) > 1 {
+			return &Tuple{Members: obj.Values, IsMulti: true}
+		}
 		return obj.Value
 	}
 	return r
@@ -4145,7 +4199,7 @@ func evalTernaryExpression(te *ast.TernaryExpression, scope *Scope) Object {
 	}
 }
 
-func evalSpawnStatment(s *ast.SpawnStmt, scope *Scope) Object {
+func evalSpawnStatement(s *ast.SpawnStmt, scope *Scope) Object {
 	newSpawnScope := NewScope(scope)
 
 	switch callExp := s.Call.(type) {
@@ -4467,8 +4521,6 @@ func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
 		}
 
 		//newScope.DebugPrint("    ") //debug
-//		extendedScope := extendFunctionScope(fn, fn.Scope, args)
-
 		results := Eval(fn.Literal.Body, newScope)
 		if results.Type() == RETURN_VALUE_OBJ {
 			return results.(*ReturnValue).Value
@@ -4482,33 +4534,6 @@ func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
 
 	panic(NewError("", GENERICERROR, fn.Type() + " is not a function"))
 }
-
-func extendFunctionScope(fn *Function, outer *Scope, args []Object) *Scope {
-	innerScope := NewScope(outer)
-
-	for i, param := range fn.Literal.Parameters {
-		innerScope.Set(param.(*ast.Identifier).Value, args[i])
-	}
-
-	// The "args" variable hold all extra parameters beyond those defined
-	// by the function at runtime. "args[0]" is the first EXTRA parameter
-	// after those that were defined have been bound.
-
-	// Although the elements of the args variable could be reassigned,
-	// I'm trying to discourage it by at least making the variable itself
-	// a constant. Trying to indicate "please don't mess with it". Mainly
-	// this is so the variable isn't overwritten accidentally.
-	if len(args) > len(fn.Literal.Parameters) {
-		innerScope.Set("args", &Array{Members: args[len(fn.Literal.Parameters):]})
-	} else {
-		// The idea is for functions to call "len(args)" to check for
-		// anything extra. "len(nil)" returns 0.
-		innerScope.Set("args", &Array{})
-	}
-
-	return innerScope
-}
-
 
 // Convert a Object to an ast.Expression.
 func obj2Expression(obj Object) ast.Expression {

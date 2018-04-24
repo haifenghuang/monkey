@@ -1207,7 +1207,8 @@ func (ds *DeferStmt) String() string {
 ///////////////////////////////////////////////////////////
 type ReturnStatement struct {
 	Token       token.Token
-	ReturnValue Expression
+	ReturnValue Expression //for old campatibility
+	ReturnValues []Expression
 }
 
 func (rs *ReturnStatement) Pos() token.Position {
@@ -1215,9 +1216,11 @@ func (rs *ReturnStatement) Pos() token.Position {
 }
 
 func (rs *ReturnStatement) End() token.Position {
-	if rs.ReturnValue != nil {
-		return rs.ReturnValue.End()
+	aLen := len(rs.ReturnValues)
+	if aLen > 0 {
+		return rs.ReturnValues[aLen-1].End()
 	}
+
 	return token.Position{Line: rs.Token.Pos.Line, Col: rs.Token.Pos.Col + len(rs.Token.Literal)}
 }
 
@@ -1229,9 +1232,15 @@ func (rs *ReturnStatement) String() string {
 
 	out.WriteString(rs.TokenLiteral() + " ")
 
-	if rs.ReturnValue != nil {
-		out.WriteString(rs.ReturnValue.String())
+//	if rs.ReturnValue != nil {
+//		out.WriteString(rs.ReturnValue.String())
+//	}
+
+	values := []string{}
+	for _, value := range rs.ReturnValues {
+		values = append(values, value.String())
 	}
+	out.WriteString(strings.Join(values, ", "))
 
 	out.WriteString(";")
 

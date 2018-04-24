@@ -1846,6 +1846,28 @@ if ret[1] != "" {
 }
 ```
 
+Starting from ver5.0, Monkey support multiple return values using 'let'.
+The returned values are wrapped as a tuple.
+
+```swift
+fn testReturn(a, b, c, d=40) {
+	return a, b, c, d
+}
+
+let (x, y, c, d) = testReturn(10, 20, 30)
+// let x, y, c, d = testReturn(10, 20, 30)  same as above
+
+printf("x=%v, y=%v, c=%v, d=%v\n", x, y, c, d)
+//Result: x=10, y=20, c=30, d=40
+```
+
+Note：You must use `let` to support multiple return values, below statement will issue a compile error.
+
+```swift
+(x, y, c, d) = testReturn(10, 20, 30) // no 'let', compile error
+x, y, c, d = testReturn(10, 20, 30)   // no 'let', compile error
+```
+
 ### Pipe Operator
 
 The pipe operator, inspired by [Elixir](https://elixir-lang.org/).

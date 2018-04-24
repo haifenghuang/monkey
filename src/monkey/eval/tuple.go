@@ -14,6 +14,9 @@ import (
 */
 
 type Tuple struct {
+	 // Used in function return values.
+	 // if function returns multiple values, it's true
+	IsMulti bool
 	Members []Object
 }
 

@@ -649,7 +649,7 @@ func (p *Parser) parseInterpolatedString() ast.Expression {
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	stmt := &ast.ReturnStatement{Token: p.curToken}
+	stmt := &ast.ReturnStatement{Token: p.curToken, ReturnValues: []ast.Expression{}}
 	if p.peekTokenIs(token.SEMICOLON) { //e.g.{ return; }
 		p.nextToken()
 		return stmt
@@ -658,9 +658,22 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 		return stmt
 	}
 
-	p.nextToken()
-	stmt.ReturnValue = p.parseExpressionStatement().Expression
 
+	p.nextToken()
+	for {
+		v := p.parseExpressionStatement().Expression
+		stmt.ReturnValues = append(stmt.ReturnValues, v)
+
+		if !p.peekTokenIs(token.COMMA) {
+			break
+		}
+		p.nextToken()
+		p.nextToken()
+	}
+
+	if len(stmt.ReturnValues) > 0 {
+		stmt.ReturnValue = stmt.ReturnValues[0]
+	}
 	return stmt
 }
 
@@ -755,7 +768,8 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return stmt
 }
 
-//let (a,b,c) = tuple|array|hash
+//let (a,b,c) = tuple|array|hash|function(which return multi-values)
+//Note: funtion's multiple return values are wraped into a tuple.
 func (p *Parser) parseLetStatement2(stmt *ast.LetStatement) *ast.LetStatement {
 	stmt.DestructingFlag = true;
 
@@ -833,6 +847,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 	e := &ast.AssignExpression{Token: p.curToken}
+
 	if n, ok := name.(*ast.Identifier); ok {
 		e.Name = n
 	} else if call, ok := name.(*ast.MethodCallExpression); ok { //might be 'includeModule.a = xxx' or 'aHashObj.key = value'
@@ -841,9 +856,9 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 		//to include a trailing space for debugging readability.
 		tmpValue := strings.TrimSpace(call.String())
 		e.Name = &ast.Identifier{Token: p.curToken, Value: tmpValue}
-		p.nextToken()
-		e.Value = p.parseExpression(LOWEST)
-		return e
+		//p.nextToken()
+		//e.Value = p.parseExpression(LOWEST)
+		//return e
 	} else if indexExp, ok := name.(*ast.IndexExpression); ok {
 		// IndexExpression(Subscript)'s left expression should be an identifier.
 		switch indexExp.Left.(type) {
@@ -854,7 +869,12 @@ func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
 			p.errors = append(p.errors, msg)
 			return e
 		}
-	} else {
+//	} else if tupleExp, ok := name.(*ast.TupleLiteral); ok {
+//		e.Name = tupleExp
+//	} else if callExp, ok := name.(*ast.CallExpression); ok {
+//		//convert CallExpression to TupleLiteral
+//		e.Name = &ast.TupleLiteral{Token: p.curToken, Members: callExp.Arguments}
+	}else {
 		msg := fmt.Sprintf("Syntax Error:%v- expected assign token to be an identifier, got %s instead", name.Pos(), name.TokenLiteral())
 		p.errors = append(p.errors, msg)
 		return e
