@@ -1826,7 +1826,7 @@ println("hhf".upper)  //result: "HHF"
 println("hhf".upper())
 ```
 
-Monkey do not support multiple return values, But there are many ways to do it.
+Before ver5.0, Monkey do not support multiple return values, But there are many ways to do it.
 
 Below suggest a way of doing it:
 
