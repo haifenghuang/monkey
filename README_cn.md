@@ -667,6 +667,20 @@ let hh = =^10 // 使用用户自定义的前缀运算符'=^'
 printf("hh=%d\n", hh) // 结果： hh=-10
 ```
 
+```swift
+fn .^(x, y) {
+	arr = []
+	while x <= y {
+		arr += x
+		x += 2
+	}
+	return arr
+}
+
+let pp = 10.^20
+printf("pp=%v\n", pp) // result: pp=[10, 12, 14, 16, 18, 20]
+```
+
 下面的表格列出了Monkey内置的运算符和用户可以自定义的运算符：
 
 <table>

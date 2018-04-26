@@ -666,6 +666,20 @@ let hh = =^10 // Use the '=^' prefix operator
 printf("hh=%d\n", hh) // result: hh=-10
 ```
 
+```swift
+fn .^(x, y) {
+	arr = []
+	while x <= y {
+		arr += x
+		x += 2
+	}
+	return arr
+}
+
+let pp = 10.^20
+printf("pp=%v\n", pp) // result: pp=[10, 12, 14, 16, 18, 20]
+```
+
 Below is a list of predefined operators and user defined operators:
 
 <table>
