@@ -1,6 +1,7 @@
 # Monkey程序语言
 
 Table of Contents
+=================
 
 * [Monkey程序语言](#monkey%E7%A8%8B%E5%BA%8F%E8%AF%AD%E8%A8%80)
   * [主页](#%E4%B8%BB%E9%A1%B5)
@@ -18,6 +19,7 @@ Table of Contents
     * [qw(Quote word)关键字](#qwquote-word%E5%85%B3%E9%94%AE%E5%AD%97)
     * [enum关键字](#enum%E5%85%B3%E9%94%AE%E5%AD%97)
     * [控制流程](#%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B)
+    * [用户自定义操作符](#%E7%94%A8%E6%88%B7%E8%87%AA%E5%AE%9A%E4%B9%89%E6%93%8D%E4%BD%9C%E7%AC%A6)
     * [整型(Integer)](#%E6%95%B4%E5%9E%8Binteger)
     * [浮点型(Float)](#%E6%B5%AE%E7%82%B9%E5%9E%8Bfloat)
     * [Decimal类型](#decimal%E7%B1%BB%E5%9E%8B)
@@ -625,6 +627,87 @@ case i in {
 }
 
 ```
+
+### 用户自定义操作符
+在Monkey中， 你可以自定义一些操作符， 但是你不能覆盖Monkey内置的操作符。
+
+> 注: 并不是所有的操作符都可以自定义。
+
+下面的例子展示了如何使用自定义操作符：
+
+```swift
+//中缀运算符'=@'接收两个参数
+fn =@(x, y) {
+	return x + y * y
+}
+
+//前缀运算符'=^'仅接收一个参数
+fn =^(x) {
+	return -x
+}
+
+let pp = 10 =@ 5 // 使用用户自定义的中缀运算符'=@'
+printf("pp=%d\n", pp) // 结果： pp=35
+
+let hh = =^10 // 使用用户自定义的前缀运算符'=^'
+printf("hh=%d\n", hh) // 结果： hh=-10
+```
+
+下面的表格列出了Monkey内置的运算符和用户可以自定义的运算符：
+
+<table>
+  <tr>
+    <th>内置运算符</td>
+    <th>用户自定义运算符</td>
+  </tr>
+  <tr>
+    <td>==<br/>=~<br/>=></td>
+    <td>=X</td>
+  </tr>
+  <tr>
+    <td>++<br/>+=</td>
+    <td>+X</td>
+  </tr>
+  <tr>
+    <td>--<br/>-=<br/>-></td>
+    <td>-X</td>
+  </tr>
+  <tr>
+    <td>&gt;=<br/>&lt;&gt;</td>
+    <td>&gt;X</td>
+  </tr>
+  <tr>
+    <td>&lt;=<br/>&lt;&lt;</td>
+    <td>&lt;X</td>
+  </tr>
+  <tr>
+    <td>!=<br/>!~</td>
+    <td>!X</td>
+  </tr>
+  <tr>
+    <td>*=<br/>**</td>
+    <td>*X</td>
+  </tr>
+  <tr>
+    <td>..<br/>..</td>
+    <td>.X</td>
+  </tr>
+  <tr>
+    <td>&amp;=<br/>&amp;&amp;</td>
+    <td>&amp;X</td>
+  </tr>
+  <tr>
+    <td>|=<br/>||</td>
+    <td>|X</td>
+  </tr>
+  <tr>
+    <td>^=</td>
+    <td>^X</td>
+  </tr>
+</table>
+
+> 在上面的表格中，`X`可以是`.=+-*/%&,|^~<,>},!?@#$`。
+
 
 ### 整型(Integer)
 

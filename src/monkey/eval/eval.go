@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"monkey/ast"
+	"monkey/token"
 	"os"
 	"path"
 	"reflect"
@@ -123,7 +124,7 @@ func Eval(node ast.Node, scope *Scope) (val Object) {
 		if right.Type() == ERROR_OBJ {
 			return right
 		}
-		return evalInfixExpression(node, left, right)
+		return evalInfixExpression(node, left, right, scope)
 	case *ast.PostfixExpression:
 		left := Eval(node.Left, scope)
 		if left.Type() == ERROR_OBJ {
@@ -1202,11 +1203,40 @@ func evalFunctionLiteral(fl *ast.FunctionLiteral, scope *Scope) Object {
 	return fn
 }
 
+// Prefix expression for User Defined Operator
+func evalPrefixExpressionUDO(p *ast.PrefixExpression, right Object, scope *Scope) Object {
+	if fn, ok := scope.Get(p.Operator); ok {
+		f := fn.(*Function)
+		// set functions's parameters
+		scope.Set(f.Literal.Parameters[0].String(), right)
+		r := Eval(f.Literal.Body, scope)
+		if r.Type() == ERROR_OBJ {
+			return r
+		}
+
+		if obj, ok := r.(*ReturnValue); ok {
+			// if function returns multiple-values
+			// returns a tuple instead.
+			if len(obj.Values) > 1 {
+				return &Tuple{Members: obj.Values, IsMulti: true}
+			}
+			return obj.Value
+		}
+		return r
+	}
+	panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
+}
+
 // Prefix expressions, e.g. `!true, -5`
 func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	right := Eval(p.Right, scope)
 	if right.Type() == ERROR_OBJ {
 		return right
+	}
+
+	//User Defined Operator
+	if p.Token.Type == token.UDO {
+		return evalPrefixExpressionUDO(p, right, scope)
 	}
 
 	if right.Type() == INSTANCE_OBJ {
@@ -1320,8 +1350,39 @@ func evalBangOperatorExpression(right Object) Object {
 	return nativeBoolToBooleanObject(!IsTrue(right))
 }
 
+// Infix expression for User Defined Operator
+func evalInfixExpressionUDO(p *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
+	if fn, ok := scope.Get(p.Operator); ok {
+		f := fn.(*Function)
+		// set functions two parameters
+		scope.Set(f.Literal.Parameters[0].String(), left)
+		scope.Set(f.Literal.Parameters[1].String(), right)
+		r := Eval(f.Literal.Body, scope)
+		if r.Type() == ERROR_OBJ {
+			return r
+		}
+
+		if obj, ok := r.(*ReturnValue); ok {
+			// if function returns multiple-values
+			// returns a tuple instead.
+			if len(obj.Values) > 1 {
+				return &Tuple{Members: obj.Values, IsMulti: true}
+			}
+			return obj.Value
+		}
+		return r
+	}
+
+	panic(NewError(p.Pos().Sline(), INFIXOP, left.Type(), p.Operator, right.Type()))
+}
+
 // Evaluate infix expressions, e.g 1 + 2, a == 5, true == true, etc...
-func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
+func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *Scope) Object {
+	//User Defined Operator
+	if node.Token.Type == token.UDO {
+		return evalInfixExpressionUDO(node, left, right, scope)
+	}
+
 	_, leftIsNum := left.(Number)
 	_, rightIsNum := right.(Number)
 	//hasNumArg := leftIsNum || rightIsNum
@@ -1338,9 +1399,9 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object) Object {
 	case leftIsNum && rightIsNum:
 		return evalNumberInfixExpression(node, left, right)
 	case (left.Type() == ARRAY_OBJ || right.Type() == ARRAY_OBJ):
-		return evalArrayInfixExpression(node, left, right)
+		return evalArrayInfixExpression(node, left, right, scope)
 	case (left.Type() == TUPLE_OBJ || right.Type() == TUPLE_OBJ):
-		return evalTupleInfixExpression(node, left, right)
+		return evalTupleInfixExpression(node, left, right, scope)
 	case left.Type() == STRING_OBJ && right.Type() == STRING_OBJ:
 		return evalStringInfixExpression(node, left, right)
 	case (left.Type() == STRING_OBJ || right.Type() == STRING_OBJ):
@@ -1715,7 +1776,7 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 //array + array
 //array == array
 //array != array
-func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
+func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
 	switch node.Operator {
 	case "+":
 		if left.Type() == ARRAY_OBJ {
@@ -1759,7 +1820,7 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 
 		for i := range leftVals {
-			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i], scope)
 			if !IsTrue(aBool) {
 				return FALSE
 			}
@@ -1780,7 +1841,7 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 
 		for i := range leftVals {
-			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i], scope)
 			if IsTrue(aBool) {
 				return TRUE
 			}
@@ -1796,7 +1857,7 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 //tuple + tuple
 //tuple == tuple
 //tuple != tuple
-func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
+func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
 	switch node.Operator {
 	case "+":
 		if left.Type() == TUPLE_OBJ {
@@ -1840,7 +1901,7 @@ func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 
 		for i := range leftVals {
-			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i], scope)
 			if !IsTrue(aBool) {
 				return FALSE
 			}
@@ -1861,7 +1922,7 @@ func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Obje
 		}
 
 		for i := range leftVals {
-			aBool := evalInfixExpression(node, leftVals[i], rightVals[i])
+			aBool := evalInfixExpression(node, leftVals[i], rightVals[i], scope)
 			if IsTrue(aBool) {
 				return TRUE
 			}

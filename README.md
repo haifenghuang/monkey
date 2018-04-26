@@ -6,7 +6,6 @@ Table of Contents
 =================
 
 * [Monkey Programming Language](#monkey-programming-language)
-* [Table of Contents](#table-of-contents)
   * [Summary](#summary)
   * [Overview](#overview)
   * [Installation](#installation)
@@ -21,6 +20,7 @@ Table of Contents
     * [qw(Quote word) keyword](#qwquote-word-keyword)
     * [enum keyword](#enum-keyword)
     * [Control flow](#control-flow)
+    * [User Defined Operator](#user-defined-operator)
     * [Integer](#integer)
     * [Float](#float)
     * [Decimal](#decimal)
@@ -63,6 +63,7 @@ Table of Contents
   * [Syntax Highlight](#syntax-highlight)
   * [Futual Plans](#futual-plans)
   * [License](#license)
+
 
 ## Summary
 
@@ -624,6 +625,87 @@ case i in {
 }
 
 ```
+
+### User Defined Operator
+In monkey, you are free to define some operators, but you cannot
+overwrite predefined operators.
+
+> Note: Not all operators could be user defined.
+
+Below is an example for showing how to write User Defined Operators:
+
+```swift
+//infix operator '=@' which accept two parameters.
+fn =@(x, y) {
+	return x + y * y
+}
+
+//prefix operator '=^' which accept only one parameter.
+fn =^(x) {
+	return -x
+}
+
+let pp = 10 =@ 5 // Use the '=@' user defined infix operator
+printf("pp=%d\n", pp) // result: pp=35
+
+let hh = =^10 // Use the '=^' prefix operator
+printf("hh=%d\n", hh) // result: hh=-10
+```
+
+Below is a list of predefined operators and user defined operators:
+
+<table>
+  <tr>
+    <th>Predefined Operators</td>
+    <th>User Defined Operators</td>
+  </tr>
+  <tr>
+    <td>==<br/>=~<br/>=></td>
+    <td>=X</td>
+  </tr>
+  <tr>
+    <td>++<br/>+=</td>
+    <td>+X</td>
+  </tr>
+  <tr>
+    <td>--<br/>-=<br/>-></td>
+    <td>-X</td>
+  </tr>
+  <tr>
+    <td>&gt;=<br/>&lt;&gt;</td>
+    <td>&gt;X</td>
+  </tr>
+  <tr>
+    <td>&lt;=<br/>&lt;&lt;</td>
+    <td>&lt;X</td>
+  </tr>
+  <tr>
+    <td>!=<br/>!~</td>
+    <td>!X</td>
+  </tr>
+  <tr>
+    <td>*=<br/>**</td>
+    <td>*X</td>
+  </tr>
+  <tr>
+    <td>..<br/>..</td>
+    <td>.X</td>
+  </tr>
+  <tr>
+    <td>&amp;=<br/>&amp;&amp;</td>
+    <td>&amp;X</td>
+  </tr>
+  <tr>
+    <td>|=<br/>||</td>
+    <td>|X</td>
+  </tr>
+  <tr>
+    <td>^=</td>
+    <td>^X</td>
+  </tr>
+</table>
+
+> In the table above, `X` could be `.=+-*/%&,|^~<,>},!?@#$`
 
 ### Integer
 

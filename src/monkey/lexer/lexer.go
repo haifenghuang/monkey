@@ -20,6 +20,7 @@ type Mode uint
 
 const (
 	ScanComments Mode = 1 << iota // return comments as COMMENT tokens
+	op_chars = ".=+-*/%&,|^~<,>},!?@#$"
 )
 
 type Lexer struct {
@@ -132,6 +133,10 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '>' {
 				tok = token.Token{Type: token.FATARROW, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.ASSIGN, l.ch)
 			}
@@ -141,6 +146,10 @@ func (l *Lexer) NextToken() token.Token {
 				l.readNext()
 			} else if l.peek() == '=' {
 				tok = token.Token{Type: token.PLUS_A, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
 			} else {
 				tok = newToken(token.PLUS, l.ch)
@@ -155,6 +164,10 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '>' {
 				tok = token.Token{Type: token.THINARROW, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.MINUS, l.ch)
 			}
@@ -164,6 +177,10 @@ func (l *Lexer) NextToken() token.Token {
 				l.readNext()
 			} else if l.peek() == '>' {
 				tok = token.Token{Type: token.SHIFT_R, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
 			} else {
 				tok = newToken(token.GT, l.ch)
@@ -175,6 +192,10 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '<' {
 				tok = token.Token{Type: token.SHIFT_L, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.LT, l.ch)
 			}
@@ -184,6 +205,10 @@ func (l *Lexer) NextToken() token.Token {
 				l.readNext()
 			} else if l.peek() == '~' {
 				tok = token.Token{Type: token.NOTMATCH, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
 			} else {
 				tok = newToken(token.BANG, l.ch)
@@ -239,6 +264,10 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '*' {
 				tok = token.Token{Type: token.POWER, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.ASTERISK, l.ch)
 			}
@@ -251,6 +280,10 @@ func (l *Lexer) NextToken() token.Token {
 				} else {
 					tok = token.Token{Type: token.DOTDOT, Literal: ".."}
 				}
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.DOT, l.ch)
 			}
@@ -272,6 +305,10 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '&' {
 				tok = token.Token{Type: token.CONDAND, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.BITAND, l.ch)
 			}
@@ -285,12 +322,20 @@ func (l *Lexer) NextToken() token.Token {
 			} else if l.peek() == '|' {
 				tok = token.Token{Type: token.CONDOR, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
 			} else {
 				tok = newToken(token.BITOR, l.ch)
 			}
 		case token.BITXOR:
 			if l.peek() == '=' {
 				tok = token.Token{Type: token.BITXOR_A, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
+			} else if strings.Contains(op_chars, string(l.peek())) {
+				//User Defined Operator
+				tok = token.Token{Type: token.UDO, Literal: string(l.ch) + string(l.peek())}
 				l.readNext()
 			} else {
 				tok = newToken(token.BITXOR, l.ch)

@@ -65,6 +65,7 @@ var precedences = map[token.TokenType]int{
 	token.LE:         LESSGREATER,
 	token.GT:         LESSGREATER,
 	token.GE:         LESSGREATER,
+	token.UDO:        LESSGREATER, // User defined Operator
 	token.BITOR:      BITOR,
 	token.BITOR_A:    BITOR,
 	token.BITXOR_A:   BITXOR,
@@ -212,6 +213,7 @@ func (p *Parser) registerAction() {
 	p.registerPrefix(token.QW, p.parseQWExpression)
 	p.registerPrefix(token.CLASS, p.parseClassLiteral)
 	p.registerPrefix(token.NEW, p.parseNewExpression)
+	p.registerPrefix(token.UDO, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -237,6 +239,7 @@ func (p *Parser) registerAction() {
 	p.registerInfix(token.BITAND, p.parseInfixExpression)
 	p.registerInfix(token.BITOR, p.parseInfixExpression)
 	p.registerInfix(token.BITXOR, p.parseInfixExpression)
+	p.registerInfix(token.UDO, p.parseInfixExpression)
 
 	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 	p.registerInfix(token.PLUS_A, p.parseAssignExpression)

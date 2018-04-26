@@ -123,6 +123,9 @@ const (
 	PROTECTED  //NOT IMPLEMENTED
 	STATIC
 	DEFAULT
+
+	// User Defined Operator
+	UDO
 )
 
 var keywords = map[string]TokenType{
@@ -388,6 +391,8 @@ func (tt TokenType) String() string {
 		return "static"
 	case DEFAULT:
 		return "default"
+	case UDO:
+		return "User-Defined-Operator)"
 	default:
 		return "unknown"
 	}
