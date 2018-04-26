@@ -725,8 +725,8 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	//parse left hand side of the assignment
 	for {
 		p.nextToken()
-		if !p.curTokenIs(token.IDENT) {
-			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier, got %s instead.", p.curToken.Pos, p.curToken.Type)
+		if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.UNDERSCORE) {
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier|underscore, got %s instead.", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			return stmt
 		}
@@ -783,8 +783,8 @@ func (p *Parser) parseLetStatement2(stmt *ast.LetStatement) *ast.LetStatement {
 
 	//parse left hand side of the assignment
 	for {
-		if !p.curTokenIs(token.IDENT) {
-			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier, got %s instead.", p.curToken.Pos, p.curToken.Type)
+		if !p.curTokenIs(token.IDENT) && !p.curTokenIs(token.UNDERSCORE) {
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be identifier|underscore, got %s instead.", p.curToken.Pos, p.curToken.Type)
 			p.errors = append(p.errors, msg)
 			return stmt
 		}

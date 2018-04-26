@@ -284,6 +284,9 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 		case HASH_OBJ:
 			h := v.(*Hash)
 			for _, item := range l.Names {
+				if item.Token.Type == token.UNDERSCORE {
+					continue
+				}
 				found := false
 				for _, pair := range h.Pairs{
 					if item.String() == pair.Key.Inspect() {
@@ -302,10 +305,15 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 			arr := v.(*Array)
 			valuesLen := len(arr.Members)
 			for idx, item := range l.Names {
-				if idx >= valuesLen { //There are more Values than Names
-					val = NIL
-					scope.Set(item.String(), val)
+				if idx >= valuesLen { //There are more Names than Values
+					if item.Token.Type != token.UNDERSCORE {
+						val = NIL
+						scope.Set(item.String(), val)
+					}
 				} else {
+					if item.Token.Type == token.UNDERSCORE {
+						continue
+					}
 					val = arr.Members[idx]
 					if val.Type() != ERROR_OBJ {
 						scope.Set(item.String(), val)
@@ -319,10 +327,17 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 			tup := v.(*Tuple)
 			valuesLen := len(tup.Members)
 			for idx, item := range l.Names {
-				if idx >= valuesLen { //There are more Values than Names
+				if idx >= valuesLen { //There are more Names than Values
+					if item.Token.Type != token.UNDERSCORE {
+						val = NIL
+						scope.Set(item.String(), val)
+					}
 					val = NIL
 					scope.Set(item.String(), val)
 				} else {
+					if item.Token.Type == token.UNDERSCORE {
+						continue
+					}
 					val = tup.Members[idx]
 					if val.Type() != ERROR_OBJ {
 						scope.Set(item.String(), val)
@@ -362,11 +377,15 @@ func evalLetStatement(l *ast.LetStatement, scope *Scope) (val Object) {
 	}
 
 	for idx, item := range l.Names {
-		if idx >= valuesLen { //There are more Values than Names
-			val = NIL
-			scope.Set(item.String(), val)
+		if idx >= valuesLen { //There are more Names than Values
+			if item.Token.Type != token.UNDERSCORE {
+				val = NIL
+				scope.Set(item.String(), val)
+			}
 		} else {
-			//val = Eval(l.Values[idx], scope)
+			if item.Token.Type == token.UNDERSCORE {
+				continue
+			}
 			val = values[idx];
 			if val.Type() != ERROR_OBJ {
 				scope.Set(item.String(), val)
@@ -927,7 +946,7 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 //		valuesLen := len(tupleObj.Members)
 //
 //		for idx, item := range nodeType.Members {
-//			if idx >= valuesLen { //There are more Values than Names
+//			if idx >= valuesLen { //There are more Names than Values
 //				val = NIL
 //				scope.Set(item.String(), val)
 //			} else {

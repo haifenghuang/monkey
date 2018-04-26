@@ -126,6 +126,7 @@ const (
 
 	// User Defined Operator
 	UDO
+	UNDERSCORE // _
 )
 
 var keywords = map[string]TokenType{
@@ -392,7 +393,9 @@ func (tt TokenType) String() string {
 	case DEFAULT:
 		return "default"
 	case UDO:
-		return "User-Defined-Operator)"
+		return "User-Defined-Operator"
+	case UNDERSCORE:
+		return "_"
 	default:
 		return "unknown"
 	}

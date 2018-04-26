@@ -365,6 +365,20 @@ Below code is not correct：
 a, b, c = 1, "hello world", [1,2,3]
 ```
 
+Note：Starting from Monkey 5.0，when the decalared variable already exists, it's value will be overwritten:
+
+```swift
+let x, y = 10, 20;
+let x, y = y, x //Swap the value of x and y
+printf("x=%v, y=%v\n", x, y)  //result: x=20, y=10
+```
+`let` also support the placeholder(_), when assigned a value, it will just ignore it.
+
+```swift
+let x, _, y = 10, 20, 30
+printf("x=%d, y=%d\n", x, y) //result: x=10, y=30
+```
+
 ### Reserved keywords
 
 Keywords are predefined, reserved identifiers that have special meanings to the compiler. They cannot be used as identifiers. Below is a list of reserved keywords
