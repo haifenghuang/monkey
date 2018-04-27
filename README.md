@@ -494,12 +494,12 @@ println(LogOption.getName(LogOption.Lshortfile))
 ```
 
 ### Meta-Operators
-Monkey has some meta-operators like perl6.
-There are strict rule for meta-operators:
+Monkey has some meta-operators borrowed from perl6.
+There are strict rules for meta-operators:
 
 * Meta-operators can only operator on arrays.
-* Each array's element must be number type(uint, int, float)
-* If the meat-operators serve as an infix operator, and if the left and right are all arrays, they must have the same number of elements
+* Each array's element must be number type(uint, int, float).
+* If the meat-operators serve as an infix operator, and if the left and right are all arrays, they must have the same number of elements.
 
 ```swift
 let arr1 = [1,2,3] ~* [4,5,6]
@@ -511,7 +511,7 @@ println(arr2) //result: [4, 8, 12]
 println(arr3) //result: 40
 ```
 
-Until now,Monkey has six meta-operators：
+At the moment, Monkey has six meta-operators：
 * <p>~+</p>
 * <p>~-</p>
 * <p>~*</p>
@@ -519,9 +519,12 @@ Until now,Monkey has six meta-operators：
 * <p>~%</p>
 * <p>~^</p>
 
-The six meta-operators could be served as eighter infix expression or prefix expression.
+The six meta-operators could be served as either infix expression or prefix expression.
 
-Below talbe give an example of meta-operator and their meanings:(only `~+` is showed)：
+The meta-operator for infix expression will return an array.
+The meta-operator for prefix expression will return a value(uint, int, float).
+
+Below talbe give an example of meta-operator and their meanings:(only `~+` is showed):
 <table>
   <tr>
     <th>Meta-Operator</td>
