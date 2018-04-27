@@ -68,7 +68,7 @@ type Object interface {
 	CallMethod(line string, scope *Scope, method string, args ...Object) Object
 }
 
-//Whether the Object is a number (INT, FLOAT)
+//Whether the Object is a number (UINT, INT, FLOAT)
 type Number interface {
 	number()
 }

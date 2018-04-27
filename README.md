@@ -19,6 +19,7 @@ Table of Contents
     * [Type conversion](#type-conversion)
     * [qw(Quote word) keyword](#qwquote-word-keyword)
     * [enum keyword](#enum-keyword)
+    * [Meta\-Operators](#meta-operators)
     * [Control flow](#control-flow)
     * [User Defined Operator](#user-defined-operator)
     * [Integer](#integer)
@@ -491,6 +492,62 @@ for s in LogOption.getValues() { //not ordered
 // get a specific name of the `enum`
 println(LogOption.getName(LogOption.Lshortfile))
 ```
+
+### Meta-Operators
+Monkey has some meta-operators like perl6.
+There are strict rule for meta-operators:
+
+* Meta-operators can only operator on arrays.
+* Each array's element must be number type(uint, int, float)
+* If the meat-operators serve as an infix operator, and if the left and right are all arrays, they must have the same number of elements
+
+```swift
+let arr1 = [1,2,3] ~* [4,5,6]
+let arr2 = [1,2,3] ~* 4
+let arr3 = ~*[10,2,2]
+
+println(arr1) //result: [4, 10, 18]
+println(arr2) //result: [4, 8, 12]
+println(arr3) //result: 40
+```
+
+Until now,Monkey has six meta-operators：
+* <p>~+</p>
+* <p>~-</p>
+* <p>~*</p>
+* <p>~/</p>
+* <p>~%</p>
+* <p>~^</p>
+
+The six meta-operators could be served as eighter infix expression or prefix expression.
+
+Below talbe give an example of meta-operator and their meanings:(only `~+` is showed)：
+<table>
+  <tr>
+    <th>Meta-Operator</td>
+    <th>Expression</td>
+    <th>Example</td>
+    <th>Result</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>Infix Expression</td>
+    <td>[x1, y1, z1] ~+ [x2, y2, z2]</td>
+    <td>[x1+x2, y1+y2, z1+z2] (Array)</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>Infix Expression</td>
+    <td>[x1, y1, z1] ~+ 4</td>
+    <td>[x1+4, y1+4, z1+4] (Array)</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>Prefix Expression</td>
+    <td>~+[x1, y1, z1]</td>
+    <td>x1+y1+z1 (Note: a value, not an array)</td>
+  </tr>
+</table>
 
 ### Control flow
 

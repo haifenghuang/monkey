@@ -18,6 +18,7 @@ Table of Contents
     * [类型转换](#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2)
     * [qw(Quote word)关键字](#qwquote-word%E5%85%B3%E9%94%AE%E5%AD%97)
     * [enum关键字](#enum%E5%85%B3%E9%94%AE%E5%AD%97)
+    * [元操作符(Meta\-Operators)](#%E5%85%83%E6%93%8D%E4%BD%9C%E7%AC%A6meta-operators)
     * [控制流程](#%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B)
     * [用户自定义操作符](#%E7%94%A8%E6%88%B7%E8%87%AA%E5%AE%9A%E4%B9%89%E6%93%8D%E4%BD%9C%E7%AC%A6)
     * [整型(Integer)](#%E6%95%B4%E5%9E%8Binteger)
@@ -493,6 +494,62 @@ for s in LogOption.getValues() { //非排序(non-ordered)
 // 得到`enum`的一个特定的名字
 println(LogOption.getName(LogOption.Lshortfile))
 ```
+
+### 元操作符(Meta-Operators)
+Monkey内嵌了一些类似Perl6的元操作符。
+但是对于元操作符有严格的限制：
+
+* 元操作符只能针对数组进行操作
+* 元操作符操作的数组中的所有元素必须是数字(uint, int, float)
+* 元操作符是中缀元操作符的时候，如果两边都是数组的话，数组元素必须相等
+
+```swift
+let arr1 = [1,2,3] ~* [4,5,6]
+let arr2 = [1,2,3] ~* 4
+let arr3 = ~*[10,2,2]
+
+println(arr1) //结果：[4, 10, 18]
+println(arr2) //结果：[4, 8, 12]
+println(arr3) //结果：40
+```
+
+目前为止，Monkey中有六个元操作符：
+* <p>~+</p>
+* <p>~-</p>
+* <p>~*</p>
+* <p>~/</p>
+* <p>~%</p>
+* <p>~^</p>
+
+这六个元操作符既可以作为中缀表达式，也可以作为前缀表达式
+
+下面的表格列出了相关的元操作符及其含义(只列出了`~+`)：
+<table>
+  <tr>
+    <th>元操作符</td>
+    <th>表达式</td>
+    <th>举例</td>
+    <th>结果</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>中缀表达式</td>
+    <td>[x1, y1, z1] ~+ [x2, y2, z2]</td>
+    <td>[x1+x2, y1+y2, z1+z2] (数组)</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>中缀表达式</td>
+    <td>[x1, y1, z1] ~+ 4</td>
+    <td>[x1+4, y1+4, z1+4] (数组)</td>
+  </tr>
+  <tr>
+    <td>~+</td>
+    <td>前缀表达式</td>
+    <td>~+[x1, y1, z1]</td>
+    <td>x1+y1+z1 (注：数值， 非数组)</td>
+  </tr>
+</table>
 
 ### 控制流程
 

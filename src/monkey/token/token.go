@@ -126,7 +126,15 @@ const (
 
 	// User Defined Operator
 	UDO
-	UNDERSCORE // _
+	UNDERSCORE // _(PlaceHolder)
+
+	//Meta-Operators(for working with array)
+	TILDEPLUS     // ~+
+	TILDEMINUS    // ~-
+	TILDEASTERISK // ~*
+	TILDESLASH    // ~/
+	TILDEMOD      // ~%
+	TILDECARET    // ~^
 )
 
 var keywords = map[string]TokenType{
@@ -396,6 +404,18 @@ func (tt TokenType) String() string {
 		return "User-Defined-Operator"
 	case UNDERSCORE:
 		return "_"
+	case TILDEPLUS:
+		return "~+"
+	case TILDEMINUS:
+		return "~-"
+	case TILDEASTERISK:
+		return "~*"
+	case TILDESLASH:
+		return "~/"
+	case TILDEMOD:
+		return "~%"
+	case TILDECARET:
+		return "~^"
 	default:
 		return "unknown"
 	}

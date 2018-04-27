@@ -402,6 +402,8 @@ func (l *Lexer) readRunesToken() token.Token {
 			tok.Literal = s
 			return tok
 		}
+	case l.ch == '~':
+		return l.getMetaOperatorToken()
 	}
 	l.readNext()
 	return newToken(token.ILLEGAL, l.ch)
@@ -726,6 +728,34 @@ loop:
 	}
 
 	return string(l.input[position:l.position]), err
+}
+
+func (l *Lexer) getMetaOperatorToken() token.Token {
+	ch := l.ch // ~
+	var tok token.Token
+	switch l.peek() {
+	case '+':
+		tok = token.Token{Type: token.TILDEPLUS, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	case '-':
+		tok = token.Token{Type: token.TILDEMINUS, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	case '*':
+		tok = token.Token{Type: token.TILDEASTERISK, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	case '/':
+		tok = token.Token{Type: token.TILDESLASH, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	case '%':
+		tok = token.Token{Type: token.TILDEMOD, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	case '^':
+		tok = token.Token{Type: token.TILDECARET, Literal: string(ch) + string(l.peek())}
+		l.readNext()
+	} //end switch
+
+	l.readNext()
+	return tok
 }
 
 func (l *Lexer) getPos() token.Position {

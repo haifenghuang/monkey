@@ -96,6 +96,14 @@ var precedences = map[token.TokenType]int{
 	token.INCREMENT:  INCREMENT,
 	token.DECREMENT:  INCREMENT,
 	token.THINARROW:  THINARROW,
+
+	//Meta-Operators
+	token.TILDEPLUS:     SUM,
+	token.TILDEMINUS:    SUM,
+	token.TILDEASTERISK: PRODUCT,
+	token.TILDESLASH:    PRODUCT,
+	token.TILDEMOD:      PRODUCT,
+	token.TILDECARET:    PRODUCT,
 }
 
 // A Mode value is a set of flags (or 0).
@@ -215,6 +223,14 @@ func (p *Parser) registerAction() {
 	p.registerPrefix(token.NEW, p.parseNewExpression)
 	p.registerPrefix(token.UDO, p.parsePrefixExpression)
 
+	//Meta-Operators
+	p.registerPrefix(token.TILDEPLUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TILDEMINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TILDEASTERISK, p.parsePrefixExpression)
+	p.registerPrefix(token.TILDESLASH, p.parsePrefixExpression)
+	p.registerPrefix(token.TILDEMOD, p.parsePrefixExpression)
+	p.registerPrefix(token.TILDECARET, p.parsePrefixExpression)
+
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -260,6 +276,14 @@ func (p *Parser) registerAction() {
 	p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.PIPE, p.parsePipeExpression)
 	p.registerInfix(token.THINARROW, p.parseThinArrowFunction)
+
+	//Meta-Operators
+	p.registerInfix(token.TILDEPLUS, p.parseInfixExpression)
+	p.registerInfix(token.TILDEMINUS, p.parseInfixExpression)
+	p.registerInfix(token.TILDEASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.TILDESLASH, p.parseInfixExpression)
+	p.registerInfix(token.TILDEMOD, p.parseInfixExpression)
+	p.registerInfix(token.TILDECARET, p.parseInfixExpression)
 }
 
 func (p *Parser) ParseProgram() *ast.Program {

@@ -1246,6 +1246,34 @@ func evalPrefixExpressionUDO(p *ast.PrefixExpression, right Object, scope *Scope
 	panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
 }
 
+// Prefix expression for Meta-Operators
+func evalMetaOperatorPrefixExpression(p *ast.PrefixExpression, right Object, scope *Scope) Object {
+	if right.Type() != ARRAY_OBJ {
+		panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
+	}
+
+	//convert prefix operator to infix operator,
+	//Because 'evalNumberInfixExpression' function need a InfixExpression
+	infixExp := &ast.InfixExpression{Token: p.Token, Operator: p.Operator, Right: p.Right}
+
+	members := right.(*Array).Members
+	if len(members) == 0 {
+		return NewInteger(0)
+	}
+
+	result := members[0]
+	for i := 1; i < len(members); i++ {
+			_, itemIsNum := members[i].(Number)
+			if !itemIsNum {
+				panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+			}
+
+			result = evalNumberInfixExpression(infixExp, result, members[i])
+		} // end for
+
+	return result
+}
+
 // Prefix expressions, e.g. `!true, -5`
 func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	right := Eval(p.Right, scope)
@@ -1256,6 +1284,10 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	//User Defined Operator
 	if p.Token.Type == token.UDO {
 		return evalPrefixExpressionUDO(p, right, scope)
+	}
+
+	if isMetaOperators(p.Token.Type) {
+		return evalMetaOperatorPrefixExpression(p, right, scope)
 	}
 
 	if right.Type() == INSTANCE_OBJ {
@@ -1395,11 +1427,70 @@ func evalInfixExpressionUDO(p *ast.InfixExpression, left Object, right Object, s
 	panic(NewError(p.Pos().Sline(), INFIXOP, left.Type(), p.Operator, right.Type()))
 }
 
+// Infix expression for Meta-Operators
+func evalMetaOperatorInfixExpression(p *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
+	//1. [1,2,3] ~+ [4,5,6] = [1+4, 2+5, 3+6]
+	//2. [1,2,3] ~+ 4 = [1+4, 2+4, 3+4]
+	//left must be an array
+	if left.Type() != ARRAY_OBJ {
+		panic(NewError(p.Pos().Sline(), INFIXOP, left.Type(), p.Operator, right.Type()))
+	}
+
+	leftMembers := left.(*Array).Members
+	leftNumLen := len(leftMembers)
+
+	//right could be an array or a number
+	var rightMembers []Object
+	_, rightIsNum := right.(Number)
+	if rightIsNum {
+		for i := 0; i < leftNumLen; i++ {
+			rightMembers = append(rightMembers, right)
+		}
+	} else {
+		if right.Type() == ARRAY_OBJ {
+			rightMembers = right.(*Array).Members
+		} else {
+			panic(NewError(p.Pos().Sline(), INFIXOP, left.Type(), p.Operator, right.Type()))
+		}
+	}
+	rightNumLen := len(rightMembers)
+
+	if leftNumLen != rightNumLen {
+		panic(NewError(p.Pos().Sline(), GENERICERROR, "Number of items not equal for Meta-Operators!"))
+	}
+
+	resultArr := &Array{}
+	if leftNumLen == 0 {
+		return resultArr
+	}
+
+	for idx, item := range leftMembers {
+		_, itemIsNum := item.(Number)
+		if !itemIsNum {
+			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+		}
+
+		_, itemIsNum = rightMembers[idx].(Number)
+		if !itemIsNum {
+			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+		}
+		result := evalNumberInfixExpression(p, item, rightMembers[idx])
+		resultArr.Members = append(resultArr.Members, result)
+	} // end for
+
+	return resultArr
+
+}
+
 // Evaluate infix expressions, e.g 1 + 2, a == 5, true == true, etc...
 func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *Scope) Object {
 	//User Defined Operator
 	if node.Token.Type == token.UDO {
 		return evalInfixExpressionUDO(node, left, right, scope)
+	}
+
+	if isMetaOperators(node.Token.Type) {
+		return evalMetaOperatorInfixExpression(node, left, right, scope)
 	}
 
 	_, leftIsNum := left.(Number)
@@ -1473,6 +1564,15 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *S
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
 
+func isMetaOperators(tokenType token.TokenType) bool {
+	return tokenType == token.TILDEPLUS ||               // ~+
+		   tokenType == token.TILDEMINUS ||     // ~-
+		   tokenType == token.TILDEASTERISK ||  // ~*
+		   tokenType == token.TILDESLASH ||     // ~/
+		   tokenType == token.TILDEMOD ||       // ~%
+		   tokenType == token.TILDECARET        // ~^
+}
+
 func objectToNativeBoolean(o Object) bool {
 	if r, ok := o.(*ReturnValue); ok {
 		o = r.Value
@@ -1542,7 +1642,7 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 	}
 
 	switch node.Operator {
-	case "**":
+	case "**", "~^":
 		val := math.Pow(leftVal, rightVal)
 		if isInt {
 			return NewInteger(int64(val))
@@ -1578,7 +1678,7 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 			return NewUInteger(uint64(val))
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
-	case "+":
+	case "+", "~+":
 		val := leftVal + rightVal
 		if isInt {
 			return NewInteger(int64(val))
@@ -1587,7 +1687,7 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		} else {
 			return checkNumInfix(left, right, val)
 		}
-	case "-":
+	case "-", "~-":
 		val := leftVal - rightVal
 		if isInt {
 			return NewInteger(int64(val))
@@ -1596,7 +1696,7 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		} else {
 			return checkNumInfix(left, right, val)
 		}
-	case "*":
+	case "*", "~*":
 		val := leftVal * rightVal
 		if isInt {
 			return NewInteger(int64(val))
@@ -1605,14 +1705,14 @@ func evalNumberInfixExpression(node *ast.InfixExpression, left Object, right Obj
 		} else {
 			return checkNumInfix(left, right, val)
 		}
-	case "/":
+	case "/", "~/":
 		if rightVal == 0 {
 			panic(NewError(node.Pos().Sline(), DIVIDEBYZERO))
 		}
 		val := leftVal / rightVal
 		//Should Always return float
 		return NewFloat(val)
-	case "%":
+	case "%", "~%":
 		if isInt {
 			return NewInteger(int64(leftVal) % int64(rightVal))
 		} else if isUInt {
