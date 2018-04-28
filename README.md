@@ -565,7 +565,7 @@ Below talbe give an example of meta-operator and their meanings:(only `~+` is sh
 ```swift
 // if-else
 let a, b = 10, 5
-if (a > b) { // '()' is optional, but '{}' is a must
+if (a > b) {
     println("a > b")
 }
 elseif a == b { // could also use 'elsif', 'elseif' or 'elif'

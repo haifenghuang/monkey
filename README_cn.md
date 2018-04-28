@@ -568,7 +568,7 @@ println(arr3) //结果：40
 ```swift
 // if-else
 let a, b = 10, 5
-if (a > b) { // '()'可选, 但是'{}'必须要有
+if (a > b) {
     println("a > b")
 }
 elseif a == b { // 也可以使用'elsif', 'elseif'和'elif'
