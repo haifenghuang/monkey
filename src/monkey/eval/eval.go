@@ -1262,14 +1262,43 @@ func evalMetaOperatorPrefixExpression(p *ast.PrefixExpression, right Object, sco
 	}
 
 	result := members[0]
+	var leftIsNum bool
+	var leftIsStr bool
+
+	_, leftIsNum = result.(Number)
+	if !leftIsNum {
+		_, leftIsStr = result.(*String)
+		if !leftIsStr {
+			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+		}
+	}
+
 	for i := 1; i < len(members); i++ {
-			_, itemIsNum := members[i].(Number)
-			if !itemIsNum {
+		var rightIsNum bool
+		var rightIsStr bool
+		_, rightIsNum = members[i].(Number)
+		if !rightIsNum {
+			_, rightIsStr = members[i].(*String)
+			if !rightIsStr {
 				panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
 			}
+		}
 
+		if leftIsStr || rightIsStr {
+			result = evalMixedTypeInfixExpression(infixExp, result, members[i])
+		} else {
 			result = evalNumberInfixExpression(infixExp, result, members[i])
-		} // end for
+		}
+
+		_, leftIsNum = result.(Number)
+		if !leftIsNum {
+		_, leftIsStr = result.(*String)
+		if !leftIsStr {
+			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+		}
+	}
+
+	} // end for
 
 	return result
 }
@@ -1465,16 +1494,34 @@ func evalMetaOperatorInfixExpression(p *ast.InfixExpression, left Object, right 
 	}
 
 	for idx, item := range leftMembers {
-		_, itemIsNum := item.(Number)
-		if !itemIsNum {
-			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+		var leftIsNum, rightIsNum bool
+		var leftIsStr, rightIsStr bool
+		_, leftIsNum = item.(Number)
+		if !leftIsNum {
+			_, leftIsStr = item.(*String)
+			if !leftIsStr {
+				panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+			}
 		}
 
-		_, itemIsNum = rightMembers[idx].(Number)
-		if !itemIsNum {
+		_, rightIsNum = rightMembers[idx].(Number)
+		if !rightIsNum {
+			_, rightIsStr = rightMembers[idx].(*String)
+			if !rightIsStr {
+				panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
+			}
+		}
+
+		var result Object
+		if leftIsNum && rightIsNum {
+			result = evalNumberInfixExpression(p, item, rightMembers[idx])
+		} else if leftIsStr && rightIsStr{
+			result = evalStringInfixExpression(p, item, rightMembers[idx])
+		} else if leftIsStr || rightIsStr {
+			result = evalMixedTypeInfixExpression(p, item, rightMembers[idx])
+		} else {
 			panic(NewError(p.Pos().Sline(), METAOPERATORERROR))
 		}
-		result := evalNumberInfixExpression(p, item, rightMembers[idx])
 		resultArr.Members = append(resultArr.Members, result)
 	} // end for
 
@@ -1807,9 +1854,9 @@ func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Obj
 
 func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
 	switch node.Operator {
-	case "+":
+	case "+", "~+":
 		return NewString(left.Inspect() + right.Inspect())
-	case "*":
+	case "*", "~*":
 		if left.Type() == INTEGER_OBJ {
 			integer := left.(*Integer).Int64
 			return NewString(strings.Repeat(right.Inspect(), int(integer)))

@@ -102,7 +102,7 @@ var errorType = map[int]string{
 	CLASSCATEGORYERROR:"No class(%s) found for category(%s).",
 	PARENTNOTANNOTATION:"Annotation(%s)'s Parent(%s) is not annotation.",
 	OVERRIDEERROR:      "Method(%s) of class(%s) must override a superclass method!",
-	METAOPERATORERROR:  "Meta-Operators' item must be Numbers!",
+	METAOPERATORERROR:  "Meta-Operators' item must be Numbers|String!",
 	GENERICERROR:      "%s",
 }
 
