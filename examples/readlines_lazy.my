@@ -8,22 +8,17 @@ fn Readlines(file) {
 		ch.close()
 	}()
 
-	return ch, false
+	return ch
 }
 
 file = newFile("./file.demo", "r")
 if (file == nil) {
-	println("opening ", filename, "for reading failed, error:", file.message())
-	return nil, true
+	println("opening 'file.demo' for reading failed, error:", file.message())
+	os.exit(1)
 }
 
 
-let reader, err = Readlines(file)
-if err {
-	file.close()
-    log.fatal("Error Reading file")
-}
-
+let reader = Readlines(file)
 for line in reader {
     fmt.printf("%d\t%s\n", $_ + 1, line) // $_ is the index
 }
