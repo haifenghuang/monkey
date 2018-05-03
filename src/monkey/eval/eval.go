@@ -3078,6 +3078,7 @@ func evalForEverLoopExpression(fel *ast.ForEverLoop, scope *Scope) Object {
 //for item in array
 //for item in string
 //for item in tuple
+//for item in channel
 func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object { //fal:For Array Loop
 	innerScope := NewScope(scope)
 
@@ -3115,7 +3116,10 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 		ret := &Array{}
 		var result Object
 
+		idx := 0
 		for value := range chanObj.ch {
+			scope.Set("$_", NewInteger(int64(idx)))
+			idx++
 			scope.Set(fal.Var, value)
 			result = Eval(fal.Block, scope)
 			if result.Type() == ERROR_OBJ {

@@ -2048,6 +2048,29 @@ spawn fn() {
 aChan.send("Hello Channel!")
 ```
 
+使用channel和spawn的组合，你可以实现lazy evaluation（延迟执行）:
+
+```swift
+// XRange is an iterator over all the numbers from 0 to the limit.
+fn XRange(limit) {
+	ch = chan()
+	spawn fn() {
+		//for (i = 0; i <= limit; i++)  // 警告: 务必不要使用此种类型的for循环，否则得到的结果不会是你希望的
+		for i in 0..limit {
+			ch.send(i)
+		}
+
+		// 确保循环终了的时候，channel被正常关闭!
+		ch.close()
+	}()
+	return ch
+}
+
+for i in XRange(10) {
+    fmt.println(i)
+}
+```
+
 ## 标准模块介绍
 
 Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, logger, time, flag, net, http等等。

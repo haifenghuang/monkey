@@ -1,0 +1,31 @@
+// Readlines is an iterator that returns one line of a file at a time. 
+fn Readlines(file) {
+	ch = chan()
+	spawn fn() {
+		while ((l = file.readLine()) != nil) {
+			ch.send(l)
+		}
+		ch.close()
+	}()
+
+	return ch, false
+}
+
+file = newFile("./file.demo", "r")
+if (file == nil) {
+	println("opening ", filename, "for reading failed, error:", file.message())
+	return nil, true
+}
+
+
+let reader, err = Readlines(file)
+if err {
+	file.close()
+    log.fatal("Error Reading file")
+}
+
+for line in reader {
+    fmt.printf("%d\t%s\n", $_ + 1, line) // $_ is the index
+}
+
+file.close()
