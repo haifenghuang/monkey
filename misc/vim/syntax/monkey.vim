@@ -13,7 +13,7 @@ hi def link     monkeyDirective         Statement
 hi def link     monkeyDeclaration       Type 
 
 
-syn keyword     monkeyStatement         return let spawn defer yield struct enum
+syn keyword     monkeyStatement         return let spawn defer struct enum
 syn keyword     monkeyException         try catch finally throw
 syn keyword     monkeyConditional       if else elseif elsif elif unless where and or case in is
 syn keyword     monkeyRepeat            do while for break continue grep map

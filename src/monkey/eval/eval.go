@@ -191,8 +191,6 @@ func Eval(node ast.Node, scope *Scope) (val Object) {
 		return evalTernaryExpression(node, scope)
 	case *ast.SpawnStmt:
 		return evalSpawnStatement(node, scope)
-	case *ast.YieldExpression:
-		return NIL
 	case *ast.NilLiteral:
 		return NIL
 	case *ast.Pipe:
@@ -3112,6 +3110,39 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 	} else if aValue.Type() == TUPLE_OBJ {
 		tuple, _ := aValue.(*Tuple)
 		members = tuple.Members
+	} else if aValue.Type() == CHANNEL_OBJ {
+		chanObj := aValue.(*ChanObject)
+		ret := &Array{}
+		var result Object
+
+		for value := range chanObj.ch {
+			scope.Set(fal.Var, value)
+			result = Eval(fal.Block, scope)
+			if result.Type() == ERROR_OBJ {
+				return result
+			}
+
+			if _, ok := result.(*Break); ok {
+				break
+			}
+			if _, ok := result.(*Continue); ok {
+				continue
+			}
+			if v, ok := result.(*ReturnValue); ok {
+
+				if v.Value != nil {
+					return v
+				}
+				break
+			} else {
+				ret.Members = append(ret.Members, result)
+			}
+
+		} //end for
+		if result == nil || result.Type() == BREAK_OBJ || result.Type() == CONTINUE_OBJ {
+			return ret
+		}
+		return ret
 	}
 
 	ret := &Array{}

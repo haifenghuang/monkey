@@ -58,8 +58,8 @@ const (
 	ENUM_OBJ         = "ENUM"
 	FILE_OBJ         = "FILE"
 	REGEX_OBJ        = "REGEX"
-	CHANNEL_OBJ = "CHANNEL"
-	NIL_OBJ     = "NIL_OBJ"
+	CHANNEL_OBJ      = "CHANNEL"
+	NIL_OBJ          = "NIL_OBJ"
 )
 
 type Object interface {

@@ -94,7 +94,6 @@ type String struct {
 }
 
 func (s *String) iter() {}
-func (s *String) list() {}
 
 func (s *String) throw() {}
 func (s *String) Inspect() string {

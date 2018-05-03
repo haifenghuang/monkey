@@ -400,7 +400,6 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * try catch finally throw
 * defer
 * spawn
-* yield #not used
 * qw
 * class new property set get static default
 * interface public private protected # reserved, not used

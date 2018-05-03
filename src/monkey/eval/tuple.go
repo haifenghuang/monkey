@@ -22,7 +22,6 @@ type Tuple struct {
 }
 
 func (t *Tuple) iter() {}
-func (t *Tuple) list() {}
 
 func (t *Tuple) Inspect() string {
 	var out bytes.Buffer

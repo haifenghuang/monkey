@@ -402,7 +402,6 @@ printf("x=%d, y=%d\n", x, y) //结果：x=10, y=30
 * try catch finally throw
 * defer
 * spawn
-* yield #not used
 * qw
 * class new property set get static default
 * interface public private protected #保留,暂时没使用

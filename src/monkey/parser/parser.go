@@ -215,7 +215,6 @@ func (p *Parser) registerAction() {
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
 	p.registerPrefix(token.INCREMENT, p.parsePrefixExpression)
 	p.registerPrefix(token.DECREMENT, p.parsePrefixExpression)
-	p.registerPrefix(token.YIELD, p.parseYieldExpression)
 	p.registerPrefix(token.NIL, p.parseNilExpression)
 	p.registerPrefix(token.ENUM, p.parseEnumExpression)
 	p.registerPrefix(token.QW, p.parseQWExpression)
@@ -2054,21 +2053,6 @@ func (p *Parser) parseSpawnStatement() *ast.SpawnStmt {
 	stmt.Call = p.parseExpressionStatement().Expression
 
 	return stmt
-}
-
-//NOT IMPLEMENTED CORRECTLY
-func (p *Parser) parseYieldExpression() ast.Expression {
-	yield := &ast.YieldExpression{Token: p.curToken}
-
-	p.nextToken()
-	if p.curTokenIs(token.LPAREN) {
-		p.nextToken()
-		//yield.Arguments =
-		p.nextToken()
-		return yield
-	}
-	//yield.Arguments =
-	return yield
 }
 
 func (p *Parser) parseNilExpression() ast.Expression {

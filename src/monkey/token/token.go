@@ -105,7 +105,6 @@ const (
 	THROW
 	DEFER
 	SPAWN
-	YIELD // NOT IMPLEMENTED
 	NIL
 	ENUM
 	QW
@@ -169,7 +168,6 @@ var keywords = map[string]TokenType{
 	"throw":    THROW,
 	"defer":    DEFER,
 	"spawn":    SPAWN,
-	"yield":    YIELD,
 	"nil":      NIL,
 	"enum":     ENUM,
 	"qw":       QW, //“quoted words”

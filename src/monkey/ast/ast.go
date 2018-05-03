@@ -1957,44 +1957,6 @@ func (ss *SpawnStmt) String() string {
 }
 
 ///////////////////////////////////////////////////////////
-//                     YIELD EXPRESSION                  //
-///////////////////////////////////////////////////////////
-type YieldExpression struct {
-	Token     token.Token
-	Arguments []Expression // The arguments to yield
-}
-
-func (y *YieldExpression) Pos() token.Position {
-	return y.Token.Pos
-}
-
-func (y *YieldExpression) End() token.Position {
-	aLen := len(y.Arguments)
-	if aLen > 0 {
-		return y.Arguments[aLen-1].End()
-	}
-	return y.Token.Pos
-}
-
-func (y *YieldExpression) expressionNode()      {}
-func (y *YieldExpression) TokenLiteral() string { return y.Token.Literal }
-
-func (y *YieldExpression) String() string {
-	var out bytes.Buffer
-
-	out.WriteString(y.Token.Literal)
-	if len(y.Arguments) != 0 {
-		args := []string{}
-		for _, a := range y.Arguments {
-			args = append(args, a.String())
-		}
-		out.WriteString(" ")
-		out.WriteString(strings.Join(args, ", "))
-	}
-	return out.String()
-}
-
-///////////////////////////////////////////////////////////
 //                  PIPE OPERATOR                        //
 ///////////////////////////////////////////////////////////
 // Pipe operator.

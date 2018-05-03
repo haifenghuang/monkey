@@ -9,6 +9,9 @@ type ChanObject struct {
 	done bool
 }
 
+//Make channel object could be used in `for x in channelObj`
+func (c *ChanObject) iter() {}
+
 func (c *ChanObject) Inspect() string  { return fmt.Sprintf("channel<%p>", c.ch) }
 func (c *ChanObject) Type() ObjectType { return CHANNEL_OBJ }
 func (c *ChanObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {

@@ -15,7 +15,6 @@ type Array struct {
 }
 
 func (a *Array) iter() {}
-func (a *Array) list() {}
 
 func (a *Array) Inspect() string {
 	var out bytes.Buffer
