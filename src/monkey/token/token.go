@@ -307,7 +307,7 @@ func (tt TokenType) String() string {
 	case IF:
 		return "IF"
 	case ELIF:
-		return "elif"
+		return "ELIF"
 	case ELSIF:
 		return "ELSIF"
 	case ELSEIF:
@@ -369,37 +369,37 @@ func (tt TokenType) String() string {
 	case DEFER:
 		return "DEFER"
 	case NIL:
-		return "nil"
+		return "NIL"
 	case ENUM:
-		return "enum"
+		return "ENUM"
 	case QW:
-		return "qw"
+		return "QW"
 	case UNLESS:
-		return "unless"
+		return "UNLESS"
 	case INTERFACE:
-		return "interface"
+		return "INTERFACE"
 	case CLASS:
-		return "class"
+		return "CLASS"
 	case NEW:
-		return "new"
+		return "NEW"
 	case PROPERTY:
-		return "property"
+		return "PROPERTY"
 	case GET:
-		return "get"
+		return "GET"
 	case SET:
-		return "set"
+		return "SET"
 	case PUBLIC:
-		return "public"
+		return "PUBLIC"
 	case PRIVATE:
-		return "private"
+		return "PRIVATE"
 	case PROTECTED:
-		return "protected"
+		return "PROTECTED"
 	case STATIC:
-		return "static"
+		return "STATIC"
 	case DEFAULT:
-		return "default"
+		return "DEFAULT"
 	case UDO:
-		return "User-Defined-Operator"
+		return "USER-DEFINED-OPERATOR"
 	case UNDERSCORE:
 		return "_"
 	case TILDEPLUS:
@@ -415,7 +415,7 @@ func (tt TokenType) String() string {
 	case TILDECARET:
 		return "~^"
 	default:
-		return "unknown"
+		return "UNKNOWN"
 	}
 }
 
