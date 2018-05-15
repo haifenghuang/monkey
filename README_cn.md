@@ -2080,33 +2080,33 @@ Monkey提供了引入`go`语言模块的功能(实验性)。
 下面是`main.go`中的例子(节选):
 
 ```swift
-    // 因为Monkey语言中，已经提供了内置模块`fmt`, 因此这里我们使用`gfmt`作为名字。
-    eval.RegisterFunctions("gfmt", []interface{}{
-        fmt.Errorf,
-        fmt.Println, fmt.Print, fmt.Printf,
-        fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
-        fmt.Scan, fmt.Scanf, fmt.Scanln,
-        fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
-        fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
-    })
+// 因为Monkey语言中，已经提供了内置模块`fmt`, 因此这里我们使用`gfmt`作为名字。
+eval.RegisterFunctions("gfmt", []interface{}{
+    fmt.Errorf,
+    fmt.Println, fmt.Print, fmt.Printf,
+    fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
+    fmt.Scan, fmt.Scanf, fmt.Scanln,
+    fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
+    fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
+})
 
-    eval.RegisterFunctions("io/ioutil", []interface{}{
-        ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
-        ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
-    })
+eval.RegisterFunctions("io/ioutil", []interface{}{
+    ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
+    ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
+})
 
-    eval.Eval(program, scope)
+eval.Eval(program, scope)
 ```
 接下来, 在你的Monkey文件中，像下面这样使用导入的方法:
 
 ```swift
-    gfmt.Printf("Hello %s!\n", "go function");
+gfmt.Printf("Hello %s!\n", "go function");
 
-    //注意: 这里需要使用'io_ioutil', 而不是'io/ioutil'。
-    let files, err = io_ioutil.ReadDir(".")
-    if err != nil {
-        gfmt.Println(err)
-    }
+//注意: 这里需要使用'io_ioutil', 而不是'io/ioutil'。
+let files, err = io_ioutil.ReadDir(".")
+if err != nil {
+    gfmt.Println(err)
+}
 ```
 
 更详细的例子请参照`goObj.my`。

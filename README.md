@@ -2109,33 +2109,33 @@ register `go` language functions or types into monkey language.
 Below is an example of `main.go`(extracted):
 
 ```swift
-    // Because in monkey we already have built in module `fmt`, here we use `gfmt` for package name.
-    eval.RegisterFunctions("gfmt", []interface{}{
-        fmt.Errorf,
-        fmt.Println, fmt.Print, fmt.Printf,
-        fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
-        fmt.Scan, fmt.Scanf, fmt.Scanln,
-        fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
-        fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
-    })
+// Because in monkey we already have built in module `fmt`, here we use `gfmt` for package name.
+eval.RegisterFunctions("gfmt", []interface{}{
+    fmt.Errorf,
+    fmt.Println, fmt.Print, fmt.Printf,
+    fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
+    fmt.Scan, fmt.Scanf, fmt.Scanln,
+    fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
+    fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
+})
 
-    eval.RegisterFunctions("io/ioutil", []interface{}{
-        ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
-        ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
-    })
+eval.RegisterFunctions("io/ioutil", []interface{}{
+    ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
+    ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
+})
 
-    eval.Eval(program, scope)
+eval.Eval(program, scope)
 ```
 Now, in your monkey file, you could use it like below:
 
 ```swift
-    gfmt.Printf("Hello %s!\n", "go function");
+gfmt.Printf("Hello %s!\n", "go function");
 
-    //Note Here: we use 'io_ioutil', not 'io/ioutil'.
-    let files, err = io_ioutil.ReadDir(".")
-    if err != nil {
-        gfmt.Println(err)
-    }
+//Note Here: we use 'io_ioutil', not 'io/ioutil'.
+let files, err = io_ioutil.ReadDir(".")
+if err != nil {
+    gfmt.Println(err)
+}
 ```
 
 For more detailed examples, please see `goObj.my`.
