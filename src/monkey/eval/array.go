@@ -14,7 +14,7 @@ type Array struct {
 	Members []Object
 }
 
-func (a *Array) iter() {}
+func (a *Array) iter() bool { return true }
 
 func (a *Array) Inspect() string {
 	var out bytes.Buffer

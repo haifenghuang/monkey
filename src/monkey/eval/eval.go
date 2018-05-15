@@ -1566,6 +1566,14 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *S
 	case left.Type() == INSTANCE_OBJ:
 		return evalInstanceInfixExpression(node, left, right)
 	case node.Operator == "==":
+		if isGoObj(left) || isGoObj(right) { // if it's GoObject
+			ret := compareGoObj(left, right)
+			if ret {
+				return TRUE
+			}
+			return FALSE
+		}
+
 		if left.Type() != right.Type() {
 			return FALSE
 		}
@@ -1590,6 +1598,14 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *S
 
 		return nativeBoolToBooleanObject(left == right)
 	case node.Operator == "!=":
+		if isGoObj(left) || isGoObj(right) { // if it's GoObject
+			ret := compareGoObj(left, right)
+			if ret {
+				return FALSE
+			}
+			return TRUE
+		}
+
 		if left.Type() != right.Type() {
 			return TRUE
 		}
@@ -1871,6 +1887,14 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		}
 		panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 	case "==":
+		if isGoObj(left) || isGoObj(right) { // if it's GoObject
+			ret := compareGoObj(left, right)
+			if ret {
+				return TRUE
+			}
+			return FALSE
+		}
+
 		if left.Type() != right.Type() {
 			return FALSE
 		}
@@ -1885,6 +1909,14 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 		return FALSE
 
 	case "!=":
+		if isGoObj(left) || isGoObj(right) { // if it's GoObject
+			ret := compareGoObj(left, right)
+			if ret {
+				return FALSE
+			}
+			return TRUE
+		}
+
 		if left.Type() != right.Type() {
 			return TRUE
 		}
@@ -2354,8 +2386,11 @@ func evalGrepExpression(ge *ast.GrepExpr, scope *Scope) Object {
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(ge.Pos().Sline(), GREPMAPNOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(ge.Pos().Sline(), GREPMAPNOTITERABLE))
 	}
 
@@ -2411,8 +2446,11 @@ func evalMapExpression(me *ast.MapExpr, scope *Scope) Object {
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(me.Pos().Sline(), GREPMAPNOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(me.Pos().Sline(), GREPMAPNOTITERABLE))
 	}
 
@@ -2469,8 +2507,11 @@ func evalListComprehension(lc *ast.ListComprehension, scope *Scope) Object {
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(lc.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(lc.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -2645,8 +2686,11 @@ func evalListMapComprehension(mc *ast.ListMapComprehension, scope *Scope) Object
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -2699,8 +2743,11 @@ func evalHashComprehension(hc *ast.HashComprehension, scope *Scope) Object {
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(hc.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(hc.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -2894,8 +2941,11 @@ func evalHashMapComprehension(mc *ast.HashMapComprehension, scope *Scope) Object
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable) //must be Iterable
+	iterObj, ok := aValue.(Iterable) //must be Iterable
 	if !ok {
+		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(mc.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -3093,8 +3143,11 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable)
+	iterObj, ok := aValue.(Iterable)
 	if !ok {
+		panic(NewError(fal.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(fal.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -3111,6 +3164,10 @@ func evalForEachArrayExpression(fal *ast.ForEachArrayLoop, scope *Scope) Object 
 	} else if aValue.Type() == TUPLE_OBJ {
 		tuple, _ := aValue.(*Tuple)
 		members = tuple.Members
+	} else if aValue.Type() == GO_OBJ { // GoObject
+		goObj := aValue.(*GoObject)
+		arr := GoValueToObject(goObj.obj).(*Array)
+		members = arr.Members
 	} else if aValue.Type() == CHANNEL_OBJ {
 		chanObj := aValue.(*ChanObject)
 		ret := &Array{}
@@ -3284,8 +3341,11 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 		return &Array{Members:[]Object{}}
 	}
 
-	_, ok := aValue.(Iterable)
+	iterObj, ok := aValue.(Iterable)
 	if !ok {
+		panic(NewError(fml.Pos().Sline(), NOTITERABLE))
+	}
+	if !iterObj.iter() {
 		panic(NewError(fml.Pos().Sline(), NOTITERABLE))
 	}
 
@@ -3523,6 +3583,9 @@ func IsTrue(obj Object) bool {
 			if len(obj.(*Tuple).Members) == 0 {
 				return false
 			}
+		case GO_OBJ:
+			goObj := obj.(*GoObject)
+			return goObj.obj != nil
 		}
 		return true
 	}
@@ -3693,16 +3756,42 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 	str := call.Object.String()
 	if obj, ok := GetGlobalObj(str); ok {
 		switch o := call.Call.(type) {
+		case *ast.IndexExpression: // e.g. 'if gos.Args[0] == "hello" {'
+			if arr, ok := GetGlobalObj(str + "." + o.Left.String()); ok {
+				return evalArrayIndex(arr.(*Array), o, scope)
+			}
 		case *ast.Identifier: //e.g. os.O_APPEND
 			if i, ok := GetGlobalObj(str + "." + o.String()); ok {
 				return i
 			} else { //e.g. method call like 'os.environ'
-				return obj.CallMethod(call.Call.Pos().Sline(), scope, o.String())
+				if obj.Type() == HASH_OBJ { // It's a GoFuncObject
+					hashPairs := obj.(*Hash).Pairs
+					for _, pair := range hashPairs {
+						funcName := pair.Key.(*String).String
+						if funcName == o.String() {
+							goFuncObj := pair.Value.(*GoFuncObject)
+							return goFuncObj.CallMethod(call.Call.Pos().Sline(), scope, o.String())
+						}
+					}
+				} else {
+					return obj.CallMethod(call.Call.Pos().Sline(), scope, o.String())
+				}
 			}
 		case *ast.CallExpression: //e.g. method call like 'os.environ()'
 			if method, ok := call.Call.(*ast.CallExpression); ok {
 				args := evalArgs(method.Arguments, scope)
-				return obj.CallMethod(call.Call.Pos().Sline(), scope, o.Function.String(), args...)
+				if obj.Type() == HASH_OBJ { // It's a GoFuncObject
+					hashPairs := obj.(*Hash).Pairs
+					for _, pair := range hashPairs {
+						funcName := pair.Key.(*String).String
+						if funcName == o.Function.String() {
+							goFuncObj := pair.Value.(*GoFuncObject)
+							return goFuncObj.CallMethod(call.Call.Pos().Sline(), scope, o.Function.String(), args...)
+						}
+					}
+				} else {
+					return obj.CallMethod(call.Call.Pos().Sline(), scope, o.Function.String(), args...)
+				}
 			}
 		}
 	}
@@ -4868,6 +4957,10 @@ func equal(isWholeMatch bool, lhsV, rhsV Object) bool {
 		}
 	}
 
+	if isGoObj(lhsV) || isGoObj(rhsV) { // if it's GoObject
+		return compareGoObj(lhsV, rhsV)
+	}
+
 	if lhsV.Type() == STRING_OBJ && rhsV.Type() == STRING_OBJ {
 		leftStr := lhsV.(*String).String
 		rightStr := rhsV.(*String).String
@@ -4902,4 +4995,27 @@ func isTryError(o Object) bool {
 		return true
 	}
 	return false
+}
+
+func isGoObj(o Object) bool {
+	return o.Type() == GO_OBJ
+}
+
+func compareGoObj(left, right Object) bool {
+	if left.Type() == GO_OBJ || right.Type() == GO_OBJ {
+		var goObj *GoObject
+		var another Object
+		if left.Type() == GO_OBJ {
+			goObj = left.(*GoObject)
+			another = right
+		} else {
+			goObj = right.(*GoObject)
+			another = left
+		}
+
+		return goObj.Equal(another)
+	}
+
+	//left and right both are GoObject
+	return left.(*GoObject).Equal(right)
 }

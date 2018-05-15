@@ -93,7 +93,7 @@ type String struct {
 	Valid  bool
 }
 
-func (s *String) iter() {}
+func (s *String) iter() bool { return true }
 
 func (s *String) throw() {}
 func (s *String) Inspect() string {

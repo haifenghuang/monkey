@@ -45,6 +45,7 @@ Table of Contents
     * [函数](#%E5%87%BD%E6%95%B0)
     * [Pipe操作符](#pipe%E6%93%8D%E4%BD%9C%E7%AC%A6)
     * [Spawn 和 channel](#spawn-%E5%92%8C-channel)
+  * [使用go语言模块](#%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9D%97)
   * [标准模块介绍](#%E6%A0%87%E5%87%86%E6%A8%A1%E5%9D%97%E4%BB%8B%E7%BB%8D)
     * [fmt 模块](#fmt-%E6%A8%A1%E5%9D%97)
     * [time 模块](#time-%E6%A8%A1%E5%9D%97)
@@ -63,7 +64,6 @@ Table of Contents
   * [未来计划](#%E6%9C%AA%E6%9D%A5%E8%AE%A1%E5%88%92)
   * [许可证](#%E8%AE%B8%E5%8F%AF%E8%AF%81)
   * [备注](#%E5%A4%87%E6%B3%A8)
-
 
 ## 主页
 
@@ -716,12 +716,12 @@ case i in {
 ```swift
 //中缀运算符'=@'接受两个参数
 fn =@(x, y) {
-	return x + y * y
+    return x + y * y
 }
 
 //前缀运算符'=^'仅接受一个参数
 fn =^(x) {
-	return -x
+    return -x
 }
 
 let pp = 10 =@ 5 // 使用用户自定义的中缀运算符'=@'
@@ -733,12 +733,12 @@ printf("hh=%d\n", hh) // 结果： hh=-10
 
 ```swift
 fn .^(x, y) {
-	arr = []
-	while x <= y {
-		arr += x
-		x += 2
-	}
-	return arr
+    arr = []
+    while x <= y {
+        arr += x
+        x += 2
+    }
+    return arr
 }
 
 let pp = 10.^20
@@ -1578,17 +1578,17 @@ Monkey支持类似objective-c的类别（C#中称为extension methods）。
 
 ```swift
 class Animal {
-	fn Walk() {
-		println("Animal Walk!")
-	}
+    fn Walk() {
+        println("Animal Walk!")
+    }
 }
 
 //类类别 like objective-c
 class Animal (Run) { //建立一个Animal的Run类别.
-	fn Run() {
-		println("Animal Run!")
-		this.Walk() //可以调用Animal类的Walk()方法.
-	}
+    fn Run() {
+        println("Animal Run!")
+        this.Walk() //可以调用Animal类的Walk()方法.
+    }
 }
 
 animal = new Animal()
@@ -1997,7 +1997,7 @@ if ret[1] != "" {
 
 ```swift
 fn testReturn(a, b, c, d=40) {
-	return a, b, c, d
+    return a, b, c, d
 }
 
 let (x, y, c, d) = testReturn(10, 20, 30)
@@ -2053,23 +2053,63 @@ aChan.send("Hello Channel!")
 ```swift
 // XRange is an iterator over all the numbers from 0 to the limit.
 fn XRange(limit) {
-	ch = chan()
-	spawn fn() {
-		//for (i = 0; i <= limit; i++)  // 警告: 务必不要使用此种类型的for循环，否则得到的结果不会是你希望的
-		for i in 0..limit {
-			ch.send(i)
-		}
-
-		// 确保循环终了的时候，channel被正常关闭!
-		ch.close()
-	}()
-	return ch
+    ch = chan()
+    spawn fn() {
+        //for (i = 0; i <= limit; i++)  // 警告: 务必不要使用此种类型的for循环，否则得到的结果不会是你希望的
+        for i in 0..limit {
+            ch.send(i)
+        }
+    
+        // 确保循环终了的时候，channel被正常关闭!
+        ch.close()
+    }()
+    return ch
 }
 
 for i in XRange(10) {
     fmt.println(i)
 }
 ```
+
+## 使用`go`语言模块
+Monkey提供了引入`go`语言模块的功能(实验性)。
+
+如果你需要使用`go`元的package函数或类型，你首先需要使用`RegisterFunctions'或`RegisterVars`
+来注册`go`语言的方法或类型到Monkey语言中。
+
+下面是`main.go`中的例子(节选):
+
+```swift
+    // 因为Monkey语言中，已经提供了内置模块`fmt`, 因此这里我们使用`gfmt`作为名字。
+    eval.RegisterFunctions("gfmt", []interface{}{
+        fmt.Errorf,
+        fmt.Println, fmt.Print, fmt.Printf,
+        fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
+        fmt.Scan, fmt.Scanf, fmt.Scanln,
+        fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
+        fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
+    })
+
+    eval.RegisterFunctions("io/ioutil", []interface{}{
+        ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
+        ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
+    })
+
+    eval.Eval(program, scope)
+```
+接下来, 在你的Monkey文件中，像下面这样使用导入的方法:
+
+```swift
+    gfmt.Printf("Hello %s!\n", "go function");
+
+    //注意: 这里需要使用'io_ioutil', 而不是'io/ioutil'。
+    let files, err = io_ioutil.ReadDir(".")
+    if err != nil {
+        gfmt.Println(err)
+    }
+```
+
+更详细的例子请参照`goObj.my`。
 
 ## 标准模块介绍
 

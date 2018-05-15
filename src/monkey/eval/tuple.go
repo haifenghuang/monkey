@@ -21,7 +21,7 @@ type Tuple struct {
 	Members []Object
 }
 
-func (t *Tuple) iter() {}
+func (t *Tuple) iter() bool { return true }
 
 func (t *Tuple) Inspect() string {
 	var out bytes.Buffer

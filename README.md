@@ -46,6 +46,7 @@ Table of Contents
     * [Function](#function)
     * [Pipe Operator](#pipe-operator)
     * [Spawn and channel](#spawn-and-channel)
+  * [Use go language modules](#use-go-language-modules)
   * [Standard module introduction](#standard-module-introduction)
       * [fmt module](#fmt-module)
       * [time module](#time-module)
@@ -64,7 +65,6 @@ Table of Contents
   * [Syntax Highlight](#syntax-highlight)
   * [Futual Plans](#futual-plans)
   * [License](#license)
-
 
 ## Summary
 
@@ -714,12 +714,12 @@ Below is an example for showing how to write User Defined Operators:
 ```swift
 //infix operator '=@' which accept two parameters.
 fn =@(x, y) {
-	return x + y * y
+    return x + y * y
 }
 
 //prefix operator '=^' which accept only one parameter.
 fn =^(x) {
-	return -x
+    return -x
 }
 
 let pp = 10 =@ 5 // Use the '=@' user defined infix operator
@@ -731,12 +731,12 @@ printf("hh=%d\n", hh) // result: hh=-10
 
 ```swift
 fn .^(x, y) {
-	arr = []
-	while x <= y {
-		arr += x
-		x += 2
-	}
-	return arr
+    arr = []
+    while x <= y {
+        arr += x
+        x += 2
+    }
+    return arr
 }
 
 let pp = 10.^20
@@ -1581,17 +1581,17 @@ Monkey also support class Category like objective-c（C# is called 'extension me
 
 ```swift
 class Animal {
-	fn Walk() {
-		println("Animal Walk!")
-	}
+    fn Walk() {
+        println("Animal Walk!")
+    }
 }
 
 //Class category like objective-c
 class Animal (Run) { //Create an 'Run' category of Animal class.
-	fn Run() {
-		println("Animal Run!")
-		this.Walk() //can call Walk() method of Animal class.
-	}
+    fn Run() {
+        println("Animal Run!")
+        this.Walk() //can call Walk() method of Animal class.
+    }
 }
 
 animal = new Animal()
@@ -2024,7 +2024,7 @@ The returned values are wrapped as a tuple.
 
 ```swift
 fn testReturn(a, b, c, d=40) {
-	return a, b, c, d
+    return a, b, c, d
 }
 
 let (x, y, c, d) = testReturn(10, 20, 30)
@@ -2082,23 +2082,63 @@ You could use channel and spawn togeter to support lazy evaluation:
 ```swift
 // XRange is an iterator over all the numbers from 0 to the limit.
 fn XRange(limit) {
-	ch = chan()
-	spawn fn() {
-		//for (i = 0; i <= limit; i++)  // Warning: Never use this kind of for loop, or else you will get weird results.
-		for i in 0..limit {
-			ch.send(i)
-		}
+    ch = chan()
+    spawn fn() {
+        //for (i = 0; i <= limit; i++)  // Warning: Never use this kind of for loop, or else you will get weird results.
+        for i in 0..limit {
+            ch.send(i)
+        }
 
-		// Ensure that at the end of the loop we close the channel!
-		ch.close()
-	}()
-	return ch
+        // Ensure that at the end of the loop we close the channel!
+        ch.close()
+    }()
+    return ch
 }
 
 for i in XRange(10) {
     fmt.println(i)
 }
 ```
+
+## Use `go` language modules
+Monkey has experimental support for working with `go` modules.
+
+If you need to use `go`s language package fucntion, you first need to use `RegisterFunctions' or `RegisterVars` to
+register `go` language functions or types into monkey language.
+
+Below is an example of `main.go`(extracted):
+
+```swift
+    // Because in monkey we already have built in module `fmt`, here we use `gfmt` for package name.
+    eval.RegisterFunctions("gfmt", []interface{}{
+        fmt.Errorf,
+        fmt.Println, fmt.Print, fmt.Printf,
+        fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
+        fmt.Scan, fmt.Scanf, fmt.Scanln,
+        fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
+        fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
+    })
+
+    eval.RegisterFunctions("io/ioutil", []interface{}{
+        ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
+        ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
+    })
+
+    eval.Eval(program, scope)
+```
+Now, in your monkey file, you could use it like below:
+
+```swift
+    gfmt.Printf("Hello %s!\n", "go function");
+
+    //Note Here: we use 'io_ioutil', not 'io/ioutil'.
+    let files, err = io_ioutil.ReadDir(".")
+    if err != nil {
+        gfmt.Println(err)
+    }
+```
+
+For more detailed examples, please see `goObj.my`.
 
 ## Standard module introduction
 

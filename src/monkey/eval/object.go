@@ -60,6 +60,8 @@ const (
 	REGEX_OBJ        = "REGEX"
 	CHANNEL_OBJ      = "CHANNEL"
 	NIL_OBJ          = "NIL_OBJ"
+	GO_OBJ           = "GO_OBJ"
+	GFO_OBJ          = "GFO_OBJ"
 )
 
 type Object interface {
@@ -73,9 +75,9 @@ type Number interface {
 	number()
 }
 
-//Whether the Object is iterable (HASH, ARRAY, RANGE, STRING, TUPLE)
+//Whether the Object is iterable (HASH, ARRAY, RANGE, STRING, TUPLE, Some of the GoObject)
 type Iterable interface {
-	iter()
+	iter() bool
 }
 
 //Whether the Object is throwable (STRING for now)
@@ -960,6 +962,11 @@ func (f *Float) UnmarshalJSON(b []byte) error {
 
 func NewFalseObj(s string) *Boolean {
 	return &Boolean{Bool: false, Valid: true, OptionalMsg: s}
+}
+
+// Returns a new valid boolean object
+func NewBooleanObj(b bool) *Boolean {
+	return &Boolean{Bool: b, Valid: true}
 }
 
 type Boolean struct {

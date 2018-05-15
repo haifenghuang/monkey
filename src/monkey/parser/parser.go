@@ -334,7 +334,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.THROW:
 		return p.parseThrowStatement()
 	case token.FUNCTION:
-		//if p.peekTokenIs(token.IDENT) { //function statement. e.g. 'func add(x,y) { xxx }'
+		//if p.peekTokenIs(token.IDENT) { //function statement. e.g. 'fn add(x,y) { xxx }'
 		//	return p.parseFunctionStatement()
 		//} else {
 		//	// if we reach here, it means the "FN" token is

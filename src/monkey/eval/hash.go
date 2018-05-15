@@ -24,7 +24,7 @@ type Hash struct {
 	Pairs map[HashKey]HashPair
 }
 
-func (h *Hash) iter() {}
+func (h *Hash) iter() bool { return true }
 
 func (h *Hash) Type() ObjectType { return HASH_OBJ }
 func (h *Hash) Inspect() string {
