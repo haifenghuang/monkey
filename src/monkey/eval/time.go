@@ -69,8 +69,13 @@ const (
 )
 
 func (t *TimeObj) Inspect() string {
-	v := t.ToStr("")
-	return v.(*String).String
+	if t.Valid {
+		v := t.ToStr("")
+		return v.(*String).String
+	}
+	return "ERROR: Time is null"
+
+
 }
 
 func (t *TimeObj) Type() ObjectType { return TIME_OBJ }

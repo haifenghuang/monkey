@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"time"
+	"regexp"
+	"runtime"
 	"math/rand"
 	"monkey/eval"
 	"monkey/lexer"
@@ -77,6 +79,11 @@ func RegisterGoGlobals() {
 		"Args": os.Args[argsStart:],
 	})
 
+	eval.RegisterVars("runtime", map[string]interface{}{
+		"GOOS":   runtime.GOOS,
+		"GOARCH": runtime.GOARCH,
+	})
+
 	eval.RegisterFunctions("gtime", []interface{}{
 		time.Sleep, time.Now, time.Unix,
 	})
@@ -95,6 +102,10 @@ func RegisterGoGlobals() {
 
 	eval.RegisterFunctions("bufio", []interface{}{
 		bufio.NewWriter, bufio.NewReader, bufio.NewReadWriter, bufio.NewScanner,
+	})
+	eval.RegisterFunctions("gregex", []interface{}{
+		regexp.Match,regexp.MatchReader,regexp.MatchString,regexp.QuoteMeta,
+		regexp.Compile,regexp.CompilePOSIX,regexp.MustCompile,regexp.MustCompilePOSIX,
 	})
 }
 

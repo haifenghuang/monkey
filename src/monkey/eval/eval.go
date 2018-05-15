@@ -3794,6 +3794,18 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				}
 			}
 		}
+	} else {
+		// if 'GetGlobalObj(str)' returns nil, then try below
+		// e.g.
+		//     eval.RegisterVars("runtime", map[string]interface{}{
+		//          "GOOS": runtime.GOOS,
+		//       })
+		// The eval.RegisterVars will call SetGlobalObj("runtime.GOOS"), so the
+		// global scope's name is 'runtime.GOOS', not 'runtime', therefore, the above 
+		// GetGlobalObj('runtime') will returns false.
+		if obj, ok := GetGlobalObj(str + "." + call.Call.String()); ok {
+			return obj
+		}
 	}
 
 	obj := Eval(call.Object, scope)
