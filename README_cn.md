@@ -2074,7 +2074,7 @@ for i in XRange(10) {
 ## 使用`go`语言模块
 Monkey提供了引入`go`语言模块的功能(实验性)。
 
-如果你需要使用`go`元的package函数或类型，你首先需要使用`RegisterFunctions'或`RegisterVars`
+如果你需要使用`go`语言的package函数或类型，你首先需要使用`RegisterFunctions'或`RegisterVars`
 来注册`go`语言的方法或类型到Monkey语言中。
 
 下面是`main.go`中的例子(节选):
@@ -2106,6 +2106,12 @@ gfmt.Printf("Hello %s!\n", "go function");
 let files, err = io_ioutil.ReadDir(".")
 if err != nil {
     gfmt.Println(err)
+}
+for file in files {
+    if file.Name() == ".git" {
+        continue
+    }
+    gfmt.Printf("Name=%s, Size=%d\n", file.Name(), file.Size())
 }
 ```
 

@@ -2136,6 +2136,12 @@ let files, err = io_ioutil.ReadDir(".")
 if err != nil {
     gfmt.Println(err)
 }
+for file in files {
+    if file.Name() == ".git" {
+        continue
+    }
+    gfmt.Printf("Name=%s, Size=%d\n", file.Name(), file.Size())
+}
 ```
 
 For more detailed examples, please see `goObj.my`.
