@@ -239,13 +239,13 @@ func TestHashIndexExpressions(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{`{"foo"=>5}["foo"]`, 5},
-		{`{"foo"=>5}["bar"]`, nil},
-		{`let key = "foo";{"foo"=>5}[key]`, 5},
+		{`{"foo": 5}["foo"]`, 5},
+		{`{"foo": 5}["bar"]`, nil},
+		{`let key = "foo";{"foo": 5}[key]`, 5},
 		{`{}["foo"]`, nil},
-		{`{5=>5}[5]`, 5},
-		{`{true=>5}[true]`, 5},
-		{`{false=>5}[false]`, 5},
+		{`{5: 5}[5]`, 5},
+		{`{true: 5}[true]`, 5},
+		{`{false: 5}[false]`, 5},
 	}
 
 	for _, tt := range tests {
@@ -263,12 +263,12 @@ func TestHashLiterals(t *testing.T) {
 	input := `
 	let two = "two";
 	{
-		"one"        => 10 - 9,
-		two          => 1 + 1,
-		"thr" + "ee" => 6 /2,
-		4            => 4,
-		true         => 5,
-		false        => 6
+		"one"        : 10 - 9,
+		two          : 1 + 1,
+		"thr" + "ee" : 6 /2,
+		4            : 4,
+		true         : 5,
+		false        : 6
 	}`
 
 	evaluated := testEval(input)
@@ -422,16 +422,16 @@ func TestHashMethods(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{`{1=>"a", 2=>"b"}.pop(1)`, "a"},
-		{`let a = {1=>"a", 2=>"b"}; a.pop(1); str(a)`, `{2=> b}`},
-		{`let a = {1=>"a", 2=>"b"}.push(3, "c"); a[3]`, `c`},
-		{`let a = {1=>"a", 2=>"b"}; let b = {3=>"c"} let c = a.merge(b); c[3]`, `c`},
-		{`let a = {1=>"a", 2=>"b"}; let b = {3=>"c"} let c = a.merge(b); str(a[3])`, `null`},
-		{`let a = {1=>"a", 2=>"b"}; let b = {3=>"c"} let c = a.merge(b); str(b[1])`, `null`},
-		{`let a = {"a"=>1}.map(fn(k, v){ {k.upper()=>v+1} } ); str(a)`, `{A=> 2}`},
-		{`let a = {"a"=>1, "b"=>2}.filter(fn(k, v){ v > 1 } ); str(a)`, `{b=> 2}`},
-		{`str({"a"=>1}.keys())`, `[a]`},
-		{`str({"a"=>1}.values())`, `[1]`},
+		{`{1:"a", 2:"b"}.pop(1)`, "a"},
+		{`let a = {1:"a", 2:"b"}; a.pop(1); str(a)`, `{2: b}`},
+		{`let a = {1:"a", 2:"b"}.push(3, "c"); a[3]`, `c`},
+		{`let a = {1:"a", 2:"b"}; let b = {3:"c"} let c = a.merge(b); c[3]`, `c`},
+		{`let a = {1:"a", 2:"b"}; let b = {3:"c"} let c = a.merge(b); str(a[3])`, `null`},
+		{`let a = {1:"a", 2:"b"}; let b = {3:"c"} let c = a.merge(b); str(b[1])`, `null`},
+		{`let a = {"a":1}.map(fn(k, v){ {k.upper():v+1} } ); str(a)`, `{A: 2}`},
+		{`let a = {"a":1, "b":2}.filter(fn(k, v){ v > 1 } ); str(a)`, `{b: 2}`},
+		{`str({"a":1}.keys())`, `[a]`},
+		{`str({"a":1}.values())`, `[1]`},
 	}
 
 	for _, tt := range tests {
@@ -672,7 +672,7 @@ if (10 > 1) {
 		{`"abc" / "abc"`, "unsupported operator for infix expression: '/' and types STRING and STRING"},
 		{`"abc" > "abc"`, "unsupported operator for infix expression: '>' and types STRING and STRING"},
 		{`"abc" < "abc"`, "unsupported operator for infix expression: '<' and types STRING and STRING"},
-		{`{"name"=>"Monkey"}[fn(x) {x}];`, "key error: type FUNCTION is not hashable"},
+		{`{"name":"Monkey"}[fn(x) {x}];`, "key error: type FUNCTION is not hashable"},
 	}
 
 	for _, tt := range tests {

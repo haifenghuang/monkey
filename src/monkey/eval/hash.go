@@ -43,7 +43,7 @@ func (h *Hash) Inspect() string {
 		} else {
 			val = pair.Value.Inspect()
 		}
-		pairs = append(pairs, fmt.Sprintf("%s => %s", key, val))
+		pairs = append(pairs, fmt.Sprintf("%s : %s", key, val))
 	}
 	out.WriteString("{")
 	out.WriteString(strings.Join(pairs, ", "))

@@ -344,22 +344,22 @@ if !eq {
 
 
 groupByArr2 = [
-	{"Owner" => "Google",    "Name" => "Chrome"},
-	{"Owner" => "Microsoft", "Name" => "Windows"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "XBox"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "AppEngine"},
-	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
-	{"Owner" => "Intel",     "Name" => "VTune"},
-	{"Owner" => "Microsoft", "Name" => "Office"},
-	{"Owner" => "Intel",     "Name" => "Edison"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "PowerShell"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "GDrive"}
+	{"Owner" : "Google",    "Name" : "Chrome"},
+	{"Owner" : "Microsoft", "Name" : "Windows"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "VisualStudio"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "XBox"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "AppEngine"},
+	{"Owner" : "Intel",     "Name" : "ParallelStudio"},
+	{"Owner" : "Intel",     "Name" : "VTune"},
+	{"Owner" : "Microsoft", "Name" : "Office"},
+	{"Owner" : "Intel",     "Name" : "Edison"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "PowerShell"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "GDrive"}
 ]
 result = linq.from(groupByArr2).groupBy(
 	fn(v) { return v["Owner"] },
@@ -382,16 +382,16 @@ for i in result.toSlice() { //convert it to an array
 println()
 
 let joinOwnerArr = [
-	{"Name"=>"Hedlund, Magnus"},
-	{"Name"=>"Adams, Terry"},
-	{"Name"=>"Weiss, Charlotte"}
+	{"Name":"Hedlund, Magnus"},
+	{"Name":"Adams, Terry"},
+	{"Name":"Weiss, Charlotte"}
 ]
 
 let joinPetsArr = [
-	{"Name" => "Barley",   "Age" => 8, "Owner" => joinOwnerArr[1]},
-	{"Name" => "Boots",    "Age" => 4, "Owner" => joinOwnerArr[1]},
-	{"Name" => "Whiskers", "Age" => 1, "Owner" => joinOwnerArr[2]},
-	{"Name" => "Daisy",    "Age" => 4, "Owner" => joinOwnerArr[0]}
+	{"Name" : "Barley",   "Age" : 8, "Owner" : joinOwnerArr[1]},
+	{"Name" : "Boots",    "Age" : 4, "Owner" : joinOwnerArr[1]},
+	{"Name" : "Whiskers", "Age" : 1, "Owner" : joinOwnerArr[2]},
+	{"Name" : "Daisy",    "Age" : 4, "Owner" : joinOwnerArr[0]}
 ]
 
 result = linq.from(joinOwnerArr).join(linq.from(joinPetsArr),
@@ -948,22 +948,22 @@ println('orderByDescending([0,1,2,3,4,5,6,7,8,9,10])={result}')
 //test 'thenBy'
 println()
 thenByArr = [
-	{"Owner" => "Google",    "Name" => "Chrome"},
-	{"Owner" => "Microsoft", "Name" => "Windows"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "XBox"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "AppEngine"},
-	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
-	{"Owner" => "Intel",     "Name" => "VTune"},
-	{"Owner" => "Microsoft", "Name" => "Office"},
-	{"Owner" => "Intel",     "Name" => "Edison"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "PowerShell"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "GDrive"}
+	{"Owner" : "Google",    "Name" : "Chrome"},
+	{"Owner" : "Microsoft", "Name" : "Windows"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "VisualStudio"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "XBox"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "AppEngine"},
+	{"Owner" : "Intel",     "Name" : "ParallelStudio"},
+	{"Owner" : "Intel",     "Name" : "VTune"},
+	{"Owner" : "Microsoft", "Name" : "Office"},
+	{"Owner" : "Intel",     "Name" : "Edison"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "PowerShell"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "GDrive"}
 ]
 
 result = linq.from(thenByArr).orderBy(fn(x) {
@@ -982,22 +982,22 @@ println(json.indent(thenByArrStr, "  "))
 //test 'thenByDescending'
 println()
 thenByDescendingArr = [
-	{"Owner" => "Google",    "Name" => "Chrome"},
-	{"Owner" => "Microsoft", "Name" => "Windows"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "VisualStudio"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "XBox"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "AppEngine"},
-	{"Owner" => "Intel",     "Name" => "ParallelStudio"},
-	{"Owner" => "Intel",     "Name" => "VTune"},
-	{"Owner" => "Microsoft", "Name" => "Office"},
-	{"Owner" => "Intel",     "Name" => "Edison"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Microsoft", "Name" => "PowerShell"},
-	{"Owner" => "Google",    "Name" => "GMail"},
-	{"Owner" => "Google",    "Name" => "GDrive"}
+	{"Owner" : "Google",    "Name" : "Chrome"},
+	{"Owner" : "Microsoft", "Name" : "Windows"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "VisualStudio"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "XBox"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "AppEngine"},
+	{"Owner" : "Intel",     "Name" : "ParallelStudio"},
+	{"Owner" : "Intel",     "Name" : "VTune"},
+	{"Owner" : "Microsoft", "Name" : "Office"},
+	{"Owner" : "Intel",     "Name" : "Edison"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Microsoft", "Name" : "PowerShell"},
+	{"Owner" : "Google",    "Name" : "GMail"},
+	{"Owner" : "Google",    "Name" : "GDrive"}
 ]
 
 result = linq.from(thenByDescendingArr).orderBy(fn(x) {
@@ -1031,9 +1031,9 @@ println('[1,2,3,4,5,6,7,8,9,10] sort(x<y)={result}')
 //test 'toMap'
 println()
 aMap = {}
-aMap += {1 => true}
-aMap += {2 => false}
-aMap += {3 => true}
+aMap += {1 : true}
+aMap += {2 : false}
+aMap += {3 : true}
 result = linq.from(aMap).toMap(
 fn(x) {
 	return x.key()
@@ -1090,7 +1090,7 @@ file.close() //do not forget to close the file
 
 //test: linq for "csv"
 r = newCsvReader("./examples/test.csv") //open test.csv file for reading
-r.setOptions({"Comma"=>";", "Comment"=>"#"})
+r.setOptions({"Comma":";", "Comment":"#"})
 result = linq.from(r).where(fn(x) {
 	x[2] == "Pike"//only 2nd Field = "Pike"
 }).sort(fn(x,y){

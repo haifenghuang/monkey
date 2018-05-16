@@ -31,7 +31,7 @@ const (
 	LOWEST
 	PIPE
 	ASSIGN
-	THINARROW
+	FATARROW
 	CONDOR
 	CONDAND
 	EQUALS
@@ -95,7 +95,7 @@ var precedences = map[token.TokenType]int{
 	token.LBRACKET:   INDEX,
 	token.INCREMENT:  INCREMENT,
 	token.DECREMENT:  INCREMENT,
-	token.THINARROW:  THINARROW,
+	token.FATARROW:   FATARROW,
 
 	//Meta-Operators
 	token.TILDEPLUS:     SUM,
@@ -274,7 +274,7 @@ func (p *Parser) registerAction() {
 	p.registerInfix(token.INCREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.PIPE, p.parsePipeExpression)
-	p.registerInfix(token.THINARROW, p.parseThinArrowFunction)
+	p.registerInfix(token.FATARROW, p.parseFatArrowFunction)
 
 	//Meta-Operators
 	p.registerInfix(token.TILDEPLUS, p.parseInfixExpression)
@@ -480,7 +480,7 @@ func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
 //	}
 //
 //	// NOTE: if previous token is toke.LPAREN, and the current
-//	//       token is token.RPAREN, that is an empty parentheses(e.g. '() -> 5'), 
+//	//       token is token.RPAREN, that is an empty parentheses(e.g. '() => 5'), 
 //	//       we need to return earlier.
 //	if curToken.Type == token.LPAREN && p.curTokenIs(token.RPAREN) {
 //		return nil
@@ -509,9 +509,9 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	//       token is token.RPAREN, that is an empty parentheses, 
 	//       we need to return earlier.
 	if curToken.Type == token.LPAREN && p.curTokenIs(token.RPAREN) {
-		if p.peekTokenIs(token.THINARROW) { //e.g. '() -> 5': this is a short function
+		if p.peekTokenIs(token.FATARROW) { //e.g. '() => 5': this is a short function
 			p.nextToken() //skip current token
-			ret := p.parseThinArrowFunction(nil)
+			ret := p.parseFatArrowFunction(nil)
 			return ret
 		}
 
@@ -1504,22 +1504,55 @@ func (p *Parser) parseHashExpression() ast.Expression {
 		p.nextToken()
 		hash := &ast.HashLiteral{Token: curToken, RBraceToken:p.curToken}
 		hash.Pairs = make(map[ast.Expression]ast.Expression)
-
 		return hash
 	}
 
 	p.nextToken() //skip the '{'
 	keyExpr := p.parseExpression(SLICE) //note the precedence,if is LOWEST, then it will be parsed as sliceExpression
-
 	if p.peekTokenIs(token.COLON) { //a hash comprehension
 		p.nextToken() //skip current token
 		p.nextToken() //skip the ':'
 
 		valueExpr := p.parseExpression(LOWEST)
+
+		if p.peekTokenIs(token.COMMA) || p.peekTokenIs(token.RBRACE) { // {k1:v1, ...} or {k1:v1}
+			hash := &ast.HashLiteral{Token: curToken}
+			hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+			hash.Pairs[keyExpr] = valueExpr
+
+			p.nextToken() //skip current token
+			if p.curTokenIs(token.RBRACE) {
+				hash.RBraceToken = p.curToken
+				return hash
+			}
+			p.nextToken() //skip the ','
+
+			for !p.curTokenIs(token.RBRACE) {
+				key := p.parseExpression(SLICE)
+				if !p.expectPeek(token.COLON) {
+					return nil
+				}
+
+				p.nextToken() //skip the ':'
+				hash.Pairs[key] = p.parseExpression(LOWEST)
+				p.nextToken() // skip the current token'
+				if p.curTokenIs(token.RBRACE) {
+					break
+				}
+				if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) { //allow for the last comma symbol
+					p.nextToken()
+					break
+				}
+				p.nextToken()
+			}
+			hash.RBraceToken = p.curToken
+			return hash
+		}
+
 		if !p.expectPeek(token.FOR) {
 			return nil
 		}
-
 		if !p.expectPeek(token.IDENT) { //must be an identifier
 			return nil
 		}
@@ -1534,42 +1567,87 @@ func (p *Parser) parseHashExpression() ast.Expression {
 
 		// hash list comprehension
 		return p.parseHashListComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
-
-	} else if p.peekTokenIs(token.FATARROW) { //a hash
-		hash := &ast.HashLiteral{Token: curToken}
-		hash.Pairs = make(map[ast.Expression]ast.Expression)
-
-		p.nextToken() //skip current token
-		p.nextToken() //skip the '=>'
-
-		hash.Pairs[keyExpr] = p.parseExpression(LOWEST)
-		p.nextToken() //skip current token
-		for !p.curTokenIs(token.RBRACE) {
-			p.nextToken() //skip the ','
-
-			key := p.parseExpression(SLICE)
-			if !p.expectPeek(token.FATARROW) {
-				return nil
-			}
-
-			p.nextToken() //skip the '=>'
-			hash.Pairs[key] = p.parseExpression(LOWEST)
-			p.nextToken()
-			if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) { //allow for the last comma symbol
-				p.nextToken()
-				break
-			}
-		}
-		hash.RBraceToken = p.curToken
-		return hash
 	} else {
 		pos := p.fixPosCol()
-		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be ':' or '=>', got %s instead", pos, p.peekToken.Type)
+		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be ':', got %s instead", pos, p.peekToken.Type)
 		p.errors = append(p.errors, msg)
 	}
 
 	return nil
 }
+
+//func (p *Parser) parseHashExpression() ast.Expression {
+//	curToken := p.curToken //save current token
+//
+//	if p.peekTokenIs(token.RBRACE) { //empty hash
+//		p.nextToken()
+//		hash := &ast.HashLiteral{Token: curToken, RBraceToken:p.curToken}
+//		hash.Pairs = make(map[ast.Expression]ast.Expression)
+//
+//		return hash
+//	}
+//
+//	p.nextToken() //skip the '{'
+//	keyExpr := p.parseExpression(SLICE) //note the precedence,if is LOWEST, then it will be parsed as sliceExpression
+//	if p.peekTokenIs(token.COLON) { //a hash comprehension
+//		p.nextToken() //skip current token
+//		p.nextToken() //skip the ':'
+//
+//		valueExpr := p.parseExpression(LOWEST)
+//		if !p.expectPeek(token.FOR) {
+//			return nil
+//		}
+//
+//		if !p.expectPeek(token.IDENT) { //must be an identifier
+//			return nil
+//		}
+//
+//		//{ k:k+1 for k in arr }     -----> k is a variable in an array
+//		//{ k:k+1 for k,v in hash }  -----> k is a key in a hash
+//		keyOrVariable := p.curToken.Literal
+//
+//		if p.peekTokenIs(token.COMMA) { //hash map comprehension
+//			return p.parseHashMapComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
+//		}
+//
+//		// hash list comprehension
+//		return p.parseHashListComprehension(curToken, keyOrVariable, keyExpr, valueExpr, token.RBRACE)
+//
+//	} else if p.peekTokenIs(token.FATARROW) { //a hash
+//		hash := &ast.HashLiteral{Token: curToken}
+//		hash.Pairs = make(map[ast.Expression]ast.Expression)
+//
+//		p.nextToken() //skip current token
+//		p.nextToken() //skip the '=>'
+//
+//		hash.Pairs[keyExpr] = p.parseExpression(LOWEST)
+//		p.nextToken() //skip current token
+//		for !p.curTokenIs(token.RBRACE) {
+//			p.nextToken() //skip the ','
+//
+//			key := p.parseExpression(SLICE)
+//			if !p.expectPeek(token.FATARROW) {
+//				return nil
+//			}
+//
+//			p.nextToken() //skip the '=>'
+//			hash.Pairs[key] = p.parseExpression(LOWEST)
+//			p.nextToken()
+//			if p.curTokenIs(token.COMMA) && p.peekTokenIs(token.RBRACE) { //allow for the last comma symbol
+//				p.nextToken()
+//				break
+//			}
+//		}
+//		hash.RBraceToken = p.curToken
+//		return hash
+//	} else {
+//		pos := p.fixPosCol()
+//		msg := fmt.Sprintf("Syntax Error:%v- expected next token to be ':' or '=>', got %s instead", pos, p.peekToken.Type)
+//		p.errors = append(p.errors, msg)
+//	}
+//
+//	return nil
+//}
 
 func (p *Parser) parseHashMapComprehension(curToken token.Token, key string, keyExpr ast.Expression, valueExpr ast.Expression, closure token.TokenType) ast.Expression {
 	if !p.expectPeek(token.COMMA) {
@@ -2631,11 +2709,11 @@ func (p *Parser) parsePipeExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
-// EXPRESSION -> EXPRESSION
-//(x, y) -> x + y + 5      left expression is *TupleLiteral
-//(x) -> x + 5             left expression is *Identifier
-//()  -> 5 + 5             left expression is nil
-func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
+// EXPRESSION => EXPRESSION
+//(x, y) => x + y + 5      left expression is *TupleLiteral
+//(x) => x + 5             left expression is *Identifier
+//()  => 5 + 5             left expression is nil
+func (p *Parser) parseFatArrowFunction(left ast.Expression) ast.Expression {
 	tok := token.Token{Type:token.FUNCTION, Literal:"fn"}
 	fn := &ast.FunctionLiteral{Token: tok, Variadic: false}
 	switch exprType := left.(type) {
@@ -2667,7 +2745,7 @@ func (p *Parser) parseThinArrowFunction(left ast.Expression) ast.Expression {
 		fn.Body = p.parseBlockStatement()
 	} else { //not block, we use parseStatement
 		/* Note here, if we use parseExpressionStatement, then below is not correct:
-		      (x) -> return x  //error: no prefix parse functions for 'RETURN' found
+		      (x) => return x  //error: no prefix parse functions for 'RETURN' found
 		  so we need to use parseStatement() here
 		*/
 		fn.Body = &ast.BlockStatement{

@@ -1,5 +1,5 @@
 //hash comprehension (from hash)
-z1 = { v:k for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}} //reverse key-value pair
+z1 = { v:k for k,v in {"key1":10, "key2":20, "key3":30}} //reverse key-value pair
 println(z1)
 
 //hash comprehension (from array)
@@ -37,5 +37,5 @@ v = [x+1 for x in (12,34,56)]
 println(v)
 
 //hash
-z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
+z = [v * 10 for k,v in {"key1":10, "key2":20, "key3":30}]
 println(z)

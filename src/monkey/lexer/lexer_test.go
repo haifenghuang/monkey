@@ -30,7 +30,7 @@ func TestNextToken(t *testing.T) {
 	"foo bar";
 	[];
 	function.call
-	{ "foo" => "bar" }
+	{ "foo" : "bar" }
 	[1:3]
 	5 % 4
 	include tests

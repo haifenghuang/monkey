@@ -260,7 +260,7 @@ u = 10u                # uint
 f = 10.0               # float
 b = true               # bool
 a = [1, "2"]           # array
-h = {"a"=>1, "b"=>2}   # hash
+h = {"a": 1, "b": 2}   # hash
 t = (1,2,3)            # tuple
 n = nil
 ```
@@ -313,7 +313,7 @@ if (r) { prinln("regex matched!") }
 a = [1+2, 3, 4, "5", 3]
 
 // Hash literals
-h = { "a"=>1, "b"=>2, "c"=>2}
+h = { "a": 1, "b": 2, "c": 2}
 
 //Tuple literals
 t = (1, 2+3, "Hello", 5)
@@ -329,8 +329,8 @@ f = false
 let f1 = add(x, y) { return x + y }
 println(f1(1,2))
 
-//short-arrow function literals
-let f2 = (x, y) -> x + y
+//fat-arrow function literals
+let f2 = (x, y) => x + y
 println(f2(1,2))
 ```
 
@@ -356,7 +356,7 @@ let (g, h, i) = (10, 20, "hhf")
 //g=10, h=20, i=hhf
 
 //等号右边为哈希
-let (j, k, l) = {"j"=> 50, "l"=> "good"}
+let (j, k, l) = {"j": 50, "l": "good"}
 //j=50, k=nil, l=good
 
 ```
@@ -418,7 +418,7 @@ let s = str(i)                  // result: "10"
 let f = float(i)                // result: 10
 let a = array(i)                // result: [10]
 let t = tuple(i)                // result: (10,)
-let h = hash(("key", "value"))  // result: {"key"=>"value}
+let h = hash(("key", "value"))  // result: {"key": "value}
 let d = decimal("123.45634567") // result: 123.45634567
 ```
 
@@ -441,12 +441,12 @@ let arr = array((10,20))  //result:[10,20]
 let h1 = hash()  //same as h1 = {}
 
 //从数组创建哈希
-let h1 = hash([10, 20])     //result: {10 => 20}
-let h2 = hash([10,20,30])   //result: {10 => 20, 30 => nil}
+let h1 = hash([10, 20])     //result: {10 : 20}
+let h2 = hash([10,20,30])   //result: {10 : 20, 30 : nil}
 
 //从tuple创建哈希
-let h3 = hash((10, 20))     //result: {10 => 20}
-let h4 = hash((10,20,30))   //result: {10 => 20, 30 => nil}
+let h3 = hash((10, 20))     //result: {10 : 20}
+let h4 = hash((10,20,30))   //result: {10 : 20, 30 : nil}
 ```
 
 ### `qw`(Quote word)关键字
@@ -615,7 +615,7 @@ for i in a where i % 2 != 0 {
 }
 
 
-hs = {"a"=>1, "b"=>2, "c"=>3, "d"=>4, "e"=>5, "f"=>6, "g"=>7}
+hs = {"a":1, "b":2, "c":3, "d":4, "e":5, "f":6, "g":7}
 for k, v in hs where v % 2 == 0 {
     println('{k} : {v}')
 }
@@ -695,8 +695,8 @@ case testStr in { // in(完全或部分匹配), is(完全匹配)
     else         { println("testStr not matched") }
 }
 
-let i = [{"a"=>1, "b"=>2}, 10]
-let x = [{"a"=>1, "b"=>2},10]
+let i = [{"a":1, "b":2}, 10]
+let x = [{"a":1, "b":2},10]
 case i in {
     1, 2 { println("i matched 1, 2") }
     3    { println("i matched 3") }
@@ -911,7 +911,7 @@ println(arr3) //结果 : ["1", "a5", "5", "5b", "4", "cc", "7", "dd", "9", 10, 1
 数组可以包含任意数据类型的元素。
 
 ```swift
-mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name"=>"HHF", "SEX"=>"Male"}]
+mixedArr = [1, 2.5, "Hello", ["Another", "Array"], {"Name":"HHF", "SEX":"Male"}]
 ```
 注: 最后关闭方括弧(']')前的逗号(',’)是可以省略的。
 
@@ -1054,9 +1054,9 @@ println(emptyHash)
 
 ```swift
 hashObj = {
-    12     => "twelve",
-    true   => 1,
-    "Name" => "HHF"
+    12     : "twelve",
+    true   : 1,
+    "Name" : "HHF"
 }
 println(hashObj)
 ```
@@ -1066,9 +1066,9 @@ println(hashObj)
 你还可以使用'+'或'-'来从一个哈希中增加或者删除一个元素:
 
 ```swift
-hashObj += {"key1" => "value1"}
-hashObj += {"key2" => "value2"}
-hashObj += {5 => "five"}
+hashObj += {"key1" : "value1"}
+hashObj += {"key2" : "value2"}
+hashObj += {5 : "five"}
 hashObj -= "key2"
 hashObj -= 5
 println(hash)
@@ -1091,7 +1091,7 @@ println(values)
 你还可以使用内置函数`reverse`来反转哈希的key和value:
 
 ```swift
-let hs = {"key1"=>12, "key2"=>"HHF", "key3"=>false}
+let hs = {"key1":12, "key2":"HHF", "key3":false}
 println("Source Hash =", hs)
 revHash = reverse(hs)
 println("Reverse Hash =", revHash)
@@ -1163,7 +1163,7 @@ println(t)    //结果:  (0, [1, 2, 3, 4], 5, 6)
 ```swift
 key1=(1,2,3)
 key2=(2,3,4)
-let ht = {key1 => 10, key2 =>20}
+let ht = {key1 : 10, key2 : 20}
 println(ht[key1]) // result: 10
 println(ht[key2]) // result: 20
 ```
@@ -1784,11 +1784,11 @@ arr = []
 arr += 1
 arr += 10.5
 arr += [1, 2, 3]
-arr += {"key"=>"value"}
+arr += {"key":"value"}
 println(arr)
 
 // Array compare
-arr1 = [1, 10.5, [1, 2, 3], {"key" => "value"}]
+arr1 = [1, 10.5, [1, 2, 3], {"key" : "value"}]
 println(arr1)
 if arr == arr1 { //support ARRAY compare
     println("arr1 = arr")
@@ -1798,9 +1798,9 @@ if arr == arr1 { //support ARRAY compare
 
 // Hash assignment("+=", "-=")
 hash = {}
-hash += {"key1" => "value1"}
-hash += {"key2" => "value2"}
-hash += {5 => "five"}
+hash += {"key1" : "value1"}
+hash += {"key2" : "value2"}
+hash += {5 : "five"}
 println(hash)
 hash -= "key2"
 hash -= 5
@@ -1831,7 +1831,7 @@ v = [x+1 for x in (12,34,56)]
 println(v) //结果：[13, 35, 57]
 
 //哈希
-z = [v * 10 for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}]
+z = [v * 10 for k,v in {"key1":10, "key2":20, "key3":30}]
 println(z) //结果：[100, 200, 300]
 ```
 
@@ -1840,24 +1840,24 @@ Monkey同时也支持哈希推导。
 
 ```swift
 //哈希推导 (from hash)
-z1 = { v:k for k,v in {"key1"=>10, "key2"=>20, "key3"=>30}} //reverse key-value pair
-println(z1) // 结果: {10 => "key1", 20 => "key2", 30 => "key3"}, 顺序可能不同
+z1 = { v:k for k,v in {"key1":10, "key2":20, "key3":30}} //reverse key-value pair
+println(z1) // 结果: {10 : "key1", 20 : "key2", 30 : "key3"}, 顺序可能不同
 
 //哈希推导 (from array)
 z2 = {x:x**2 for x in [1,2,3]}
-println(z2) // 结果: {1 => 1, 2 => 4, 3 => 9}, 顺序可能不同
+println(z2) // 结果: {1 : 1, 2 : 4, 3 : 9}, 顺序可能不同
 
 //哈希推导 (from .. range)
 z3 = {x:x**2 for x in 5..7}
-println(z3) // 结果: {5 => 25, 6 => 36, 7 => 49}, 顺序可能不同
+println(z3) // 结果: {5 : 25, 6 : 36, 7 : 49}, 顺序可能不同
 
 //哈希推导 (from string)
 z4 = {x:x.upper() for x in "hi"}
-println(z4) // 结果: {"h" => "H", "i" => "I"}, 顺序可能不同
+println(z4) // 结果: {"h" : "H", "i" : "I"}, 顺序可能不同
 
 //哈希推导 (from tuple)
 z5 = {x+1:x+2 for x in (1,2,3)}
-println(z5) // 结果: {4 => 5, 2 => 3, 3 => 4}, 顺序可能不同
+println(z5) // 结果: {4 : 5, 2 : 3, 3 : 4}, 顺序可能不同
 ```
 
 ### Grep和map
@@ -1876,10 +1876,10 @@ println('cp is {cp}')
 
 //一个复杂一点的例子
 let fields = {
-                "animal"   => "dog",
-                "building" => "house",
-                "colour"   => "red",
-                "fruit"    => "apple"
+                "animal"   : "dog",
+                "building" : "house",
+                "colour"   : "red",
+                "fruit"    : "apple"
              }
 let pattern = `animal|fruit`
 // =~(匹配), !~(不匹配)
@@ -1901,9 +1901,9 @@ println(n)
 
 
 let complex = {
-   "add" => fn(x, y) { return fn(z) {x + y + z } }, //function with closure
-   "sub" => fn(x, y) { x - y },
-   "other" => [1,2,3,4]
+   "add" : fn(x, y) { return fn(z) {x + y + z } }, //function with closure
+   "sub" : fn(x, y) { x - y },
+   "other" : [1,2,3,4]
 }
 println(complex["add"](1, 2)(3))
 println(complex["sub"](10, 2))
@@ -1943,23 +1943,23 @@ fn sub(x,y=2) {
 println(sub(10)) //结果 : 8
 ```
 
-你还可以使用`短箭头(short arraw)`语法来创建一个匿名函数:
+你还可以使用`胖箭头(fat arraw)`语法来创建一个匿名函数:
 
 ```swift
-let x = () -> 5 + 5
+let x = () => 5 + 5
 println(x())  //结果: 10
 
-let y = (x) -> x * 5
+let y = (x) => x * 5
 println(y(2)) //结果: 10
 
-let z = (x,y) -> x * y + 5
+let z = (x,y) => x * y + 5
 println(z(3,4)) //结果 :17
 
 
 let add = fn (x, factor) {
   x + factor(x)
 }
-result = add(5, (x) -> x * 2)
+result = add(5, (x) => x * 2)
 println(result)  //结果 : 15
 ```
 
@@ -2128,7 +2128,7 @@ Monkey中,预定义了一些标准模块，例如：json, sql, sort, fmt, os, lo
 ```swift
 let i, f, b, s, aArr, aHash = 108, 25.383, true, "Hello, world",
     [1, 2, 3, 4, "a", "b"],
-    { "key1" => 1, "key2" => 2, "key3" => "abc"}
+    { "key1" : 1, "key2" : 2, "key3" : "abc"}
 
 //使用 '%v (value)' 来打印变量值, '%_' 来打印变量类型
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)
@@ -2197,13 +2197,13 @@ if (flag.isSet("age")) {
 ### json 模块( json序列化(marshal)和反序列化(unmarshal) )
 
 ```swift
-let hsJson = {"key1" => 10,
-              "key2" => "Hello Json %s %s Module",
-              "key3" => 15.8912,
-              "key4" => [1,2,3.5, "Hello"],
-              "key5" => true,
-              "key6" => {"subkey1"=>12, "subkey2"=>"Json"},
-              "key7" => fn(x,y){x+y}(1,2)
+let hsJson = {"key1" : 10,
+              "key2" : "Hello Json %s %s Module",
+              "key3" : 15.8912,
+              "key4" : [1,2,3.5, "Hello"],
+              "key5" : true,
+              "key6" : {"subkey1":12, "subkey2":"Json"},
+              "key7" : fn(x,y){x+y}(1,2)
 }
 let hashStr = json.marshal(hsJson) //也可以使用 `json.toJson(hsJson)`
 println(json.indent(hashStr, "  "))
@@ -2212,7 +2212,7 @@ let hsJson1 = json.unmarshal(hashStr)
 println(hsJson1)
 
 
-let arrJson = [1,2.3,"HHF",[],{ "key" =>10, "key1" =>11}]
+let arrJson = [1,2.3,"HHF",[],{ "key" :10, "key1" :11}]
 let arrStr = json.marshal(arrJson)
 println(json.indent(arrStr))
 let arr1Json = json.unmarshal(arrStr)  //也可以使用 `json.fromJson(arrStr)`
@@ -2303,22 +2303,22 @@ result = linq.from(sortArr).sort(fn(x,y){
 println('[1,2,3,4,5,6,7,8,9,10] sort(x<y)={result}')
 
 thenByDescendingArr = [
-    {"Owner" => "Google",    "Name" => "Chrome"},
-    {"Owner" => "Microsoft", "Name" => "Windows"},
-    {"Owner" => "Google",    "Name" => "GMail"},
-    {"Owner" => "Microsoft", "Name" => "VisualStudio"},
-    {"Owner" => "Google",    "Name" => "GMail"},
-    {"Owner" => "Microsoft", "Name" => "XBox"},
-    {"Owner" => "Google",    "Name" => "GMail"},
-    {"Owner" => "Google",    "Name" => "AppEngine"},
-    {"Owner" => "Intel",     "Name" => "ParallelStudio"},
-    {"Owner" => "Intel",     "Name" => "VTune"},
-    {"Owner" => "Microsoft", "Name" => "Office"},
-    {"Owner" => "Intel",     "Name" => "Edison"},
-    {"Owner" => "Google",    "Name" => "GMail"},
-    {"Owner" => "Microsoft", "Name" => "PowerShell"},
-    {"Owner" => "Google",    "Name" => "GMail"},
-    {"Owner" => "Google",    "Name" => "GDrive"}
+    {"Owner" : "Google",    "Name" : "Chrome"},
+    {"Owner" : "Microsoft", "Name" : "Windows"},
+    {"Owner" : "Google",    "Name" : "GMail"},
+    {"Owner" : "Microsoft", "Name" : "VisualStudio"},
+    {"Owner" : "Google",    "Name" : "GMail"},
+    {"Owner" : "Microsoft", "Name" : "XBox"},
+    {"Owner" : "Google",    "Name" : "GMail"},
+    {"Owner" : "Google",    "Name" : "AppEngine"},
+    {"Owner" : "Intel",     "Name" : "ParallelStudio"},
+    {"Owner" : "Intel",     "Name" : "VTune"},
+    {"Owner" : "Microsoft", "Name" : "Office"},
+    {"Owner" : "Intel",     "Name" : "Edison"},
+    {"Owner" : "Google",    "Name" : "GMail"},
+    {"Owner" : "Microsoft", "Name" : "PowerShell"},
+    {"Owner" : "Google",    "Name" : "GMail"},
+    {"Owner" : "Google",    "Name" : "GDrive"}
 ]
 
 result = linq.from(thenByDescendingArr).orderBy(fn(x) {
@@ -2371,8 +2371,8 @@ result = linq.from(file,",",fn(line){ //第二个参数为字段分隔符, 第�
 }).where(fn(fields) {
     //'fields'是一个哈希数组:
     //  fields = [
-    //      {"line" =>LineNo1, "nf" =>line1's number of fields, 0 => line1, 1 => field1, 2 =>field2, ...},
-    //      {"line" =>LineNo2, "nf" =>line2's number of fields, 0 => line2, 1 => field1, 2 =>field2, ...}
+    //      {"line" : LineNo1, "nf" : line1's number of fields, 0 : line1, 1 : field1, 2 : field2, ...},
+    //      {"line" : LineNo2, "nf" : line2's number of fields, 0 : line2, 1 : field1, 2 : field2, ...}
     //  ]
 
     int(fields[1]) > 300000 //仅选取第一个字段的值 > 300000
@@ -2407,12 +2407,12 @@ file.close() //别忘记关闭文件
 
 //test: linq for "csv"
 r = newCsvReader("./examples/test.csv") //以读取方式打开test.csv
-r.setOptions({"Comma"=>";", "Comment"=>"#"})
+r.setOptions({"Comma":";", "Comment":"#"})
 result = linq.from(r).where(fn(x) {
     //The 'x' is an array of hashes, like below:
     //  x = [
-    //      {"nf" =>line1's number of fields, 1 => field1, 2 =>field2, ...},
-    //      {"nf" =>line2's number of fields, 1 => field1, 2 =>field2, ...}
+    //      {"nf": line1's number of fields, 1: field1, 2: field2, ...},
+    //      {"nf": line2's number of fields, 1: field1, 2: field2, ...}
     //  ]
     x[2] == "Pike"//仅选取第二个字段 = "Pike"
 }).sort(fn(x,y){
@@ -2431,7 +2431,7 @@ if r == nil {
     printf("newCsv returns err, message:%s\n", r.message())
 }
 
-r.setOptions({"Comma"=>";", "Comment"=>"#"})
+r.setOptions({"Comma": ";", "Comment": "#"})
 
 ra = r.readAll()
 if (ra == nil) {
@@ -2449,7 +2449,7 @@ r.close() //do not to forget to close the reader
 //测试 csv writer
 let ofile = newFile("./examples/demo.csv", "a+")
 let w = newCsvWriter(ofile)
-w.setOptions({"Comma"=>"	"})
+w.setOptions({"Comma": "	"})
 w.write(["1", "2", "3"])
 w.writeAll([["4", "5", "6"],["7", "8", "9"],["10", "11", "12"]])
 w.flush()
@@ -2466,9 +2466,9 @@ ofile.close() //do not to forget to close the file
 
 ```swift
 arr = [
-    { "key" => "key1", "value" => "value1" },
-    { "key" => "key2", "value" => "value2" },
-    { "key" => "key3", "value" => "value3" }
+    { "key" : "key1", "value" : "value1" },
+    { "key" : "key2", "value" : "value2" },
+    { "key" : "key3", "value" : "value3" }
 ]
 
 //使用parseTextFiles(), 来写入一个字符串

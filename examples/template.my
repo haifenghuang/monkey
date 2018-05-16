@@ -1,9 +1,9 @@
 resultValue = ""
 //test using array
 arr = [
-	{ "key" => "key1", "value" => "value1" },
-	{ "key" => "key2", "value" => "value2" },
-	{ "key" => "key3", "value" => "value3" }
+	{ "key" : "key1", "value" : "value1" },
+	{ "key" : "key2", "value" : "value2" },
+	{ "key" : "key3", "value" : "value3" }
 ]
 
 //use parseFiles(), write to a string
@@ -24,7 +24,7 @@ template.newText("array").parse(`Looping
 println('{resultValue}')
 
 //test using hash
-hs = { "key" => "key1", "value" => "value1" }
+hs = { "key" : "key1", "value" : "value1" }
 template.newText("hash").parse(`key={{.key }}, value={{ .value -}}`).execute(resultValue, hs)
 println('{resultValue}')
 
@@ -75,8 +75,8 @@ Output 5: {{printf "%q" . | upper}}
 
 template.newText("titleTest").funcs(
 {
-	"title" => fn(x){strings.title(x)},
-	"upper" => fn(x){strings.upper(x)}
+	"title" : fn(x){strings.title(x)},
+	"upper" : fn(x){strings.upper(x)}
 }
 ).parse(templateText).execute(resultValue, "the go programming language")
 println('{resultValue}')
@@ -85,7 +85,7 @@ println('{resultValue}')
 envText = `ENVIRONMENT PATH: {{getenv .}}`
 template.newText("titleTest").funcs(
 {
-	"getenv" => fn(x){os.getenv(x)}
+	"getenv" : fn(x){os.getenv(x)}
 }
 ).parse(envText).execute(resultValue, "PATH")
 println('{resultValue}')
@@ -101,7 +101,7 @@ overlay = `{{define "list"}} {{join . ", "}}{{end}} `
 
 masterTmpl = template.newHtml("master").funcs(
 {
-	"join" => fn(x,y) { strings.join(x,y) }
+	"join" : fn(x,y) { strings.join(x,y) }
 }
 ).parse(master)
 

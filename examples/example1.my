@@ -15,11 +15,11 @@ arr = []
 arr += 1
 arr += 10.5
 arr += [1,2,3]
-arr += {"key"=>"value"}
+arr += {"key":"value"}
 println(arr)
 
 # Test array compare
-arr1 = [1,10.5,[1,2,3], {"key"=>"value"}]
+arr1 = [1,10.5,[1,2,3], {"key":"value"}]
 println(arr1)
 if arr == arr1 { //support ARRAY compare
 	println("arr1 = arr")
@@ -29,9 +29,9 @@ if arr == arr1 { //support ARRAY compare
 
 //Support hash "+=", "-="
 hash = {}
-hash += {"key1"=>"value1"}
-hash += {"key2"=>"value2"}
-hash += {5 =>"five"}
+hash += {"key1":"value1"}
+hash += {"key2":"value2"}
+hash += {5 :"five"}
 println(hash)
 hash -= "key2"
 hash -= 5
@@ -43,7 +43,7 @@ f = 25.383
 b=true
 s = "Hello, world"
 aArr = [1, 2, 3, 4, "a", "b"]
-aHash = { "key1" => 1, "key2" => 2, "key3" => "abc"}
+aHash = { "key1" : 1, "key2" : 2, "key3" : "abc"}
 
 # Use '%v (value)' to print variable value, '%_' to print the variable's type
 fmt.printf("i=[%05d, %X], b=[%t], f=[%.5f], s=[%-15s], aArr=%v, aHash=%v\n", i, i, b, f, s, aArr, aHash)

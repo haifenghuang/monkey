@@ -3645,7 +3645,7 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 			fn = &Function{Literal: f, Scope: scope, Variadic: f.Variadic}
 			scope.Set(call.Function.String(), fn)
 		} else if idxExpr, ok := call.Function.(*ast.IndexExpression); ok { //index expression
-			//let complex={ "add"=>fn(x,y){ x+y } }
+			//let complex={ "add" : fn(x,y){ x+y } }
 			//complex["add"](2,3)
 			aValue := Eval(idxExpr, scope)
 			if aValue.Type() == ERROR_OBJ {
@@ -3661,7 +3661,7 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 			args := evalArgs(call.Arguments, scope)
 			return builtin.Fn(call.Function.Pos().Sline(), args...)
 		} else if callExpr, ok := call.Function.(*ast.CallExpression); ok { //call expression
-			//let complex={ "add"=>fn(x,y){ fn(z) {x+y+z} } }
+			//let complex={ "add" : fn(x,y){ fn(z) {x+y+z} } }
 			//complex["add"](2,3)(4)
 			aValue := Eval(callExpr, scope)
 			if aValue.Type() == ERROR_OBJ {

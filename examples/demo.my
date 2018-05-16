@@ -14,9 +14,9 @@ let n =[1,2] + [3,4] + fn() { return [5,6] }()
 println(n)
 
 let complex = {
-   "add" => fn(x, y) { return fn(z) {x + y + z } }, #function with closure
-   "sub" => fn(x, y) { x - y },
-   "other" => [1,2,3,4]
+   "add" : fn(x, y) { return fn(z) {x + y + z } }, #function with closure
+   "sub" : fn(x, y) { x - y },
+   "other" : [1,2,3,4]
 }
 println(complex["add"](1,2)(3))
 println(complex["sub"](10, 2))
@@ -48,13 +48,13 @@ for i in a where i % 2 != 0 {
 }
 
 # for k,v in hs <where expr> {}
-let hs = {"a" => 1, 
-          "b" => 2,
-          "c" => 3,
-          "d" => 4,
-          "e" => 5,
-          "f" => 6,
-          "g" => 7}
+let hs = {"a" : 1, 
+          "b" : 2,
+          "c" : 3,
+          "d" : 4,
+          "e" : 5,
+          "f" : 6,
+          "g" : 7}
 for k, v in hs where v % 2 == 0 {
     println('{k} : {v}')
 }
@@ -78,10 +78,10 @@ let cp = map $_ * 2 , sourceArr
 println('cp is {cp}')
 
 let fields = {
-                "animal"   => "dog",
-                "building" => "house",
-                "colour"   => "red",
-                "fruit"    => "apple"
+                "animal"   : "dog",
+                "building" : "house",
+                "colour"   : "red",
+                "fruit"    : "apple"
              }
 let pattern = `animal|fruit`
 # =~(match), !~(unmatch)
@@ -179,7 +179,7 @@ let kk = 5.1 + " hello"
 print("kk is ", kk)
 println("")
 
-let yu1, yu2, yu3, yu4, yu5, yu6 = "hello ", "world!", 123, [1,2,3,4], {"a"=>10, "b"=>"test"}, fn(x){ x + 1 }
+let yu1, yu2, yu3, yu4, yu5, yu6 = "hello ", "world!", 123, [1,2,3,4], {"a":10, "b":"test"}, fn(x){ x + 1 }
 printf("%s    %s    %d    %s    %s    %s\n", yu1, yu2, yu3, yu4, yu5, yu6)  # use '%s' only
 printf("%s\n", "おはようございます")
 
@@ -270,7 +270,7 @@ else {
     println("bad")
 }
 
-for k in {"animal" => "dog", "building" => "house"}.keys() {
+for k in {"animal" : "dog", "building" : "house"}.keys() {
     println('k={k}')
 }
 
@@ -316,13 +316,13 @@ let pow = math.pow(2,5)
 println(pow)
 
 # Test json marshal & unmarshal
-let hsJson = {"key1" =>10,
-          "key2" =>"Hello Json %s %s Module",
-          "key3" => 15.8912,
-          "key4" => [1,2,3.5, "Hello"],
-          "key5" => true,
-          "key6" => {"subkey1"=>12, "subkey2"=>"Json"},
-          "key7" => fn(x,y){x+y}(1,2)
+let hsJson = {"key1" :10,
+          "key2" :"Hello Json %s %s Module",
+          "key3" : 15.8912,
+          "key4" : [1,2,3.5, "Hello"],
+          "key5" : true,
+          "key6" : {"subkey1":12, "subkey2":"Json"},
+          "key7" : fn(x,y){x+y}(1,2)
 }
 let hashStr = json.marshal(hsJson) //same as `json.toJson(hsJson)`
 println(json.indent(hashStr, "  "))
@@ -331,7 +331,7 @@ let hsJson1 = json.unmarshal(hashStr)
 println(hsJson1)
 
 
-let arrJson = [1,2.3,"HHF",[],{ "key" =>10, "key1" =>11}]
+let arrJson = [1,2.3,"HHF",[],{ "key" :10, "key1" :11}]
 let arrStr = json.marshal(arrJson)
 println(json.indent(arrStr))
 let arr1Json = json.unmarshal(arrStr)  //same as `json.fromJson(arrStr)`

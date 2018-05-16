@@ -49,7 +49,7 @@ while (w > 0) {
     println('w is {w}')
 }
 
-let H={"hello"=>"hello", "world"=>"world", "123"=>"456"}
+let H={"hello":"hello", "world":"world", "123":"456"}
 println(H["hello"])
 
 # test grep & map

@@ -22,7 +22,7 @@ while () {  //'()' is a tuple
 }
 println("END")
 
-let m,n = () -> 10, {v:k for k,v in {"key1"=>"value1", "key2"=>"value2"}}
+let m,n = () => 10, {v:k for k,v in {"key1":"value1", "key2":"value2"}}
 println(m())
 println(n)
 println(m)
