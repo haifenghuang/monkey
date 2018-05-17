@@ -1538,6 +1538,49 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *S
 		return evalMetaOperatorInfixExpression(node, left, right, scope)
 	}
 
+	// Check if left is 'Writable'
+	if _, ok := left.(Writable); ok { //There are two Writeables in monkey: FileObject, HttpResponseWriter.
+		if node.Operator == ">>" { // '>>' is refered as 'extraction operator'. e.g.
+			// Left is a file object
+			if left.Type() == FILE_OBJ { // FileObject is also readable
+				//    let a;
+				//    stdin >> a
+			}
+
+			//right should be an identifier
+			var rightVar *ast.Identifier
+			var ok bool
+			if rightVar, ok = node.Right.(*ast.Identifier); !ok { //not an identifier
+				panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
+			}
+			f := left.(*FileObject)
+			if f.File == os.Stdin {
+				// 8192 is enough?
+				ret := f.Read(node.Pos().Sline(), NewInteger(8192))
+				scope.Set(rightVar.String(), ret)
+				return ret
+			} else {
+				ret := f.ReadLine(node.Pos().Sline())
+				scope.Set(rightVar.String(), ret)
+				return ret
+			}
+		}
+
+		if node.Operator == "<<" { // '<<' is refered as 'insertion operator'
+			if f, ok := left.(*FileObject); ok { // It's a FileOject
+				f.Write(node.Pos().Sline(), NewString(right.Inspect()))
+				//Here we return left, so we can chain multiple '<<'.
+				// e.g.
+				//     stdout << "hello " << "world!"
+				return left;
+			}
+			if httpResp, ok := left.(*HttpResponseWriter); ok { // It's a HttpResponseWriter
+				httpResp.Write(node.Pos().Sline(), NewString(right.Inspect()))
+				return left;
+			}
+		}
+	}
+
 	_, leftIsNum := left.(Number)
 	_, rightIsNum := right.(Number)
 	//hasNumArg := leftIsNum || rightIsNum

@@ -1701,7 +1701,7 @@ Property 'LastName' not valid!
 
 ### 标准输入/输出/错误
 
-Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误
+Monkey中预定义了下面三个对象: `stdin`, `stdout`, `stderr`。分别代表标准输入，标准输出，标准错误。
 
 ```swift
 stdout.writeLine("Hello world")
@@ -1711,6 +1711,49 @@ fmt.fprintf(stdout, "Hello world\n")
 print("Please type your name:")
 name = stdin.read(1024)  //从标准输入读最多1024字节
 println("Your name is " + name)
+```
+
+你还可以使用类似C++的插入操作符(`<<`)和提取操作符(`>>`)来操作标准输入和输出。
+
+```swift
+// Output to stdout by using insertion operator("<<")
+// 'endl' is a predefined object, which is "\n".
+stdout << "hello " << "world!" << " How are you?" << endl;
+
+// Read from stdin by using extraction operator(">>")
+let name;
+stdout << "Your name please: ";
+stdin >> name;
+printf("Welcome, name=%v\n", name)
+```
+
+插入操作符(`<<`)和提取操作符(`>>`)同样适用于文件操作。
+
+```swift
+//Read file by using extraction operator(">>")
+infile = newFile("./file.demo", "r")
+if (infile == nil) {
+    println("opening 'file.demo' for reading failed, error:", infile.message())
+    os.exit(1)
+}
+let line;
+let num = 0
+while ( infile>>line != nil) {
+    num++
+    printf("%d	%s\n", num, line)
+}
+infile.close()
+
+
+//Writing to file by using inserttion operator("<<")
+outfile = newFile("./outfile.demo", "w")
+if (outfile == nil) {
+    println("opening 'outfile.demo' for writing failed, error:", outfile.message())
+    os.exit(1)
+}
+outfile << "Hello" << endl
+outfile << "world" << endl
+outfile.close()
 ```
 
 ### 标准库中的错误处理
