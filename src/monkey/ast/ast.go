@@ -2900,6 +2900,38 @@ func (anno *AnnotationStmt) String() string {
 }
 
 ///////////////////////////////////////////////////////////
+//                         USING                         //
+///////////////////////////////////////////////////////////
+type UsingStmt struct {
+	Token token.Token
+	Expr  *AssignExpression
+	Block *BlockStatement
+}
+
+func (u *UsingStmt) Pos() token.Position {
+	return u.Token.Pos
+}
+
+func (u *UsingStmt) End() token.Position {
+	return u.Block.End()
+}
+
+func (u *UsingStmt) statementNode()       {}
+func (u *UsingStmt) TokenLiteral() string { return u.Token.Literal }
+func (u *UsingStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("using (")
+	out.WriteString(u.Expr.String())
+	out.WriteString(") ")
+	out.WriteString("{")
+	out.WriteString(u.Block.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
+///////////////////////////////////////////////////////////
 //                       COMMENTS                        //
 ///////////////////////////////////////////////////////////
 

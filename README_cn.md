@@ -20,6 +20,7 @@ Table of Contents
     * [enum关键字](#enum%E5%85%B3%E9%94%AE%E5%AD%97)
     * [元操作符(Meta\-Operators)](#%E5%85%83%E6%93%8D%E4%BD%9C%E7%AC%A6meta-operators)
     * [控制流程](#%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B)
+    * [using语句](#using%E8%AF%AD%E5%8F%A5)
     * [用户自定义操作符](#%E7%94%A8%E6%88%B7%E8%87%AA%E5%AE%9A%E4%B9%89%E6%93%8D%E4%BD%9C%E7%AC%A6)
     * [整型(Integer)](#%E6%95%B4%E5%9E%8Binteger)
     * [浮点型(Float)](#%E6%B5%AE%E7%82%B9%E5%9E%8Bfloat)
@@ -704,6 +705,29 @@ case i in {
     else { println("i not matched anything")}
 }
 
+```
+
+### `using`语句
+在Monkey中，如果你有一些资源需要释放(release/free/close)，例如关闭文件，释放网络连接等等，
+你可以使用类似`c#`的`using`语句。
+
+```swift
+// 这里，我们使用'using'语句，因此你不必显示调用infile.close()。
+// 当'using'语句执行完后，Monkey解析器会隐式调用infile.close()。
+using (infile = newFile("./file.demo", "r")) {
+    if (infile == nil) {
+        println("opening 'file.demo' for reading failed, error:", infile.message())
+        os.exit(1)
+    }
+
+    let line;
+    let num = 0
+    //Read file by using extraction operator(">>")
+    while (infile>>line != nil) {
+        num++
+        printf("%d	%s\n", num, line)
+    }
+}
 ```
 
 ### 用户自定义操作符

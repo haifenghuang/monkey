@@ -203,6 +203,9 @@ func Eval(node ast.Node, scope *Scope) (val Object) {
 		return evalClassLiteral(node, scope)
 	case *ast.NewExpression:
 		return evalNewExpression(node, scope)
+	//using
+	case *ast.UsingStmt:
+		return evalUsingStatement(node, scope)
 	}
 	return nil
 }
@@ -4939,6 +4942,26 @@ func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
 	}
 
 	panic(NewError("", GENERICERROR, fn.Type() + " is not a function"))
+}
+
+//evaluate 'using' statement
+func evalUsingStatement(u *ast.UsingStmt, scope *Scope) Object {
+	//evaluate the assignment expression
+	obj := evalAssignExpression(u.Expr, scope)
+	defer func(obj Object) {
+		if obj.Type() != NIL_OBJ {
+			// Check if val is 'Closeable'
+			if c, ok := obj.(Closeable); ok {
+				//call the 'Close' method of the object
+				c.close(u.Pos().Sline())
+			}
+		}
+	}(obj)
+
+	//evaluate the 'using' block statement
+	Eval(u.Block, scope)
+
+	return NIL
 }
 
 // Convert a Object to an ast.Expression.

@@ -191,6 +191,11 @@ type TcpConnObject struct {
 	Address string
 }
 
+// Implement the 'Closeable' interface
+func (t *TcpConnObject) close(line string, args ...Object) Object {
+	return t.Close(line, args...)
+}
+
 func (t *TcpConnObject) Inspect() string  { return t.Address }
 func (t *TcpConnObject) Type() ObjectType { return TCPCONN_OBJ }
 func (t *TcpConnObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -424,6 +429,11 @@ type TCPListenerObject struct {
 	Address  string
 }
 
+// Implement the 'Closeable' interface
+func (l *TCPListenerObject) close(line string, args ...Object) Object {
+	return l.Close(line, args...)
+}
+
 func (l *TCPListenerObject) Inspect() string  { return l.Address }
 func (l *TCPListenerObject) Type() ObjectType { return TCPLISTENER_OBJ }
 func (l *TCPListenerObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -491,6 +501,11 @@ func (l *TCPListenerObject) SetDeadline(line string, args ...Object) Object {
 type UdpConnObject struct {
 	Conn    *net.UDPConn
 	Address string
+}
+
+// Implement the 'Closeable' interface
+func (u *UdpConnObject) close(line string, args ...Object) Object {
+	return u.Close(line, args...)
 }
 
 func (u *UdpConnObject) Inspect() string  { return u.Address }
@@ -658,6 +673,11 @@ func (u *UdpConnObject) SetWriteBuffer(line string, args ...Object) Object {
 type UnixConnObject struct {
 	Conn    *net.UnixConn
 	Address string
+}
+
+// Implement the 'Closeable' interface
+func (u *UnixConnObject) close(line string, args ...Object) Object {
+	return u.Close(line, args...)
 }
 
 func (u *UnixConnObject) Inspect() string  { return u.Address }
@@ -855,6 +875,11 @@ func (u *UnixConnObject) SetWriteBuffer(line string, args ...Object) Object {
 type UnixListenerObject struct {
 	Listener *net.UnixListener
 	Address  string
+}
+
+// Implement the 'Closeable' interface
+func (l *UnixListenerObject) close(line string, args ...Object) Object {
+	return l.Close(line, args...)
 }
 
 func (l *UnixListenerObject) Inspect() string  { return l.Address }

@@ -134,6 +134,8 @@ const (
 	TILDESLASH    // ~/
 	TILDEMOD      // ~%
 	TILDECARET    // ~^
+	
+	USING
 )
 
 var keywords = map[string]TokenType{
@@ -183,6 +185,7 @@ var keywords = map[string]TokenType{
 	"protected":PROTECTED,
 	"static":   STATIC,
 	"default":  DEFAULT,
+	"using":    USING,
 }
 
 //for debug & testing
@@ -414,6 +417,8 @@ func (tt TokenType) String() string {
 		return "~%"
 	case TILDECARET:
 		return "~^"
+	case USING:
+		return "using"
 	default:
 		return "UNKNOWN"
 	}

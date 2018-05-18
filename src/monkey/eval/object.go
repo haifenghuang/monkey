@@ -90,6 +90,11 @@ type Writable interface {
 	IOWriter() io.Writer
 }
 
+//Whether the Object is closable(mainly used for 'using' statement)
+type Closeable interface {
+	close(line string, args ...Object) Object
+}
+
 type Hashable interface {
 	HashKey() HashKey
 }

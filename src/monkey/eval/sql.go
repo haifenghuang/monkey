@@ -59,6 +59,11 @@ type SqlObject struct {
 	Name string
 }
 
+// Implement the 'Closeable' interface
+func (s *SqlObject) close(line string, args ...Object) Object {
+	return s.Close(line, args...)
+}
+
 func (s *SqlObject) Inspect() string  { return s.Name }
 func (s *SqlObject) Type() ObjectType { return DBSQL_OBJ }
 func (s *SqlObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -291,6 +296,11 @@ type DbRowsObject struct {
 	Name string
 }
 
+// Implement the 'Closeable' interface
+func (r *DbRowsObject) close(line string, args ...Object) Object {
+	return r.Close(line, args...)
+}
+
 func (r *DbRowsObject) Inspect() string  { return r.Name }
 func (r *DbRowsObject) Type() ObjectType { return DBROWS_OBJ }
 func (r *DbRowsObject) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
@@ -399,6 +409,11 @@ func (r *DbRowObject) Scan(line string, args ...Object) Object {
 type DbStmtObject struct {
 	Stmt *sql.Stmt
 	Name string
+}
+
+// Implement the 'Closeable' interface
+func (s *DbStmtObject) close(line string, args ...Object) Object {
+	return s.Close(line, args...)
 }
 
 func (s *DbStmtObject) Inspect() string  { return s.Name }

@@ -350,6 +350,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseClassStatement()
 	case token.ENUM:
 		return p.parseEnumStatement()
+	case token.USING:
+		return p.parseUsingStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -2755,6 +2757,34 @@ func (p *Parser) parseFatArrowFunction(left ast.Expression) ast.Expression {
 		}
 	}
 	return fn
+}
+
+func (p *Parser) parseUsingStatement() *ast.UsingStmt {
+	usingStmt := &ast.UsingStmt{Token: p.curToken}
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	expr := p.parseExpression(LOWEST)
+	if _, ok := expr.(*ast.AssignExpression); !ok {
+		msg := fmt.Sprintf("Syntax Error:%v- Using should be followed by an assignment expression", p.curToken.Pos)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	usingStmt.Expr = expr.(*ast.AssignExpression)
+
+	if !p.curTokenIs(token.RPAREN) {
+		msg := fmt.Sprintf("Syntax Error:%v- expected token to be ')', got %s instead.", p.curToken.Pos, p.curToken.Type)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	usingStmt.Block = p.parseBlockStatement()
+
+	return usingStmt
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {

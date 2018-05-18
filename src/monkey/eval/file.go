@@ -184,6 +184,11 @@ type FileObject struct {
 	writer  *bufio.Writer
 }
 
+//Implement the 'Closeable' interface
+func (f *FileObject) close(line string, args ...Object) Object {
+	return f.Close(line, args...)
+}
+
 func (f *FileObject) IOWriter() io.Writer { return f.File }
 func (f *FileObject) Inspect() string     { return "<file object: " + f.Name + ">" }
 func (f *FileObject) Type() ObjectType    { return FILE_OBJ }
