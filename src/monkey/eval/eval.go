@@ -4948,7 +4948,7 @@ func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
 func evalUsingStatement(u *ast.UsingStmt, scope *Scope) Object {
 	//evaluate the assignment expression
 	obj := evalAssignExpression(u.Expr, scope)
-	defer func(obj Object) {
+	fn := func() {
 		if obj.Type() != NIL_OBJ {
 			// Check if val is 'Closeable'
 			if c, ok := obj.(Closeable); ok {
@@ -4956,7 +4956,14 @@ func evalUsingStatement(u *ast.UsingStmt, scope *Scope) Object {
 				c.close(u.Pos().Sline())
 			}
 		}
-	}(obj)
+	}
+	defer func() {
+		if r := recover(); r != nil { // if there is panic, we need to call fn()
+			fn()
+		} else { //no panic, we also need to call fn()
+			fn()
+		}
+	}()
 
 	//evaluate the 'using' block statement
 	Eval(u.Block, scope)
