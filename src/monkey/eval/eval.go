@@ -3084,9 +3084,11 @@ func evalCaseExpression(ce *ast.CaseExpr, scope *Scope) Object {
 func evalForLoopExpression(fl *ast.ForLoop, scope *Scope) Object { //fl:For Loop
 	innerScope := NewScope(scope)
 
-	init := Eval(fl.Init, innerScope)
-	if init.Type() == ERROR_OBJ {
-		return init
+	if fl.Init != nil {
+		init := Eval(fl.Init, innerScope)
+		if init.Type() == ERROR_OBJ {
+			return init
+		}
 	}
 
 	condition := Eval(fl.Cond, innerScope)
@@ -3125,9 +3127,12 @@ func evalForLoopExpression(fl *ast.ForLoop, scope *Scope) Object { //fl:For Loop
 			}
 			break
 		}
-		newVal := Eval(fl.Update, newSubScope)
-		if newVal.Type() == ERROR_OBJ {
-			return newVal
+
+		if fl.Update != nil {
+			newVal := Eval(fl.Update, newSubScope)
+			if newVal.Type() == ERROR_OBJ {
+				return newVal
+			}
 		}
 
 		condition = Eval(fl.Cond, newSubScope)
@@ -3144,8 +3149,9 @@ func evalForLoopExpression(fl *ast.ForLoop, scope *Scope) Object { //fl:For Loop
 
 func evalForEverLoopExpression(fel *ast.ForEverLoop, scope *Scope) Object {
 	var e Object
+	newScope := NewScope(scope)
 	for {
-		e = Eval(fel.Block, NewScope(scope))
+		e = Eval(fel.Block, newScope)
 		if e.Type() == ERROR_OBJ {
 			return e
 		}

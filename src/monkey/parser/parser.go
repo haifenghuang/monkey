@@ -1042,6 +1042,8 @@ func (p *Parser) parseForLoopExpression() ast.Expression {
 }
 
 //for (init; condition; update) {}
+//for (; condition; update) {}  --- init is empty
+//for (; condition;;) {}  --- init & update both empty
 func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
 	p.registerPrefix(token.BREAK, p.parseBreakExpression)
 	p.registerPrefix(token.CONTINUE, p.parseContinueExpression)
@@ -1053,15 +1055,19 @@ func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
 	}
 
 	p.nextToken()
-	loop.Init = p.parseExpression(LOWEST)
+	if !p.curTokenIs(token.SEMICOLON) {
+		loop.Init = p.parseExpression(LOWEST)
+		p.nextToken()
+	}
 
-	p.nextToken()
 	p.nextToken()
 	loop.Cond = p.parseExpression(LOWEST)
 
 	p.nextToken()
 	p.nextToken()
-	loop.Update = p.parseExpression(LOWEST)
+	if !p.curTokenIs(token.SEMICOLON) {
+		loop.Update = p.parseExpression(LOWEST)
+	}
 
 	if !p.expectPeek(token.RPAREN) {
 		return nil
