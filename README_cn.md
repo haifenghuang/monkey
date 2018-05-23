@@ -598,8 +598,6 @@ for { // 无限循环
 }
 
 
-//C语言的for循环。初期化和更新语句可以为空， 但是条件语句不能为空
-//如果需要一个无限循环语句，可以使用'for { block }'
 i = 0
 for (i = 0; i < 5; i++) {  // 类似c语言的for循环， '()'必须要有
     if (i > 4) { break }
@@ -608,20 +606,26 @@ for (i = 0; i < 5; i++) {  // 类似c语言的for循环， '()'必须要有
 }
 
 i = 0
-for (; i < 5; i++) {  // 类似c语言的for循环， '()'必须要有, 无初期化语句
+for (; i < 5; i++) {  // 无初期化语句
     if (i > 4) { break }
     if (i == 2) { continue }
     println('i is {i}')
 }
 
 i = 0
-for (; i < 5;;) {  // 类似c语言的for循环， '()'必须要有, 无初期化和更新语句
+for (; i < 5;;) {  // 无初期化和更新语句
     if (i > 4) { break }
     if (i == 2) { continue }
     println('i is {i}')
     i++ //更新语句
 }
 
+i = 0
+for (;;;) {  // 等价于'for { block }'语句
+    if (i > 4) { break }
+    println('i is {i}')
+    i++ //更新语句
+}
 
 for i in range(10) {
     println('i = {i}')

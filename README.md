@@ -594,9 +594,6 @@ for { // forever loop
     println('i = {i}')
 }
 
-// C language for loop. The initialization and updater statement both could be empty,
-// but the condition statment must not be empty. If you want a forever loop, you could
-// use 'for { block }'.
 i = 0
 for (i = 0; i < 5; i++) {  // c-like for, '()' is a must
     if (i > 4) { break }
@@ -605,20 +602,26 @@ for (i = 0; i < 5; i++) {  // c-like for, '()' is a must
 }
 
 i = 0
-for (; i < 5; i++) {  // c-like for, '()' is a must, no initialization statement.
+for (; i < 5; i++) {  // no initialization statement.
     if (i > 4) { break }
     if (i == 2) { continue }
     println('i is {i}')
 }
 
 i = 0
-for (; i < 5;;) {  // c-like for, '()' is a must, no updater statement.
+for (; i < 5;;) {  // no updater statement.
     if (i > 4) { break }
     if (i == 2) { continue }
     println('i is {i}')
     i++ // Updater statement
 }
 
+i = 0
+for (;;;) {  // same as 'for { block }'
+    if (i > 4) { break }
+    println('i is {i}')
+    i++ //update the 'i'
+}
 
 for i in range(10) {
     println('i = {i}')

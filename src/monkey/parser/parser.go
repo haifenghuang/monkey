@@ -1044,29 +1044,35 @@ func (p *Parser) parseForLoopExpression() ast.Expression {
 //for (init; condition; update) {}
 //for (; condition; update) {}  --- init is empty
 //for (; condition;;) {}  --- init & update both empty
+// for (;;;) {} --- init/condition/update all empty
 func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
+	var result ast.Expression
 	p.registerPrefix(token.BREAK, p.parseBreakExpression)
 	p.registerPrefix(token.CONTINUE, p.parseContinueExpression)
-
-	loop := &ast.ForLoop{Token: curToken}
 
 	if !p.expectPeek(token.LPAREN) {
 		return nil
 	}
 
+	var init ast.Expression
+	var cond ast.Expression
+	var update ast.Expression
+
 	p.nextToken()
 	if !p.curTokenIs(token.SEMICOLON) {
-		loop.Init = p.parseExpression(LOWEST)
+		init = p.parseExpression(LOWEST)
+		p.nextToken()
+	}
+
+	p.nextToken(); //skip ';'
+	if !p.curTokenIs(token.SEMICOLON) {
+		cond = p.parseExpression(LOWEST)
 		p.nextToken()
 	}
 
 	p.nextToken()
-	loop.Cond = p.parseExpression(LOWEST)
-
-	p.nextToken()
-	p.nextToken()
 	if !p.curTokenIs(token.SEMICOLON) {
-		loop.Update = p.parseExpression(LOWEST)
+		update = p.parseExpression(LOWEST)
 	}
 
 	if !p.expectPeek(token.RPAREN) {
@@ -1077,12 +1083,20 @@ func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
 		return nil
 	}
 
-	loop.Block = p.parseBlockStatement()
+	if init == nil && cond == nil && update == nil {
+		loop := &ast.ForEverLoop{Token: curToken}
+		loop.Block = p.parseBlockStatement()
+		result = loop
+	} else {
+		loop := &ast.ForLoop{Token: curToken}
+		loop.Block = p.parseBlockStatement()
+		result = loop
+	}
 
 	p.registerPrefix(token.BREAK, p.parseBreakWithoutLoopContext)
 	p.registerPrefix(token.CONTINUE, p.parseContinueWithoutLoopContext)
 
-	return loop
+	return result
 }
 
 //for item in array <where cond> {}
