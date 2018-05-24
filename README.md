@@ -976,6 +976,10 @@ println(emptyArr)
 //you could also use 'addition' to add an item to an array
 emptyArr += 2
 println(emptyArr)
+
+//You could also use `<<(insertion operator)` to add item(s) to an array, the insertion operator support chain operation.
+emptyArr << 2 << 3
+println(emptyArr)
 ```
 
 Array could be iterated using `for` loop

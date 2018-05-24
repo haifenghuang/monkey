@@ -2018,6 +2018,7 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 //array + array
 //array == array
 //array != array
+//array << item (<< item)
 func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
 	switch node.Operator {
 	case "+":
@@ -2089,6 +2090,13 @@ func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Obje
 			}
 		}
 		return FALSE
+	case "<<":
+		if left.Type() == ARRAY_OBJ {
+			leftVals := left.(*Array).Members
+			leftVals = append(leftVals, right)
+			left.(*Array).Members = leftVals //Change the array itself
+			return left //return the original array, so it could be chained by another '<<'
+		}
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }

@@ -980,6 +980,10 @@ println(emptyArr)
 //你可以使用'加算(+=)'的方式来向数组中添加一个元素:
 emptyArr += 2
 println(emptyArr)
+
+//你还可以使用`<<(插入操作符)`的方式来向数组中添加一个元素,插入操作符支持链式操作。
+emptyArr << 2 << 3
+println(emptyArr)
 ```
 
 可以使用`for`循环来遍历一个数组。
