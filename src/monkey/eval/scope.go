@@ -71,6 +71,15 @@ func (s *Scope) Get(name string) (Object, bool) {
 	return obj, ok
 }
 
+// Get all the keys of the scope.
+func (s *Scope) GetKeys() []string {
+	keys := make([]string, 0, len(s.store))
+	for k := range s.store {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (s *Scope) DebugPrint(indent string) {
 	s.Lock()
 	defer s.Unlock()

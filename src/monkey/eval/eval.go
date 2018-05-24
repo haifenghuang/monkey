@@ -866,7 +866,8 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 
 		strArr := strings.Split(a.Name.String(), ".")
 		if aObj, ok = scope.Get(strArr[0]); !ok {
-			panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, strArr[0]))
+			reportTypoSuggestions(a.Pos().Sline(), scope, strArr[0])
+			//panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, strArr[0]))
 		}
 		if aObj.Type() == ENUM_OBJ { //it's enum type
 			panic(NewError(a.Pos().Sline(), GENERICERROR, "Enum value cannot be reassigned!"))
@@ -970,7 +971,8 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			if ok {
 				return v
 			}
-			panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, a.Name.String()))
+			reportTypoSuggestions(a.Pos().Sline(), scope, a.Name.String())
+			//panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, a.Name.String()))
 		}
 	}
 
@@ -978,7 +980,8 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 	var left Object
 	var ok bool
 	if left, ok = scope.Get(name); !ok {
-		panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, name))
+		reportTypoSuggestions(a.Pos().Sline(), scope, name)
+		//panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, name))
 	}
 
 	switch left.Type() {
@@ -1125,10 +1128,8 @@ func evalIdentifier(i *ast.Identifier, scope *Scope) Object {
 
 	val, ok := scope.Get(i.String())
 	if !ok {
-		//panic(NewError(i.Pos().Sline(), UNKNOWNIDENT, i.String()))
-
 		if val, ok = includeScope.Get(i.String()); !ok {
-			panic(NewError(i.Pos().Sline(), UNKNOWNIDENT, i.String()))
+			reportTypoSuggestions(i.Pos().Sline(), scope, i.Value)
 		}
 	}
 	if i, ok := val.(*InterpolatedString); ok {
@@ -3715,7 +3716,8 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 			if aFn, ok := aValue.(*Function); ok { //index expression
 				fn = aFn
 			} else {
-				panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
+				reportTypoSuggestions(call.Function.Pos().Sline(), scope, call.Function.String())
+				//panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
 			}
 		} else if builtin, ok := builtins[call.Function.String()]; ok {
 			args := evalArgs(call.Arguments, scope)
@@ -3730,7 +3732,8 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 
 			fn = aValue
 		} else {
-			panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
+			reportTypoSuggestions(call.Function.Pos().Sline(), scope, call.Function.String())
+			//panic(NewError(call.Function.Pos().Sline(), UNKNOWNIDENT, call.Function.String()))
 		}
 	}
 
@@ -3983,7 +3986,8 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 					}
 				}
 			}
-			panic(NewError(call.Call.Pos().Sline(), UNKNOWNIDENT, o.Value))
+			reportTypoSuggestions(call.Call.Pos().Sline(), instanceObj.Scope, o.Value)
+			//panic(NewError(call.Call.Pos().Sline(), UNKNOWNIDENT, o.Value))
 
 		case *ast.CallExpression:
 			//e.g. instanceObj.method()
@@ -5117,4 +5121,11 @@ func compareGoObj(left, right Object) bool {
 
 	//left and right both are GoObject
 	return left.(*GoObject).Equal(right)
+}
+
+// user typo probs, add better error message here, 'Did you mean... ___?'
+func reportTypoSuggestions(line string, scope *Scope, miss string) {
+	keys := scope.GetKeys()
+	found := TypoSuggestions(keys, miss)
+	panic(NewError(line, UNKNOWNIDENT, miss, strings.Join(found, ", ")))
 }

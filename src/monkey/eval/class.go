@@ -476,7 +476,9 @@ func (p *PropertyInfo) Value(line string, args ...Object) Object {
 			}
 		}
 	}
-	panic(NewError(line, UNKNOWNIDENT, p.Name))
+	reportTypoSuggestions(line, p.Instance.Scope, p.Name)
+	return NIL
+	//panic(NewError(line, UNKNOWNIDENT, p.Name))
 }
 
 func (p *PropertyInfo) GetAnnotations(line string, scope *Scope, args ...Object) Object {
