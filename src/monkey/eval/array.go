@@ -38,6 +38,8 @@ func (a *Array) CallMethod(line string, scope *Scope, method string, args ...Obj
 	switch method {
 	case "count":
 		return a.Count(line, args...)
+	case "includes":
+		return a.Includes(line, args...)
 	case "filter", "grep":
 		return a.Filter(line, scope, args...)
 	case "index":
@@ -112,6 +114,19 @@ func (a *Array) Count(line string, args ...Object) Object {
 		}
 	}
 	return NewInteger(int64(count))
+}
+
+func (a *Array) Includes(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	for _, v := range a.Members {
+		if equal(true, v, args[0]) {
+			return TRUE
+		}
+	}
+	return FALSE
 }
 
 func (a *Array) Filter(line string, scope *Scope, args ...Object) Object {
