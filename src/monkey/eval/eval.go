@@ -27,10 +27,8 @@ var (
 
 var includeScope *Scope
 var importedCache map[string]Object
-var currentInstance *ObjectInstance
 
 var mux sync.Mutex
-var classMux sync.Mutex
 
 //REPL with color support
 var REPLColor bool
@@ -869,6 +867,7 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			reportTypoSuggestions(a.Pos().Sline(), scope, strArr[0])
 			//panic(NewError(a.Pos().Sline(), UNKNOWNIDENT, strArr[0]))
 		}
+
 		if aObj.Type() == ENUM_OBJ { //it's enum type
 			panic(NewError(a.Pos().Sline(), GENERICERROR, "Enum value cannot be reassigned!"))
 		} else if aObj.Type() == HASH_OBJ { //e.g. hash.key = value
@@ -885,19 +884,24 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			//check if it's a property
 			p := instanceObj.GetProperty(strArr[1])
 			if p == nil { //not property, return value from scope
+				// check if it's a static variable
+				if instanceObj.IsStatic(strArr[1], ClassMemberKind) {
+					panic(NewError(a.Pos().Sline(), MEMBERUSEERROR, strArr[1], instanceObj.Class.Name))
+				}
 				instanceObj.Scope.Set(strArr[1], val)
 			} else {
-					if p.Setter == nil { //property xxx { get; }
-						_, ok := instanceObj.Scope.Get(strArr[1])
-						if !ok { //it's the first time assignment
-							if currentInstance != nil { //inside class body assignment
-								instanceObj.Scope.Set(strArr[1], val)
-							} else {  //outside class body assignment
-								panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
-							}
-						} else {
-							panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
-						}
+				// check if it's a static property
+				if instanceObj.IsStatic(strArr[1], ClassPropertyKind) {
+					panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
+				}
+
+				if p.Setter == nil { //property xxx { get; }
+					_, ok := instanceObj.Scope.Get(strArr[1])
+					if !ok { //it's the first time assignment
+						instanceObj.Scope.Set(strArr[1], val)
+					} else {
+						panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], instanceObj.Class.Name))
+					}
 				} else {
 					if len(p.Setter.Body.Statements) == 0 { // property xxx { set; }
 						instanceObj.Scope.Set("_" + strArr[1], val)
@@ -906,7 +910,7 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 						newScope.Set("value", val)
 						results := Eval(p.Setter.Body, newScope)
 						if results.Type() == RETURN_VALUE_OBJ {
-							return results.(*ReturnValue).Value
+							val = results.(*ReturnValue).Value
 						}
 					}
 				}
@@ -914,11 +918,42 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			return
 		} else if aObj.Type() == CLASS_OBJ { //e.g. parent.var = xxxx
 			clsObj := aObj.(*Class)
-			if currentInstance != nil { //inside class body
-			currentInstance.Scope.Set(strArr[1], val)
-			//return evalFunctionCall(o, currentInstance.Scope) //should be Function's scope
-			} else { //outside class body
+
+			thisObj, _ := scope.Get("this")
+			if thisObj != nil && thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
+				thisObj.(*ObjectInstance).Scope.Set(strArr[1], val)
+				return
+			}
+
+			//check if it's a property
+			p := clsObj.GetProperty(strArr[1])
+			if p == nil { //not property
 				clsObj.Scope.Set(strArr[1], val)
+			} else {
+				// check if it's a static property
+				if !clsObj.IsStatic(strArr[1], ClassPropertyKind) {
+					panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], clsObj.Name))
+				}
+
+				if p.Setter == nil { //property xxx { get; }
+					_, ok := clsObj.Scope.Get(strArr[1])
+					if !ok { //it's the first time assignment
+						clsObj.Scope.Set(strArr[1], val)
+					} else {
+						panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], clsObj.Name))
+					}
+				} else {
+					if len(p.Setter.Body.Statements) == 0 { // property xxx { set; }
+						clsObj.Scope.Set("_" + strArr[1], val)
+					} else {
+						newScope := NewScope(clsObj.Scope)
+						newScope.Set("value", val)
+						results := Eval(p.Setter.Body, newScope)
+						if results.Type() == RETURN_VALUE_OBJ {
+							val = results.(*ReturnValue).Value
+						}
+					}
+				}
 			}
 			return
 		}
@@ -1343,9 +1378,8 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 			switch method.(type) {
 				case *Function:
 					newScope := NewScope(instanceObj.Scope)
-					newScope.Set("parent", instanceObj.Class.Parent)
 					args := []Object{right}
-					return evalFunctionDirect(method, args, newScope)
+					return evalFunctionDirect(method, args, instanceObj, newScope)
 				case *BuiltinMethod:
 					//do nothing for now
 			}
@@ -2264,21 +2298,14 @@ func evalInstanceInfixExpression(node *ast.InfixExpression, left Object, right O
 	if method != nil {
 		switch m := method.(type) {
 			case *Function:
-				fn := &Function{
-					Literal:    m.Literal,
-					Scope:       NewScope(instanceObj.Scope),
-					Instance:   instanceObj,
-				}
-
-				fn.Scope.Set("parent", instanceObj.Class.Parent)
-
+				newScope := NewScope(instanceObj.Scope)
 				args := []Object{right}
-				return evalFunctionDirect(method, args, fn.Scope)
+				return evalFunctionDirect(method, args, instanceObj, newScope)
 			case *BuiltinMethod:
 				args := []Object{right}
 				builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: instanceObj}
 				aScope := NewScope(instanceObj.Scope)
-				return evalFunctionDirect(builtinMethod, args, aScope)
+				return evalFunctionDirect(builtinMethod, args, instanceObj, aScope)
 		}
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
@@ -3740,10 +3767,12 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 	f := fn.(*Function)
 
 	//check if it's static function
-	aVal, ok := scope.Get("this")
-	if ok && aVal.Type() == CLASS_OBJ {
-		if !f.Literal.StaticFlag { //not static
-			panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
+	_, ok = scope.Get("this")
+	if ok {
+		if f.Instance == nil {
+			if !f.Literal.StaticFlag { //not static
+				panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
+			}
 		}
 	}
 
@@ -3793,11 +3822,7 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 		f.Scope.Set("@_", NewInteger(int64(len(f.Literal.Parameters))))
 	}
 
-	oldInstance := currentInstance
-	currentInstance = f.Instance
-
 	r := Eval(f.Literal.Body, newScope)
-	currentInstance = oldInstance
 	if r.Type() == ERROR_OBJ {
 		return r
 	}
@@ -3952,17 +3977,16 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 		switch o := call.Call.(type) {
 		//e.g.: instanceObj.key1
 		case *ast.Identifier:
-//			//get methods's modifier level
-//			ml := currentInstance.GetModifierLevel(o.Value, ClassMemberKind) //ml:modifier level
-//			if currentInstance.Class.Name != instanceObj.Class.Name && ml == ast.ModifierPrivate {
-//				panic(NewError(call.Call.Pos().Sline(), CLSMEMBERPRIVATE, o.Value, instanceObj.Class.Name))
-//			}
-
 			val, ok := instanceObj.Scope.Get(o.Value)
 			if ok {
+				// check if it's a static variable
+				if instanceObj.IsStatic(o.Value, ClassMemberKind) {
+					panic(NewError(call.Call.Pos().Sline(), MEMBERUSEERROR, o.Value, instanceObj.Class.Name))
+				}
+
 				switch val.(type) {
 				case *Function: //Function without parameter. e.g. obj.getMonth(), could be called using 'obj.getMonth'
-					return evalFunctionDirect(val, []Object{}, instanceObj.Scope)
+					return evalFunctionDirect(val, []Object{}, instanceObj, instanceObj.Scope)
 				default:
 					return val
 				}
@@ -3971,6 +3995,11 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			//See if it's a property
 			p := instanceObj.GetProperty(o.Value)
 			if p != nil {
+				// check if it's a static variable
+				if instanceObj.IsStatic(o.Value, ClassPropertyKind) {
+					panic(NewError(call.Call.Pos().Sline(), PROPERTYUSEERROR, o.Value, instanceObj.Class.Name))
+				}
+
 				if p.Getter == nil { //property xxx { set; }
 					panic(NewError(call.Call.Pos().Sline(), PROPERTYUSEERROR, o.Value, instanceObj.Class.Name))
 				} else {
@@ -3993,30 +4022,23 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			//e.g. instanceObj.method()
 			fname := o.Function.String() // get function name
 
-			//get methods's modifier level
-//			ml := instanceObj.GetModifierLevel(fname, ClassMethodKind) //ml:modifier level
-//			if ml == ast.ModifierPrivate {
-//				panic(NewError(call.Call.Pos().Sline(), CLSCALLPRIVATE, fname, instanceObj.Class.Name))
-//			}
+			isStatic := instanceObj.IsStatic(fname, ClassMethodKind)
+			if isStatic {
+				panic(NewError(call.Call.Pos().Sline(), GENERICERROR, "Method is static!"))
+			}
 
 			method := instanceObj.GetMethod(fname)
 			if method != nil {
 				switch m := method.(type) {
 					case *Function:
-						fn := &Function{
-							Literal:    m.Literal,
-							Scope:       NewScope(instanceObj.Scope),
-							Instance:   instanceObj,
-						}
-						fn.Scope.Set("parent", instanceObj.Class.Parent)
-
-						args := evalArgs(o.Arguments, fn.Scope)
-						return evalFunctionDirect(method, args, fn.Scope)
+						newScope := NewScope(instanceObj.Scope)
+						args := evalArgs(o.Arguments, newScope)
+						return evalFunctionDirect(method, args, instanceObj, newScope)
 					case *BuiltinMethod:
 						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: instanceObj}
 						aScope := NewScope(instanceObj.Scope)
 						args := evalArgs(o.Arguments, aScope)
-						return evalFunctionDirect(builtinMethod, args, aScope)
+						return evalFunctionDirect(builtinMethod, args, instanceObj, aScope)
 				}
 			}
 			panic(NewError(call.Call.Pos().Sline(), NOMETHODERROR, call.String(), obj.Type()))
@@ -4026,42 +4048,59 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 		clsObj := m
 		switch o := call.Call.(type) {
 		case *ast.Identifier: //e.g.: classObj.key1
-//			//get methods's modifier level
-//			ml := currentInstance.GetModifierLevel(o.Value, ClassMemberKind) //ml:modifier level
-//			if currentInstance.Class.Name != clsObj.Name && ml == ast.ModifierPrivate {
-//				panic(NewError(call.Call.Pos().Sline(), CLSMEMBERPRIVATE, o.Value, clsObj.Name))
-//			}
-
 			var val Object
 			var ok bool
-			if currentInstance != nil {
-				val, ok = currentInstance.Scope.Get(o.Value)
-			} else {
-				//check if it is static
-				if clsObj.IsStatic(o.Value, ClassMemberKind) {
-					val, ok = clsObj.Scope.Get(o.Value)
-				} else if clsObj.IsStatic(o.Value, ClassPropertyKind) {
-					val, ok = clsObj.Scope.Get(o.Value)
-				} else {
-					//val, ok = NIL, false
-					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+
+			thisObj, _ := scope.Get("this")
+			if thisObj != nil && thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
+				val, ok = thisObj.(*ObjectInstance).Scope.Get(o.Value)
+				if ok {
+					return val
 				}
+				return NIL
 			}
+
+			//check if it is static
+			if clsObj.IsStatic(o.Value, ClassMemberKind) {
+				val, ok = clsObj.Scope.Get(o.Value)
+			} else if clsObj.IsStatic(o.Value, ClassPropertyKind) {
+				val, ok = clsObj.Scope.Get(o.Value)
+			} else {
+				//val, ok = NIL, false
+				panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+			}
+
 			if ok {
 				return val
 			}
 			return NIL
 
 		case *ast.CallExpression: //e.g. classObj.method()
+			newScope := clsObj.Scope
 			fname := o.Function.String() // get function name
+
+			// Here is the reason for checking 'this'. Below example code explains why:
+			//
+			//    Class SubClass : ParentClass {
+			//        fn init(xxx) {
+			//            parent.init(xxx)
+			//        }
+			//    }
+			// subClassObj = new SubClass(xxx)
+			//
+			// When you instantiate 'subClassObj' using `new`,
+			// the interpreter will call `init` method. In the 'init', the 'parent' is a Class object, 
+			// but 'this' is an instance, so the scope is the instance's scope, not class's scope.
+			thisObj, _ := scope.Get("this")
+			if thisObj != nil && thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
+				newScope = thisObj.(*ObjectInstance).Scope
+			}
+
 			isStatic := clsObj.IsStatic(fname, ClassMethodKind)
-			if currentInstance == nil { //outside class body
-				if !isStatic {
-					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
-				}
-			} else {
-				if isStatic {
-					panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+			if !isStatic {
+				objName := str
+				if objName != "parent" { // e.g. parent.method(parameters)
+					panic(NewError(call.Call.Pos().Sline(), GENERICERROR, "Method is non-static"))
 				}
 			}
 
@@ -4070,17 +4109,12 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				switch m := method.(type) {
 					case *Function:
 						args := evalArgs(o.Arguments, scope)
-						if currentInstance != nil { //inside class body call
-							currentInstance.Scope.Set("parent", clsObj.Parent) //needed ?
-							return evalFunctionDirect(m, args, currentInstance.Scope)
-						} else { //outside class body call
-							return evalFunctionDirect(m, args, clsObj.Scope)
-						}
+						return evalFunctionDirect(m, args, nil, newScope)
 					case *BuiltinMethod:
-						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: currentInstance}
-						aScope := NewScope(currentInstance.Scope)
+						builtinMethod :=&BuiltinMethod{Fn: m.Fn, Instance: nil}
+						aScope := NewScope(newScope)
 						args := evalArgs(o.Arguments, aScope)
-						return evalFunctionDirect(builtinMethod, args, aScope)
+						return evalFunctionDirect(builtinMethod, args, nil, aScope)
 					
 				}
 			} else {
@@ -4127,12 +4161,12 @@ func evalIndexExpression(ie *ast.IndexExpression, scope *Scope) Object {
 	case *Tuple:
 		return evalTupleIndex(iterable, ie, scope)
 	case *ObjectInstance: //class indexer's getter
-		return evalClassInstanceIndex(iterable, ie, scope)
+		return evalClassInstanceIndexer(iterable, ie, scope)
 	}
 	panic(NewError(ie.Pos().Sline(), NOINDEXERROR, left.Type()))
 }
 
-func evalClassInstanceIndex(instanceObj *ObjectInstance, ie *ast.IndexExpression, scope *Scope) Object {
+func evalClassInstanceIndexer(instanceObj *ObjectInstance, ie *ast.IndexExpression, scope *Scope) Object {
 	var num int
 	switch o := ie.Index.(type) {
 	case *ast.ClassIndexerExpression:
@@ -4472,9 +4506,8 @@ func evalPostfixExpression(left Object, node *ast.PostfixExpression) Object {
 			switch method.(type) {
 				case *Function:
 					newScope := NewScope(instanceObj.Scope)
-					newScope.Set("parent", instanceObj.Class.Parent)
 					args := []Object{left}
-					return evalFunctionDirect(method, args, newScope)
+					return evalFunctionDirect(method, args, instanceObj, newScope)
 				case *BuiltinMethod:
 					//do nothing for now
 			}
@@ -4674,7 +4707,7 @@ func evalPipeExpression(p *ast.Pipe, scope *Scope) Object {
 //class name : parent { block }
 //class name (categoryname) { block }
 func evalClassStatement(c *ast.ClassStatement, scope *Scope) Object {
-	if c.CategoryName != nil { //it's a class literal
+	if c.CategoryName != nil { //it's a class category
 		clsObj, ok := scope.Get(c.Name.Value)
 		if !ok {
 			panic(NewError(c.Pos().Sline(), CLASSCATEGORYERROR, c.Name, c.CategoryName))
@@ -4747,6 +4780,7 @@ func evalClassLiteral(c *ast.ClassLiteral, scope *Scope) Object {
 	}
 	clsObj.Scope = newScope.parentScope
 	clsObj.Scope.Set("this", clsObj) //make 'this' refer to class object itself
+	clsObj.Scope.Set("parent", parentClass)
 
 	for k, f := range c.Methods {
 		clsObj.Methods[k] = Eval(f, scope).(ClassMethod)
@@ -4795,6 +4829,7 @@ func evalClassLiterlForAnno(c *ast.ClassLiteral, scope *Scope) Object {
 	//create a new Class scope
 	clsObj.Scope = NewScope(scope)
 	clsObj.Scope.Set("this", clsObj) //make 'this' refer to class object itself
+	clsObj.Scope.Set("parent", parentClass)
 
 	return clsObj
 }
@@ -4824,7 +4859,9 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 	//evaluate the 'Members' fields of class with proper scope.
 	for idx := len(classChain) - 1; idx >= 0; idx-- {
 		for _, member := range classChain[idx].Members {
-			Eval(member, newScope) //evaluate the 'Members' fields of class
+			if !member.StaticFlag {
+				Eval(member, newScope) //evaluate the 'Members' fields of class
+			}
 		}
 		newScope = NewScope(newScope)
 	}
@@ -4839,22 +4876,15 @@ func evalNewExpression(n *ast.NewExpression, scope *Scope) Object {
 		return instance
 	}
 
-	classMux.Lock()
-	defer classMux.Unlock()
-
 	args := evalArgs(n.Arguments, scope)
 	if len(args) == 1 && args[0].Type() == ERROR_OBJ {
 		return args[0]
 	}
 
-	oldInstance := currentInstance
-	currentInstance = instance
-	ret := evalFunctionDirect(init, args, instance.Scope); 
+	ret := evalFunctionDirect(init, args, instance, instance.Scope);
 	if ret.Type() == ERROR_OBJ {
-		currentInstance = oldInstance
 		return ret //return the error object
 	}
-	currentInstance = oldInstance
 	return instance
 }
 
@@ -4911,9 +4941,10 @@ func processClassAnnotation(Annotations []*ast.AnnotationStmt, scope *Scope, lin
 	}
 }
 
-func evalFunctionDirect(fn Object, args []Object, scope *Scope) Object {
+func evalFunctionDirect(fn Object, args []Object, instance *ObjectInstance, scope *Scope) Object {
 	switch fn := fn.(type) {
 	case *Function:
+		fn.Instance = instance
 //		if len(args) < len(fn.Literal.Parameters) {
 //			panic(NewError("", GENERICERROR, "Not enough parameters to call function"))
 //		}

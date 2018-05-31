@@ -80,6 +80,7 @@ func (c *Class) GetProperty(name string) *ast.PropertyDeclStmt {
 	return c.Parent.GetProperty(name)
 }
 
+// Check whether member, method or property is static or not.
 func (c *Class) IsStatic(val string, kind ClassComponentKind) bool {
 	switch kind {
 	case ClassMemberKind:
@@ -370,11 +371,11 @@ func (m *MethodInfo) Invoke(line string, scope *Scope, args ...Object) Object {
 			case *Function:
 				newScope := NewScope(m.Instance.Scope)
 				newScope.Set("parent", m.Instance.Class.Parent)
-				return evalFunctionDirect(method, args, newScope)
+				return evalFunctionDirect(method, args, m.Instance, newScope)
 			case *BuiltinMethod:
 				builtinMethod :=&BuiltinMethod{Fn: meth.Fn, Instance: m.Instance}
 				aScope := NewScope(m.Instance.Scope)
-				return evalFunctionDirect(builtinMethod, args, aScope)
+				return evalFunctionDirect(builtinMethod, args, m.Instance, aScope)
 		}
 	}
 

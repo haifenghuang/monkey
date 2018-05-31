@@ -43,6 +43,7 @@ const (
 	CLSMEMBERPRIVATE
 	CLSCALLPRIVATE
 	PROPERTYUSEERROR
+	MEMBERUSEERROR
 	INDEXERUSEERROR
 	INDEXERTYPEERROR
 	INDEXERSTATICERROR
@@ -95,6 +96,7 @@ var errorType = map[int]string{
 	CLSMEMBERPRIVATE:  "Variable(%s) of class(%s) is private",
 	CLSCALLPRIVATE:    "Method %s() of class(%s) is private",
 	PROPERTYUSEERROR:  "Invalid use of Property(%s) of class(%s)",
+	MEMBERUSEERROR:    "Invalid use of member(%s) of class(%s)",
 	INDEXERUSEERROR:   "Invalid use of Indexer of class(%s)",
 	INDEXERTYPEERROR:  "Invalid use of Indexer of class(%s), Only interger type of Indexer is supported",
 	INDEXERSTATICERROR:"Invalid use of Indexer of class(%s), Indexer cannot declared as static",

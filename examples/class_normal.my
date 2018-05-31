@@ -179,7 +179,7 @@ class Cat : Animal {
 
     fn eat()
     {
-        println(m_name + "likes eating Mouse");
+        println(m_name + " likes eating Mouse");
     }
 }
 
@@ -199,7 +199,7 @@ class Dog : Animal {
 
     fn eat()
     {
-        println(m_name + "likes eating Cat");
+        println(m_name + " likes eating Cat");
     }
 }
 
