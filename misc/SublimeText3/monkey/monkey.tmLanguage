@@ -337,7 +337,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(spawn|defer)\b</string>
+			<string>\b(spawn|defer|using)\b</string>
 			<key>name</key>
 			<string>keyword.control.my</string>
 		</dict>
