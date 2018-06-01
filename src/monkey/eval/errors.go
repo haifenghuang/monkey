@@ -10,7 +10,9 @@ const (
 	POSTFIXOP
 	MOD_ASSIGNOP
 	UNKNOWNIDENT
+	UNKNOWNIDENTEX
 	NOMETHODERROR
+	NOMETHODERROREX
 	NOINDEXERROR
 	KEYERROR
 	INDEXERROR
@@ -61,9 +63,10 @@ var errorType = map[int]string{
 	INFIXOP:         "unsupported operator for infix expression: %s '%s' %s",
 	POSTFIXOP:       "unsupported operator for postfix expression:'%s' and type: %s",
 	MOD_ASSIGNOP:    "unsupported operator for modulor assignment:'%s'",
-	//UNKNOWNIDENT:    "unknown identifier: '%s' is not defined",
-	UNKNOWNIDENT:    "identifier '%s' not found. \n\nDid you mean one of: \n\n  %s\n",
+	UNKNOWNIDENT:    "unknown identifier: '%s' is not defined",
+	UNKNOWNIDENTEX:  "identifier '%s' not found. \n\nDid you mean one of: \n\n  %s\n",
 	NOMETHODERROR:   "undefined method '%s' for object %s",
+	NOMETHODERROREX: "undefined method '%s' for object '%s'. \n\nDid you mean one of: \n\n  %s\n",
 	NOINDEXERROR:    "index error: type %s is not indexable",
 	KEYERROR:        "key error: type %s is not hashable",
 	INDEXERROR:      "index error: '%d' out of range",
@@ -101,7 +104,7 @@ var errorType = map[int]string{
 	INDEXERTYPEERROR:  "Invalid use of Indexer of class(%s), Only interger type of Indexer is supported",
 	INDEXERSTATICERROR:"Invalid use of Indexer of class(%s), Indexer cannot declared as static",
 	INDEXNOTFOUNDERROR:"Indexer not found for class(%s)",
-	CALLNONSTATICERROR:"Could not call non-static members.",
+	CALLNONSTATICERROR:"Could not call non-static.",
 	CLASSCATEGORYERROR:"No class(%s) found for category(%s).",
 	PARENTNOTANNOTATION:"Annotation(%s)'s Parent(%s) is not annotation.",
 	OVERRIDEERROR:      "Method(%s) of class(%s) must override a superclass method!",

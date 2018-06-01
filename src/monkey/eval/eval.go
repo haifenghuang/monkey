@@ -919,15 +919,35 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		} else if aObj.Type() == CLASS_OBJ { //e.g. parent.var = xxxx
 			clsObj := aObj.(*Class)
 
-			thisObj, _ := scope.Get("this")
-			if thisObj != nil && thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
-				thisObj.(*ObjectInstance).Scope.Set(strArr[1], val)
-				return
-			}
-
 			//check if it's a property
 			p := clsObj.GetProperty(strArr[1])
 			if p == nil { //not property
+				// check if it's a static member
+				if !clsObj.IsStatic(strArr[1], ClassMemberKind) {
+					panic(NewError(a.Pos().Sline(), MEMBERUSEERROR, strArr[1], clsObj.Name))
+				}
+			} else {
+				// check if it's a static property
+				if !clsObj.IsStatic(strArr[1], ClassPropertyKind) {
+					panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], clsObj.Name))
+				}
+			}
+
+			thisObj, _ := scope.Get("this")
+			if thisObj != nil {
+				if thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
+					thisObj.(*ObjectInstance).Scope.Set(strArr[1], val)
+					return
+				}
+			}
+
+			//check if it's a property
+			p = clsObj.GetProperty(strArr[1])
+			if p == nil { //not property
+				// check if it's a static member
+				if !clsObj.IsStatic(strArr[1], ClassMemberKind) {
+					panic(NewError(a.Pos().Sline(), MEMBERUSEERROR, strArr[1], clsObj.Name))
+				}
 				clsObj.Scope.Set(strArr[1], val)
 			} else {
 				// check if it's a static property
@@ -974,28 +994,6 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 				return evalClassIndexerAssignExpression(a, aObj, nodeType, val, scope)
 			}
 		}
-//	case *ast.TupleLiteral:
-//		if val.Type() != TUPLE_OBJ {
-//			panic(NewError(a.Pos().Sline(), GENERICERROR, "The right part must be a tuple"))
-//		}
-//		
-//		tupleObj := val.(*Tuple)
-//		valuesLen := len(tupleObj.Members)
-//
-//		for idx, item := range nodeType.Members {
-//			if idx >= valuesLen { //There are more Names than Values
-//				val = NIL
-//				scope.Set(item.String(), val)
-//			} else {
-//				val = tupleObj.Members[idx];
-//				if val.Type() != ERROR_OBJ {
-//					scope.Set(item.String(), val)
-//				} else {
-//					return
-//				}
-//			}
-//		}
-//		return
 	}
 
 	if a.Token.Literal == "=" {
@@ -3766,13 +3764,16 @@ func evalFunctionCall(call *ast.CallExpression, scope *Scope) Object {
 
 	f := fn.(*Function)
 
+	var thisObj Object
 	//check if it's static function
-	_, ok = scope.Get("this")
+	thisObj, ok = scope.Get("this")
 	if ok {
-		if f.Instance == nil {
+		if thisObj.Type() == CLASS_OBJ { // 'this' refers to Class object iteself
 			if !f.Literal.StaticFlag { //not static
 				panic(NewError(call.Function.Pos().Sline(), CALLNONSTATICERROR))
 			}
+		} else { // 'this' refers to Class object instance
+			//instance method could call static method
 		}
 	}
 
@@ -4060,14 +4061,20 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				return NIL
 			}
 
-			//check if it is static
-			if clsObj.IsStatic(o.Value, ClassMemberKind) {
-				val, ok = clsObj.Scope.Get(o.Value)
-			} else if clsObj.IsStatic(o.Value, ClassPropertyKind) {
+			//check if it's a property
+			p := clsObj.GetProperty(o.Value)
+			if p == nil { //not property, it's a member
+				// check if it's a static member
+				if !clsObj.IsStatic(o.Value, ClassMemberKind) {
+					panic(NewError(call.Call.Pos().Sline(), MEMBERUSEERROR, o.Value, clsObj.Name))
+				}
 				val, ok = clsObj.Scope.Get(o.Value)
 			} else {
-				//val, ok = NIL, false
-				panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+				// check if it's a static property
+				if !clsObj.IsStatic(o.Value, ClassPropertyKind) {
+					panic(NewError(call.Call.Pos().Sline(), PROPERTYUSEERROR, o.Value, clsObj.Name))
+				}
+				val, ok = clsObj.Scope.Get(o.Value)
 			}
 
 			if ok {
@@ -4096,16 +4103,16 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				newScope = thisObj.(*ObjectInstance).Scope
 			}
 
-			isStatic := clsObj.IsStatic(fname, ClassMethodKind)
-			if !isStatic {
-				objName := str
-				if objName != "parent" { // e.g. parent.method(parameters)
-					panic(NewError(call.Call.Pos().Sline(), GENERICERROR, "Method is non-static"))
-				}
-			}
-
 			method := clsObj.GetMethod(fname)
 			if method != nil {
+				isStatic := clsObj.IsStatic(fname, ClassMethodKind)
+				if !isStatic {
+					objName := str
+					if objName != "parent" { // e.g. parent.method(parameters)
+						panic(NewError(call.Call.Pos().Sline(), CALLNONSTATICERROR))
+					}
+				}
+
 				switch m := method.(type) {
 					case *Function:
 						args := evalArgs(o.Arguments, scope)
@@ -4115,11 +4122,11 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 						aScope := NewScope(newScope)
 						args := evalArgs(o.Arguments, aScope)
 						return evalFunctionDirect(builtinMethod, args, nil, aScope)
-					
 				}
 			} else {
-				args := evalArgs(o.Arguments, scope)
-				return clsObj.CallMethod(call.Call.Pos().Sline(), scope, fname, args...)
+				reportTypoSuggestionsMeth(call.Call.Pos().Sline(), scope, clsObj.Name, fname);
+				//args := evalArgs(o.Arguments, scope)
+				//return clsObj.CallMethod(call.Call.Pos().Sline(), scope, fname, args...)
 			}
 		}
 
@@ -5155,8 +5162,25 @@ func compareGoObj(left, right Object) bool {
 }
 
 // user typo probs, add better error message here, 'Did you mean... ___?'
+// Used for reporting IDENTIFIER not found.
 func reportTypoSuggestions(line string, scope *Scope, miss string) {
 	keys := scope.GetKeys()
 	found := TypoSuggestions(keys, miss)
-	panic(NewError(line, UNKNOWNIDENT, miss, strings.Join(found, ", ")))
+	if len(found) != 0 { //found suggestions
+		panic(NewError(line, UNKNOWNIDENTEX, miss, strings.Join(found, ", ")))
+	} else {
+		panic(NewError(line, UNKNOWNIDENT, miss))
+	}
+}
+
+// user typo probs, add better error message here, 'Did you mean... ___?'
+// Used for reporting METHOD not found.
+func reportTypoSuggestionsMeth(line string, scope *Scope, objName string, miss string) {
+	keys := scope.GetKeys()
+	found := TypoSuggestions(keys, miss)
+	if len(found) != 0 { //found suggestions
+		panic(NewError(line, NOMETHODERROREX, miss, objName, strings.Join(found, ", ")))
+	} else {
+		panic(NewError(line, NOMETHODERROR, miss, objName))
+	}
 }
