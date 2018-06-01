@@ -1304,7 +1304,7 @@ class Animal {
 ```swift
 class Animal : object {
     let name = ""
-    fn init(naem) {    //'init'是构造方法
+    fn init(name) {    //'init'是构造方法
         //do somthing
     }
 }
@@ -1659,7 +1659,7 @@ Monkey也支持非常简单的“注解”：
 使用`class @annotationName {}`的方式来声明一个注解。
 Monkey同时包含几个内置的注解：
 
-* @Override（作用于java的@Override类似）。
+* @Override（作用类似于java的@Override）。
 * @NotNull
 * @NotEmpty
 

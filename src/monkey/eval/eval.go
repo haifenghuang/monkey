@@ -941,20 +941,9 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 				}
 			}
 
-			//check if it's a property
-			p = clsObj.GetProperty(strArr[1])
 			if p == nil { //not property
-				// check if it's a static member
-				if !clsObj.IsStatic(strArr[1], ClassMemberKind) {
-					panic(NewError(a.Pos().Sline(), MEMBERUSEERROR, strArr[1], clsObj.Name))
-				}
 				clsObj.Scope.Set(strArr[1], val)
 			} else {
-				// check if it's a static property
-				if !clsObj.IsStatic(strArr[1], ClassPropertyKind) {
-					panic(NewError(a.Pos().Sline(), PROPERTYUSEERROR, strArr[1], clsObj.Name))
-				}
-
 				if p.Setter == nil { //property xxx { get; }
 					_, ok := clsObj.Scope.Get(strArr[1])
 					if !ok { //it's the first time assignment

@@ -1307,7 +1307,7 @@ Above code is same as:
 ```swift
 class Animal : object {
     let name = ""
-    fn init(naem) {    //'init' is the constructor
+    fn init(name) {    //'init' is the constructor
         //do somthing
     }
 }
