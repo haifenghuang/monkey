@@ -1290,7 +1290,7 @@ monkey解析器(parser)能够正确的处理关键字`public`, `private`, `prote
 ```swift
 class Animal {
     let name = ""
-    fn init(naem) {    //'init'是构造方法
+    fn init(name) {    //'init'是构造方法
         //do somthing
     }
 }
@@ -1620,6 +1620,9 @@ class Test
 
 Test.Main()
 ```
+
+注：非静态变量/方法/属性可以访问静态变量/方法/属性。
+    但是反过来不行。
 
 #### 类类别(class category)
 

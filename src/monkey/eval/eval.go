@@ -4046,6 +4046,27 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				val, ok = thisObj.(*ObjectInstance).Scope.Get(o.Value)
 				if ok {
 					return val
+				} else {
+					//Why this else? Please see below example:
+					// class Dog{
+					//	static let misc = 12
+					//	fn MethodA() {
+					//		printf("misc = %v\n", Dog.misc)
+					//	}
+					// }
+					//
+					//	dogObj = new Dog()
+					//	dogObj.MethodA()
+					//
+					//When calling dogObj.MethodA, `thisObj` refers to `dogObj` instance,
+					//when the above 'if' branch is executed, the `dogObj` instance's scope
+					//has no such variable(i.e. misc), because it belongs to `Dog` class's static 
+					// variable, not instance variable so the 'if' test will fail. For it to walk, 
+					// we need to check for static variable of 'Dog' class.
+					val, ok = clsObj.Scope.Get(o.Value)
+					if ok {
+						return val
+					}
 				}
 				return NIL
 			}

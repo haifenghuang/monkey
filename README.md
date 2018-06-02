@@ -1293,7 +1293,7 @@ You use `class` keyword to declare a class and use `new class(xxx)` to create an
 ```swift
 class Animal {
     let name = ""
-    fn init(naem) {    //'init' is the constructor
+    fn init(name) {    //'init' is the constructor
         //do somthing
     }
 }
@@ -1621,6 +1621,9 @@ class Test
 
 Test.Main()
 ```
+
+Note：Non-static variable/method/property could access static variable/method/property.
+      On the other hand, static variable/method/property cannot access Non-static variable/method/property.
 
 #### Class Category
 
