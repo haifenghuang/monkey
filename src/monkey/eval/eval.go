@@ -936,8 +936,33 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 			thisObj, _ := scope.Get("this")
 			if thisObj != nil {
 				if thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
-					thisObj.(*ObjectInstance).Scope.Set(strArr[1], val)
-					return
+					//Check if `thisObj` instance's scope could find `strArr[1]`
+					_, ok = thisObj.(*ObjectInstance).Scope.Get(strArr[1])
+					if ok {
+						thisObj.(*ObjectInstance).Scope.Set(strArr[1], val)
+						return
+					} else {
+						// Why this 'else' branch, please see below example:
+						// class Dog {
+						//	static let misc = 12
+						//
+						//	fn MethodA() {
+						//		printf("Hello\n")
+						//		Dog.misc = 20
+						//	}
+						// }
+						//
+						// let dogObj = new Dog("doggy")
+						// printf("Dog.misc=%d\n", Dog.misc)
+						// dogObj.MethodA();
+						// printf("Dog.misc=%d\n", Dog.misc)
+						//
+						// Here, when we call `dogObj.MethodA`, the 'thisObj' will refer to 'ObjectInstance' object.
+						// But when we assign '20' to 'Dog.misc', we should set '20' to clsObj's Scope, not
+						// instance object's scope
+						clsObj.Scope.Set(strArr[1], val)
+						return
+					}
 				}
 			}
 
