@@ -1014,6 +1014,38 @@ func evalAssignExpression(a *ast.AssignExpression, scope *Scope) (val Object) {
 		switch nodeType := a.Name.(type) {
 		case *ast.Identifier:
 			name := nodeType.Value
+
+			// class Dog {
+			// 	static let age = 12
+			// 	fn Walk() {
+			// 		age = 20
+			// 	}
+			// }
+			//
+			// let dogObj = new Dog()
+			// dogObj.Walk();
+			//
+			// In function 'Walk', we assign 'age' to 20, but 'age' is a static variable,
+			// we need to use 'Dog.age', not bare 'age', so the below check code.
+			thisObj, _ := scope.Get("this")
+			if thisObj != nil {
+				if thisObj.Type() == INSTANCE_OBJ { //'this' refers to 'ObjectInstance' object
+					_, ok := thisObj.(*ObjectInstance).Scope.Get(name)
+					if ok {
+						v, ok2 := scope.Reset(name, val)
+						if ok2 {
+							return v
+						}
+					} else {
+						thisObjClass := thisObj.(*ObjectInstance).Class
+						_, ok := thisObjClass.Scope.Get(name)
+						if ok {
+							panic(NewError(a.Pos().Sline(), UNKNOWNIDENTEX, name, thisObjClass.Name + "." + name))
+						}
+					}
+				}
+			}
+
 			v, ok := scope.Reset(name, val)
 			if ok {
 				return v
