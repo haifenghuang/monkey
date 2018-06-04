@@ -316,6 +316,18 @@ func GoValueToObject(obj interface{}) Object {
 
 func RegisterVars(name string, vars map[string]interface{}) {
 	for k, v := range vars {
+		//Note: Here we do not convert GoValue to Object using 'GoValueToObject()' function.
+		// If we do, then we may get the result which we do not expect. e.g.
+		//
+		// 		let hours, _ = gtime.ParseDuration("10h")
+		// 		gfmt.Println(hours) //Output: 5577006791947779410
+		//
+		// The expected result should be '10h0m0s', but we get '5577006791947779410'.
+		// The reason is that 'ParseDuration' returns a `Duration` type, the `Duration`
+		// type's kind is 'reflect.Int64', if we use 'GoValueToObject()' function to 
+		// convert `Duration` type to 'Integer' type, then when we print the result, it will
+		// print 5577006791947779410. For it to work as expected, we need to keep the `Duration` as it is
+		// and make no conversion.
 		//SetGlobalObj(name + "." + k, GoValueToObject(v))
 		SetGlobalObj(name + "." + k, NewGoObject(v))
 	}
