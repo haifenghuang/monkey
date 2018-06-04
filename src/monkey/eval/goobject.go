@@ -6,7 +6,7 @@ package eval
 import (
 	"fmt"
 	"reflect"
-	"runtime"
+	_ "runtime"
 	"strings"
 )
 
@@ -295,13 +295,13 @@ func GoValueToObject(obj interface{}) Object {
 		}
 		return ret
 	case reflect.String:
-		return NewString(obj.(string))
+		return NewString(val.String())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return NewInteger(obj.(int64))
+		return NewInteger(int64(val.Int()))
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return NewUInteger(obj.(uint64))
+		return NewUInteger(uint64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
-		return NewFloat(obj.(float64))
+		return NewFloat(val.Float())
 	case reflect.Bool:
 		if obj.(bool) == true {
 			return TRUE
@@ -324,16 +324,31 @@ func RegisterVars(name string, vars map[string]interface{}) {
 	//SetGlobalObj(name, hash)
 }
 
-func RegisterFunctions(name string, vars []interface{}) {
+func RegisterFunctions(name string, vars map[string]interface{}) {
 	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-	for _, v := range vars {
-		fname := runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()
-		xs := strings.Split(fname, ".")
-		key := NewString(xs[len(xs)-1])
-		hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(fname, v)}
+	for k, v := range vars {
+		key := NewString(k)
+		hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(k, v)}
 	}
 
 	//Replace all '/' to '_'. e.g. math/rand => math_rand
 	newName := strings.Replace(name, "/", "_", -1);
 	SetGlobalObj(newName, hash)
 }
+
+//func RegisterFunctions(name string, vars []interface{}) {
+//	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+//	for _, v := range vars {
+//		// In some occasions, below code will introduce panic: 
+//		// 		reflect: call of reflect.Value.Pointer on int64 Value
+//		fname := runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()
+//		xs := strings.Split(fname, ".")
+//		key := NewString(xs[len(xs)-1])
+//		fmt.Printf("11111111111111111, key=%v\n", key)
+//		hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(fname, v)}
+//	}
+//
+//	//Replace all '/' to '_'. e.g. math/rand => math_rand
+//	newName := strings.Replace(name, "/", "_", -1);
+//	SetGlobalObj(newName, hash)
+//}
