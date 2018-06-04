@@ -1611,6 +1611,13 @@ func evalMetaOperatorInfixExpression(p *ast.InfixExpression, left Object, right 
 
 // Evaluate infix expressions, e.g 1 + 2, a == 5, true == true, etc...
 func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *Scope) Object {
+	if isGoObj(left) {
+		left = GoValueToObject(left.(*GoObject).obj)
+	}
+	if isGoObj(right) {
+		right = GoValueToObject(right.(*GoObject).obj)
+	}
+
 	//User Defined Operator
 	if node.Token.Type == token.UDO {
 		return evalInfixExpressionUDO(node, left, right, scope)
@@ -1798,6 +1805,10 @@ func objectToNativeBoolean(o Object) bool {
 			return false
 		}
 		return true
+	case *GoObject:
+		goObj := obj
+		tmpObj := GoValueToObject(goObj.obj)
+		return objectToNativeBoolean(tmpObj)
 	default:
 		return true
 	}
@@ -1992,6 +2003,13 @@ func evalStringInfixExpression(node *ast.InfixExpression, left Object, right Obj
 }
 
 func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
+	if isGoObj(left) {
+		left = GoValueToObject(left.(*GoObject).obj)
+	}
+	if isGoObj(right) {
+		right = GoValueToObject(right.(*GoObject).obj)
+	}
+
 	switch node.Operator {
 	case "+", "~+":
 		return NewString(left.Inspect() + right.Inspect())

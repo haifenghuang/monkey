@@ -213,20 +213,21 @@ func (gfn *GoFuncObject) CallMethod(line string, scope *Scope, method string, ar
 	outVals := reflect.ValueOf(gfn.fn).Call(inArgs)
 	// Convert the result back to monkey Object
 	for _, val := range outVals {
-		switch val.Kind() {
-		case reflect.Bool:
-			results = append(results, NewBooleanObj(val.Bool()))
-		case reflect.String:
-			results = append(results, NewString(val.String()))
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			results = append(results, NewInteger(int64(val.Int())))
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			results = append(results, NewUInteger(uint64(val.Uint())))
-		case reflect.Float64, reflect.Float32:
-			results = append(results, NewFloat(val.Float()))
-		default:
-			results = append(results, NewGoObject(val.Interface()))
-		}
+		results = append(results, NewGoObject(val.Interface()))
+//		switch val.Kind() {
+//		case reflect.Bool:
+//			results = append(results, NewBooleanObj(val.Bool()))
+//		case reflect.String:
+//			results = append(results, NewString(val.String()))
+//		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+//			results = append(results, NewInteger(int64(val.Int())))
+//		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+//			results = append(results, NewUInteger(uint64(val.Uint())))
+//		case reflect.Float64, reflect.Float32:
+//			results = append(results, NewFloat(val.Float()))
+//		default:
+//			results = append(results, NewGoObject(val.Interface()))
+//		}
 	}
 
 	if len(results) > 1 { // There are multiple return values
@@ -314,14 +315,10 @@ func GoValueToObject(obj interface{}) Object {
 }
 
 func RegisterVars(name string, vars map[string]interface{}) {
-	//hash := &Hash{Pairs: make(map[HashKey]HashPair)}
 	for k, v := range vars {
-		//key := NewString(k)
-		SetGlobalObj(name + "." + k, GoValueToObject(v))
-		//hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: GoValueToObject(v)}
+		//SetGlobalObj(name + "." + k, GoValueToObject(v))
+		SetGlobalObj(name + "." + k, NewGoObject(v))
 	}
-
-	//SetGlobalObj(name, hash)
 }
 
 func RegisterFunctions(name string, vars map[string]interface{}) {
