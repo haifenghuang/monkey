@@ -34,6 +34,7 @@ const (
 	FATARROW
 	CONDOR
 	CONDAND
+	NULLCOALESCING //??
 	EQUALS
 	LESSGREATER
 	BITOR
@@ -76,6 +77,7 @@ var precedences = map[token.TokenType]int{
 	token.SHIFT_R:    SHIFTS,
 	token.COLON:      SLICE,
 	token.QUESTIONM:  TERNARY,
+	token.QUESTIONMM: NULLCOALESCING,
 	token.DOTDOT:     DOTDOT,
 	token.PLUS:       SUM,
 	token.MINUS:      SUM,
@@ -255,6 +257,7 @@ func (p *Parser) registerAction() {
 	p.registerInfix(token.BITOR, p.parseInfixExpression)
 	p.registerInfix(token.BITXOR, p.parseInfixExpression)
 	p.registerInfix(token.UDO, p.parseInfixExpression)
+	p.registerInfix(token.QUESTIONMM, p.parseInfixExpression)
 
 	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 	p.registerInfix(token.PLUS_A, p.parseAssignExpression)
@@ -761,6 +764,11 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.nextToken()
 		if p.curTokenIs(token.ASSIGN) || p.curTokenIs(token.SEMICOLON) {
 			break
+		}
+		if !p.curTokenIs(token.COMMA) {
+			msg := fmt.Sprintf("Syntax Error:%v- expected token to be comma, got %s instead.", p.curToken.Pos, p.curToken.Type)
+			p.errors = append(p.errors, msg)
+			return stmt
 		}
 	}
 

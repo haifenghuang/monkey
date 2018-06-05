@@ -341,6 +341,13 @@ func (l *Lexer) NextToken() token.Token {
 			} else {
 				tok = newToken(token.BITXOR, l.ch)
 			}
+		case token.QUESTIONM:
+			if l.peek() == '?' {
+			tok = token.Token{Type: token.QUESTIONMM, Literal: string(l.ch) + string(l.peek())}
+				l.readNext()
+			} else {
+				tok = newToken(token.QUESTIONM, l.ch)
+			}
 		default:
 			tok = newToken(t, l.ch)
 		}

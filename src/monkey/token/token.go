@@ -136,6 +136,8 @@ const (
 	TILDECARET    // ~^
 	
 	USING
+	QUESTIONMM  // ?? (Null Coalescing Operator)
+
 )
 
 var keywords = map[string]TokenType{
@@ -369,6 +371,8 @@ func (tt TokenType) String() string {
 		return "THROW"
 	case QUESTIONM:
 		return "?"
+	case QUESTIONMM:
+		return "??"
 	case DEFER:
 		return "DEFER"
 	case NIL:

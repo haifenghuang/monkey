@@ -213,6 +213,7 @@ func (gfn *GoFuncObject) CallMethod(line string, scope *Scope, method string, ar
 	outVals := reflect.ValueOf(gfn.fn).Call(inArgs)
 	// Convert the result back to monkey Object
 	for _, val := range outVals {
+		// Here we only retuns GoObject, See comment of 'RegisterVars'.
 		results = append(results, NewGoObject(val.Interface()))
 //		switch val.Kind() {
 //		case reflect.Bool:

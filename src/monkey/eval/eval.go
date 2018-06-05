@@ -1623,6 +1623,14 @@ func evalInfixExpression(node *ast.InfixExpression, left, right Object, scope *S
 		return evalInfixExpressionUDO(node, left, right, scope)
 	}
 
+	//Null-Coalescing Operator(??)
+	if node.Token.Type == token.QUESTIONMM {
+		if left.Type() == NIL_OBJ {
+			return right
+		}
+		return left
+	}
+
 	if isMetaOperators(node.Token.Type) {
 		return evalMetaOperatorInfixExpression(node, left, right, scope)
 	}
