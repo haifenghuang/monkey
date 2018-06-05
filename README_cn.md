@@ -194,15 +194,17 @@ Property 'LastName' is not valid!
 * 增加了`decimal`模块(代码来自[decimal](https://github.com/shopspring/decimal)并进行了相应的小幅度更改)
 * 正则表达式支持(部分类似于perl)
 * 管道(channel)(基于go语言的channel)
-* 更多的操作符支持(&&, ||, &, |, ^, +=, -=, ?: 等等)
+* 更多的操作符支持(&&, ||, &, |, ^, +=, -=, ?:, ??等等)
 * utf8支持(例如，你可以使用utf8字符作为变量名)
 * 更多的流程控制支持(例如: try/catch/finally, for-in, case-in, 类似c语言的for循环)
 * defer支持
 * spawn支持(goroutine)
-* enum支持和
+* enum支持
+* using支持
 * pipe操作符支持
 * 支持可变参数和缺省参数的函数
 * 支持列表推导(list comprehension)和哈希推导(hash comprehension)
+* 注册使用Go Package的方法(`RegisterFunctions`和`RegisterVars`)
 
 这个项目的目的主要有以下几点：
 
@@ -404,6 +406,7 @@ printf("x=%d, y=%d\n", x, y) //结果：x=10, y=30
 * defer
 * spawn
 * qw
+* using
 * class new property set get static default
 * interface public private protected #保留,暂时没使用
 

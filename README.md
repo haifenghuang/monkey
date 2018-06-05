@@ -195,15 +195,17 @@ This project is based on mayoms's project [monkey](https://github.com/mayoms/mon
 * Added decimal module(Code come from [decimal](https://github.com/shopspring/decimal) with some minor modifications)
 * Regular expression literal support(partially like perls)
 * channel support(like golang's channel)
-* more operator support(&&, ||, &, |, ^, +=, -=, ?: etc.)
+* more operator support(&&, ||, &, |, ^, +=, -=, ?:, ??, etc.)
 * utf8 support(e.g. you could use utf8 character as variable name)
 * more flow control support(e.g. try/catch/finally, for-in, case, c-like for loop)
 * defer support
 * spawn support(goroutine)
 * enum support
+* using support
 * pipe operator support(see demo for help)
 * function with default value and variadic parameters
 * list comprehension and hash comprehension support
+* Using method of Go Package(`RegisterFunctions` and `RegisterVars`)
 
 There are a number of tasks to complete, as well as a number of bugs. The purpose of this project was to dive deeper into Go, as well as get a better understanding of how programming languages work. It has been successful in those goals. There may or may not be continued work - I do plan on untangling a few messy spots, and there are a few features I'd like to see implemented. This will happen as time and interest allows.
 
@@ -402,6 +404,7 @@ Keywords are predefined, reserved identifiers that have special meanings to the 
 * defer
 * spawn
 * qw
+* using
 * class new property set get static default
 * interface public private protected # reserved, not used
 
