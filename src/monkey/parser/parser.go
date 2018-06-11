@@ -2367,8 +2367,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 		switch s := statement.(type) {
 		case *ast.LetStatement:  //class fields
-			for idx, _ := range s.Names {
-				value := s.Values[idx]
+			for _, value := range s.Values {
 				switch value.(type) {
 				case *ast.FunctionLiteral:
 					msg := fmt.Sprintf("Syntax Error:%v- Function literal is not allowed in 'let' statement of class.", s.Pos())

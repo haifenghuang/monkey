@@ -1348,6 +1348,11 @@ func (ls *LetStatement) String() string {
 		out.WriteString(")")
 	}
 
+	if len(ls.Values) == 0 { //e.g. 'let x'
+		out.WriteString(";")
+		return out.String()
+	}
+
 	out.WriteString(" = ")
 
 	values := []string{}
