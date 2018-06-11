@@ -2367,23 +2367,13 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 
 		switch s := statement.(type) {
 		case *ast.LetStatement:  //class fields
-			// For simplicity, we need 'let' statement's Names and Values are the same length.
-			if len(s.Names) != len(s.Values) {
-				msg := fmt.Sprintf("Syntax Error:%v- In class, Let-Statement's Names and Values must have the same length.", s.Pos())
-				p.errors = append(p.errors, msg)
-				return nil
-			}
-
-			//The 'let' statment might define a FunctionLiteral, like below:
-			//    let add = (x, y) => x + y
-			//so we need to treat it as a method
-			for idx, name := range s.Names {
+			for idx, _ := range s.Names {
 				value := s.Values[idx]
-				switch v := value.(type) {
+				switch value.(type) {
 				case *ast.FunctionLiteral:
-					//If it's a FunctionLiteral, we need to treat it as a method.
-					FnStmt := &ast.FunctionStatement{Name: name, FunctionLiteral: v}
-					cls.Methods[name.Value] = FnStmt
+					msg := fmt.Sprintf("Syntax Error:%v- Function literal is not allowed in 'let' statement of class.", s.Pos())
+					p.errors = append(p.errors, msg)
+					return nil
 				default:
 					cls.Members = append(cls.Members, s)
 				}
