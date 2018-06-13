@@ -81,7 +81,7 @@ This is a sample program using monkey language:
 //Note: In the body, you must use property, not method.
 class @MinMaxValidator {
   property MinLength
-  property MaxLength default 10
+  property MaxLength default 10 //Same as 'property MaxLength = 10'
 }
 
 //This is a marker annotation
@@ -1678,7 +1678,7 @@ Please see below example：
 //Note: In the body, you must use property, not method.
 class @MinMaxValidator {
   property MinLength
-  property MaxLength default 10
+  property MaxLength default 10 //Same as 'property MaxLength = 10'
 }
 
 //This is a marker annotation

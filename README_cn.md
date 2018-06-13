@@ -83,7 +83,7 @@ Monkey是一个用go语言写的解析器. 语法借鉴了C, Ruby, Python, Perl�
 //声明注解，注解的body中必须是属性，不能是方法
 class @MinMaxValidator {
   property MinLength
-  property MaxLength default 10
+  property MaxLength default 10 //Same as 'property MaxLength = 10'
 }
 
 //Marker annotation
@@ -1676,7 +1676,8 @@ Monkey同时包含几个内置的注解：
 //声明注解，注解的body中必须是属性，不能是方法
 class @MinMaxValidator {
   property MinLength
-  property MaxLength default 10
+  property MaxLength default 10  //Same as 'property MaxLength = 10'
+
 }
 
 //Marker annotation

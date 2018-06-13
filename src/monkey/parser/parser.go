@@ -2558,7 +2558,8 @@ func (p *Parser) parseClassSubStmt(modifierLevel ast.ModifierLevel, staticFlag b
 //property xxx { set {xxx} }
 //property xxx { get {xxx} set {xxx} }
 //property this[x] { get {xxx} set {xxx} }
-//property xxx default xxx
+//property xxx default defaultValue
+//property xxx = defaultValue
 func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclStmt {
 	stmt := &ast.PropertyDeclStmt{Token:p.curToken}
 	stmt.Doc = p.lineComment
@@ -2578,7 +2579,7 @@ func(p *Parser) parsePropertyDeclStmt(processAnnoClass bool) *ast.PropertyDeclSt
 		stmt.Setter.Body = &ast.BlockStatement{Statements: []ast.Statement{}}
 
 		if processAnnoClass {
-			if p.peekTokenIs(token.DEFAULT) {
+			if p.peekTokenIs(token.DEFAULT) || p.peekTokenIs(token.ASSIGN) {
 				p.nextToken() //skip current token
 				p.nextToken() //skip 'default' keyword
 				stmt.Default = p.parseExpression(LOWEST)
