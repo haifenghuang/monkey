@@ -387,11 +387,15 @@ func (o *Os) Stat(line string, args ...Object) Object {
 	modeKey := NewString("mode")
 	isDirKey := NewString("isDir")
 
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-	hash.Pairs[nameKey.HashKey()] = HashPair{Key: nameKey, Value: nameVal}
-	hash.Pairs[sizeKey.HashKey()] = HashPair{Key: sizeKey, Value: sizeVal}
-	hash.Pairs[modeKey.HashKey()] = HashPair{Key: modeKey, Value: modeVal}
-	hash.Pairs[isDirKey.HashKey()] = HashPair{Key: isDirKey, Value: isDirVal}
+	hash := NewHash()
+	hash.Push(line, nameKey, nameVal)
+	hash.Push(line, sizeKey, sizeVal)
+	hash.Push(line, modeKey, modeVal)
+	hash.Push(line, isDirKey, isDirVal)
+	//hash.Pairs[nameKey.HashKey()] = HashPair{Key: nameKey, Value: nameVal}
+	//hash.Pairs[sizeKey.HashKey()] = HashPair{Key: sizeKey, Value: sizeVal}
+	//hash.Pairs[modeKey.HashKey()] = HashPair{Key: modeKey, Value: modeVal}
+	//hash.Pairs[isDirKey.HashKey()] = HashPair{Key: isDirKey, Value: isDirVal}
 
 	return hash
 }
@@ -449,7 +453,7 @@ func (o *Os) Environ(line string, args ...Object) Object {
 
 	envs := os.Environ()
 
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+	hash := NewHash()
 	for _, env := range envs {
 		kvPair := strings.Split(env, "=")
 		key := kvPair[0]
@@ -457,7 +461,8 @@ func (o *Os) Environ(line string, args ...Object) Object {
 
 		keyKey := NewString(key)
 		valKey := NewString(val)
-		hash.Pairs[keyKey.HashKey()] = HashPair{Key: keyKey, Value: valKey}
+		hash.Push(line, keyKey, valKey)
+		//hash.Pairs[keyKey.HashKey()] = HashPair{Key: keyKey, Value: valKey}
 	}
 
 	return hash

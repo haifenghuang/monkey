@@ -325,9 +325,11 @@ func (f *FilePathObj) Split(line string, args ...Object) Object {
 	dirKey := NewString("dir")
 	fileKey := NewString("file")
 
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-	hash.Pairs[dirKey.HashKey()] = HashPair{Key: dirKey, Value: dirVal}
-	hash.Pairs[fileKey.HashKey()] = HashPair{Key: fileKey, Value: fileVal}
+	hash := NewHash()
+	hash.Push(line, dirKey, dirVal)
+	hash.Push(line, fileKey, fileVal)
+	//hash.Pairs[dirKey.HashKey()] = HashPair{Key: dirKey, Value: dirVal}
+	//hash.Pairs[fileKey.HashKey()] = HashPair{Key: fileKey, Value: fileVal}
 
 	return hash
 }

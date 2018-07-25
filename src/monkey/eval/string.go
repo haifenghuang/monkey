@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"monkey/ast"
 	"strconv"
 	"strings"
@@ -101,6 +102,13 @@ func (s *String) Inspect() string {
 		return s.String
 	}
 	return ""
+}
+
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.String))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
 
 func (s *String) MarshalJSON() ([]byte, error) {

@@ -122,7 +122,7 @@ func (j *Json) UnMarshal(line string, args ...Object) Object {
 		return NewNil(err.Error())
 	}
 
-	ret, err := unmarshalJsonObject(val)
+	ret, err := unmarshalJsonObjectEx(b, val)
 	if err != nil {
 		return NewNil(err.Error())
 	}

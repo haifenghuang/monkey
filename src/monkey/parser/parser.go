@@ -1532,7 +1532,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 
 	if p.peekTokenIs(token.RBRACE) { //empty hash
 		p.nextToken()
-		hash := &ast.HashLiteral{Token: curToken, RBraceToken:p.curToken}
+		hash := &ast.HashLiteral{Token: curToken, RBraceToken:p.curToken, Order:[]ast.Expression{}}
 		hash.Pairs = make(map[ast.Expression]ast.Expression)
 		return hash
 	}
@@ -1546,10 +1546,11 @@ func (p *Parser) parseHashExpression() ast.Expression {
 		valueExpr := p.parseExpression(LOWEST)
 
 		if p.peekTokenIs(token.COMMA) || p.peekTokenIs(token.RBRACE) { // {k1:v1, ...} or {k1:v1}
-			hash := &ast.HashLiteral{Token: curToken}
+			hash := &ast.HashLiteral{Token: curToken, Order:[]ast.Expression{}}
 			hash.Pairs = make(map[ast.Expression]ast.Expression)
 
 			hash.Pairs[keyExpr] = valueExpr
+			hash.Order = append(hash.Order, keyExpr)
 
 			p.nextToken() //skip current token
 			if p.curTokenIs(token.RBRACE) {
@@ -1566,6 +1567,7 @@ func (p *Parser) parseHashExpression() ast.Expression {
 
 				p.nextToken() //skip the ':'
 				hash.Pairs[key] = p.parseExpression(LOWEST)
+				hash.Order = append(hash.Order, key)
 				p.nextToken() // skip the current token'
 				if p.curTokenIs(token.RBRACE) {
 					break

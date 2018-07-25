@@ -335,10 +335,11 @@ func RegisterVars(name string, vars map[string]interface{}) {
 }
 
 func RegisterFunctions(name string, vars map[string]interface{}) {
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+	hash := NewHash()
 	for k, v := range vars {
 		key := NewString(k)
-		hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(k, v)}
+		hash.Push("", key, NewGoFuncObject(k, v))
+		//hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(k, v)}
 	}
 
 	//Replace all '/' to '_'. e.g. math/rand => math_rand
@@ -347,7 +348,7 @@ func RegisterFunctions(name string, vars map[string]interface{}) {
 }
 
 //func RegisterFunctions(name string, vars []interface{}) {
-//	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+//	hash := NewHash()
 //	for _, v := range vars {
 //		// In some occasions, below code will introduce panic: 
 //		// 		reflect: call of reflect.Value.Pointer on int64 Value
@@ -355,7 +356,7 @@ func RegisterFunctions(name string, vars map[string]interface{}) {
 //		xs := strings.Split(fname, ".")
 //		key := NewString(xs[len(xs)-1])
 //		fmt.Printf("11111111111111111, key=%v\n", key)
-//		hash.Pairs[key.HashKey()] = HashPair{Key: key, Value: NewGoFuncObject(fname, v)}
+//		hash.Push(key, NewGoFuncObject(fname, v))
 //	}
 //
 //	//Replace all '/' to '_'. e.g. math/rand => math_rand

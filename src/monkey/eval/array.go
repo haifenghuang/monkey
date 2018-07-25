@@ -406,7 +406,7 @@ func (a *Array) UnmarshalJSON(b []byte) error {
 		return errors.New("object is not a array")
 	}
 
-	ret, err := unmarshalArray(obj.([]interface{}))
+	ret, err := unmarshalArrayEx(b, obj.([]interface{}))
 	a = ret.(*Array)
 	return nil
 }

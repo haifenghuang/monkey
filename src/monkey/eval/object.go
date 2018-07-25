@@ -12,6 +12,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -95,6 +96,7 @@ type Closeable interface {
 	close(line string, args ...Object) Object
 }
 
+//Whether the Object can be used as hash's key
 type Hashable interface {
 	HashKey() HashKey
 }
@@ -496,6 +498,10 @@ func (i Integer) Value() (driver.Value, error) {
 	return i.Int64, nil
 }
 
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Int64)}
+}
+
 //Json marshal handling
 func (i *Integer) MarshalJSON() ([]byte, error) {
 	if i.Valid {
@@ -713,6 +719,10 @@ func (i UInteger) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return i.UInt64, nil
+}
+
+func (u *UInteger) HashKey() HashKey {
+	return HashKey{Type: u.Type(), Value: u.UInt64}
 }
 
 //Json marshal handling
@@ -1055,6 +1065,16 @@ func (b *Boolean) SetValid(line string, args ...Object) Object {
 	return b
 }
 
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+	if b.Bool {
+		value = 1
+	} else {
+		value = 0
+	}
+	return HashKey{Type: b.Type(), Value: value}
+}
+
 func (b *Boolean) MarshalJSON() ([]byte, error) {
 	if b.Valid {
 		if b.Bool {
@@ -1202,6 +1222,76 @@ func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
 	return out, nil
 }
 
+func unmarshalJsonObjectEx(b []byte, val interface{}) (Object, error) {
+	var ret Object
+	var err error = nil
+	switch val.(type) {
+	case []interface{}:
+		ret, err = unmarshalArrayEx(b, val.([]interface{}))
+	case map[string]interface{}:
+		ret, err = unmarshalHashEx(b, val.(map[string]interface{}))
+	case float64:
+		ret = NewFloat(val.(float64))
+	case bool:
+		b := val.(bool)
+		if b {
+			ret = TRUE
+		} else {
+			ret = FALSE
+		}
+	case string:
+		ret = NewString(val.(string))
+	case nil:
+		ret = NIL
+	}
+	return ret, err
+}
+
+func unmarshalArrayEx(b []byte, a []interface{}) (Object, error) {
+	arr := &Array{}
+
+	for _, v := range a {
+		item, err := unmarshalJsonObjectEx(b, v)
+		if err != nil {
+			return FALSE, err
+		}
+		arr.Members = append(arr.Members, item)
+	}
+
+	return arr, nil
+}
+
+func unmarshalHashEx(b []byte, m map[string]interface{}) (Object, error) {
+	hash := NewHash()
+
+	index:=make(map[string]int)
+	var keyOrder []string
+	for key, value := range m {
+		keyOrder = append(keyOrder, key)
+		esc ,_ := json.Marshal(key) //Escape the key
+		index[key] = bytes.Index(b,esc)
+
+		keyObj := NewString(key)
+		valObj, err := unmarshalJsonObjectEx(b, value)
+		if err != nil {
+			return FALSE, err
+		}
+
+		hash.Push("", keyObj, valObj)
+		//hash.Pairs[keyObj.HashKey()] = HashPair{Key: keyObj, Value: valObj}
+	} //end for
+
+	sort.Slice(keyOrder, func(i,j int) bool { return index[keyOrder[i]] < index[keyOrder[j]] })
+
+	// First, we need to free the Order array, because 'hash.Push' already added to the Order array.
+	hash.Order = nil
+	for _, key := range keyOrder {
+		keyObj := NewString(key)
+		hash.Order = append(hash.Order, keyObj.HashKey())
+	}
+	return hash, nil
+}
+
 func unmarshalJsonObject(val interface{}) (Object, error) {
 	var ret Object
 	var err error = nil
@@ -1242,7 +1332,7 @@ func unmarshalArray(a []interface{}) (Object, error) {
 }
 
 func unmarshalHash(m map[string]interface{}) (Object, error) {
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+	hash := NewHash()
 
 	for key, value := range m {
 		keyObj, err := unmarshalJsonObject(key)
@@ -1255,11 +1345,8 @@ func unmarshalHash(m map[string]interface{}) (Object, error) {
 			return FALSE, err
 		}
 
-		if hashable, ok := keyObj.(Hashable); ok {
-			hash.Pairs[hashable.HashKey()] = HashPair{Key: keyObj, Value: valObj}
-		} else {
-			return FALSE, errors.New("key error: type is not hashable")
-		}
+		hash.Push("", keyObj, valObj)
+		//hash.Pairs[hashable.HashKey()] = HashPair{Key: keyObj, Value: valObj}
 	}
 	return hash, nil
 }
@@ -1301,7 +1388,8 @@ func arrayObj2RawValue(arr *Array) interface{} {
 
 func hashObj2RawValue(h *Hash) interface{} {
 	ret := make(map[interface{}]interface{})
-	for _, v := range h.Pairs{
+	for _, hk := range h.Order {
+		v, _ := h.Pairs[hk]
 		ret[object2RawValue(v.Key)] = object2RawValue(v.Value)
 	}
 	return ret

@@ -3,7 +3,7 @@ package eval
 import (
 	"bytes"
 	"encoding/json"
-	_ "fmt"
+	"fmt"
 	"monkey/ast"
 	"reflect"
 	"strings"
@@ -290,6 +290,29 @@ func (t *Tuple) Tail(line string, args ...Object) Object {
 	newMembers := make([]Object, length+1, length+1)
 	copy(newMembers, t.Members)
 	return &Tuple{Members: newMembers}
+}
+
+func (t *Tuple) HashKey() HashKey {
+	// https://en.wikipedia.org/wiki/Jenkins_hash_function
+	var hash uint64 = 0
+	for _, v := range t.Members {
+		hashable, ok := v.(Hashable)
+		if !ok {
+			errStr := fmt.Sprintf("key error: type %s is not hashable", v.Type())
+			panic(errStr)
+		}
+
+		h := hashable.HashKey()
+
+		hash += h.Value
+		hash += hash << 10
+		hash ^= hash >> 6
+	}
+	hash += hash << 3
+	hash ^= hash >> 11
+	hash += hash << 15
+
+	return HashKey{Type: t.Type(), Value: hash}
 }
 
 //Json marshal handling

@@ -695,7 +695,7 @@ func evalTupleAssignExpression(a *ast.AssignExpression, name string, left Object
 }
 
 func evalHashAssignExpression(a *ast.AssignExpression, name string, left Object, scope *Scope, val Object) (ret Object) {
-	leftVals := left.(*Hash).Pairs
+	leftHash := left.(*Hash)
 
 	var ok bool
 	switch a.Token.Literal {
@@ -704,25 +704,23 @@ func evalHashAssignExpression(a *ast.AssignExpression, name string, left Object,
 			panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 		}
 
-		rightVals := val.(*Hash).Pairs
-		for k, v := range rightVals {
-			leftVals[k] = v
+		rightHash := val.(*Hash)
+		for _, hk := range rightHash.Order { //hk:hash key
+			pair, _ := rightHash.Pairs[hk]
+			leftHash.Push(a.Pos().Sline(), pair.Key, pair.Value)
 		}
-		ret, ok = scope.Reset(name, &Hash{Pairs: leftVals})
+		ret, ok = scope.Reset(name, leftHash)
 		if ok {
 			return
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	case "-=":
-		hashable, ok := val.(Hashable)
+		_, ok := val.(Hashable)
 		if !ok {
 			panic(NewError(a.Pos().Sline(), KEYERROR, val.Type()))
 		}
-		if hashPair, ok := leftVals[hashable.HashKey()]; ok {
-			delete(leftVals, hashable.HashKey())
-			return hashPair.Value
-		}
-		ret, ok = scope.Reset(name, &Hash{Pairs: leftVals})
+		leftHash.Pop(a.Pos().Sline(), val)
+		ret, ok = scope.Reset(name, leftHash)
 		if ok {
 			return
 		}
@@ -731,17 +729,13 @@ func evalHashAssignExpression(a *ast.AssignExpression, name string, left Object,
 		switch nodeType := a.Name.(type) {
 		case *ast.IndexExpression: //hashObj[key] = val
 			key := Eval(nodeType.Index, scope)
-			hashable, ok := key.(Hashable)
-			if !ok {
-				panic(NewError(a.Pos().Sline(), KEYERROR, val.Type()))
-			}
-			leftVals[hashable.HashKey()] = HashPair{Key: key, Value: val}
-			return left
+			leftHash.Push(a.Pos().Sline(), key, val)
+			return leftHash
 		case *ast.Identifier: //hashObj.key = val
 			key := strings.Split(a.Name.String(), ".")[1]
 			keyObj := NewString(key)
-			leftVals[keyObj.HashKey()] = HashPair{Key: keyObj, Value: val}
-			return left
+			leftHash.Push(a.Pos().Sline(), keyObj, val)
+			return leftHash
 		}
 		panic(NewError(a.Pos().Sline(), INFIXOP, left.Type(), a.Token.Literal, val.Type()))
 	}
@@ -1221,24 +1215,22 @@ func evalIdentifier(i *ast.Identifier, scope *Scope) Object {
 
 func evalHashLiteral(hl *ast.HashLiteral, scope *Scope) Object {
 	innerScope := NewScope(scope)
-	hashMap := make(map[HashKey]HashPair)
-	for key, value := range hl.Pairs {
-		key := Eval(key, innerScope)
-		if key.Type() == ERROR_OBJ {
-			return key
+
+	hash := NewHash()
+	for _, key := range hl.Order {
+		value, _ := hl.Pairs[key]
+		k := Eval(key, innerScope)
+		if k.Type() == ERROR_OBJ {
+			return k
 		}
 
-		if hashable, ok := key.(Hashable); ok {
-			v := Eval(value, innerScope)
-			if v.Type() == ERROR_OBJ {
-				return v
-			}
-			hashMap[hashable.HashKey()] = HashPair{Key: key, Value: v}
-		} else {
-			panic(NewError(hl.Pos().Sline(), KEYERROR, key.Type()))
+		v := Eval(value, innerScope)
+		if v.Type() == ERROR_OBJ {
+			return v
 		}
+		hash.Push(hl.Pos().Sline(), k, v)
 	}
-	return &Hash{Pairs: hashMap}
+	return hash
 }
 
 func evalStructLiteral(s *ast.StructLiteral, scope *Scope) Object {
@@ -2291,20 +2283,20 @@ func evalTupleInfixExpression(node *ast.InfixExpression, left Object, right Obje
 //hast == hash
 //hash != hash
 func evalHashInfixExpression(node *ast.InfixExpression, left Object, right Object) Object {
-	leftVals := left.(*Hash).Pairs
-	rightVals := right.(*Hash).Pairs
+	leftHash  := left.(*Hash)
+	rightHash := right.(*Hash)
 
 	switch node.Operator {
 	case "+":
-		for k, v := range rightVals {
-			leftVals[k] = v
+		for _, hk := range rightHash.Order {
+			pair, _ := rightHash.Pairs[hk]
+			leftHash.Push(node.Pos().Sline(), pair.Key, pair.Value)
 		}
-
-		return &Hash{Pairs: leftVals}
+		return leftHash
 	case "==":
-		return nativeBoolToBooleanObject(compareHashObj(leftVals, rightVals))
+		return nativeBoolToBooleanObject(compareHashObj(leftHash.Pairs, rightHash.Pairs))
 	case "!=":
-		return nativeBoolToBooleanObject(!compareHashObj(leftVals, rightVals))
+		return nativeBoolToBooleanObject(!compareHashObj(leftHash.Pairs, rightHash.Pairs))
 	}
 	panic(NewError(node.Pos().Sline(), INFIXOP, left.Type(), node.Operator, right.Type()))
 }
@@ -2851,7 +2843,8 @@ func evalListMapComprehension(mc *ast.ListMapComprehension, scope *Scope) Object
 
 	ret := &Array{}
 	var result Object
-	for _, pair := range hash.Pairs {
+	for _, hk := range hash.Order {
+		pair, _ := hash.Pairs[hk]
 		newSubScope := NewScope(innerScope)
 		newSubScope.Set(mc.Key, pair.Key)
 		newSubScope.Set(mc.Value, pair.Value)
@@ -2918,7 +2911,7 @@ func evalHashComprehension(hc *ast.HashComprehension, scope *Scope) Object {
 		members = tuple.Members
 	}
 
-	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
+	ret := NewHash()
 
 	for idx, value := range members {
 		newSubScope := NewScope(innerScope)
@@ -2945,11 +2938,8 @@ func evalHashComprehension(hc *ast.HashComprehension, scope *Scope) Object {
 			return valueResult
 		}
 
-		if hashable, ok := keyResult.(Hashable); ok {
-			ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
-		} else {
-			panic(NewError("", KEYERROR, keyResult.Type()))
-		}
+		ret.Push(hc.Pos().Sline(), keyResult, valueResult)
+		//ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
 	}
 
 	return ret
@@ -3041,7 +3031,7 @@ func evalHashRangeComprehension(hc *ast.HashRangeComprehension, scope *Scope) Ob
 		}
 	}
 
-	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
+	ret := NewHash()
 
 	for idx, value := range arr.Members {
 		newSubScope := NewScope(innerScope)
@@ -3068,11 +3058,8 @@ func evalHashRangeComprehension(hc *ast.HashRangeComprehension, scope *Scope) Ob
 			return valueResult
 		}
 
-		if hashable, ok := keyResult.(Hashable); ok {
-			ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
-		} else {
-			panic(NewError("", KEYERROR, keyResult.Type()))
-		}
+		ret.Push(hc.Pos().Sline(), keyResult, valueResult)
+		//ret.Pairs[hashable.HashKey()] = HashPair{Key: keyResult, Value: valueResult}
 	}
 
 	return ret
@@ -3104,9 +3091,9 @@ func evalHashMapComprehension(mc *ast.HashMapComprehension, scope *Scope) Object
 	//must be a *Hash, if not, panic
 	hash, _ := aValue.(*Hash)
 
-	ret := &Hash{Pairs: make(map[HashKey]HashPair)}
-
-	for _, pair := range hash.Pairs {
+	ret := NewHash()
+	for _, hk := range hash.Order {
+		pair, _ := hash.Pairs[hk]
 		newSubScope := NewScope(innerScope)
 		newSubScope.Set(mc.Key, pair.Key)
 		newSubScope.Set(mc.Value, pair.Value)
@@ -3517,7 +3504,8 @@ func evalForEachMapExpression(fml *ast.ForEachMapLoop, scope *Scope) Object { //
 
 	ret := &Array{}
 	var result Object
-	for _, pair := range hash.Pairs {
+	for _, hk := range hash.Order {
+		pair, _ := hash.Pairs[hk]
 		newSubScope := NewScope(innerScope)
 		newSubScope.Set(fml.Key, pair.Key)
 		newSubScope.Set(fml.Value, pair.Value)
@@ -3926,8 +3914,9 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 				return i
 			} else { //e.g. method call like 'os.environ'
 				if obj.Type() == HASH_OBJ { // It's a GoFuncObject
-					hashPairs := obj.(*Hash).Pairs
-					for _, pair := range hashPairs {
+					hash := obj.(*Hash)
+					for _, hk := range hash.Order {
+						pair, _ := hash.Pairs[hk]
 						funcName := pair.Key.(*String).String
 						if funcName == o.String() {
 							goFuncObj := pair.Value.(*GoFuncObject)
@@ -3942,8 +3931,9 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 			if method, ok := call.Call.(*ast.CallExpression); ok {
 				args := evalArgs(method.Arguments, scope)
 				if obj.Type() == HASH_OBJ { // It's a GoFuncObject
-					hashPairs := obj.(*Hash).Pairs
-					for _, pair := range hashPairs {
+					hash := obj.(*Hash)
+					for _, hk := range hash.Order {
+						pair, _ := hash.Pairs[hk]
 						funcName := pair.Key.(*String).String
 						if funcName == o.Function.String() {
 							goFuncObj := pair.Value.(*GoFuncObject)
@@ -4014,12 +4004,7 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, scope *Scope) Obje
 		//println(hashObj.key1)
 		case *ast.Identifier:
 			keyObj := NewString(call.Call.String())
-			hashPair, ok := m.Pairs[keyObj.HashKey()]
-			// TODO: should we return an error here?
-			if !ok {
-				return NIL
-			}
-			return hashPair.Value
+			return m.Get(call.Call.Pos().Sline(), keyObj)
 
 		case *ast.CallExpression:
 			//we need to get the hash key
@@ -4398,16 +4383,7 @@ func evalHashKeyIndex(hash *Hash, ie *ast.IndexExpression, scope *Scope) Object 
 	if key.Type() == ERROR_OBJ {
 		return key
 	}
-	hashable, ok := key.(Hashable)
-	if !ok {
-		panic(NewError(ie.Pos().Sline(), KEYERROR, key.Type()))
-	}
-	hashPair, ok := hash.Pairs[hashable.HashKey()]
-	// TODO: should we return an error here? If not, maybe arrays should return NIL as well?
-	if !ok {
-		return NIL
-	}
-	return hashPair.Value
+	return hash.Get(ie.Pos().Sline(), key)
 }
 
 func evalArraySliceExpression(array *Array, se *ast.SliceExpression, scope *Scope) Object {
@@ -5158,7 +5134,10 @@ func obj2Expression(obj Object) ast.Expression {
 	case *Hash:
 		hash := &ast.HashLiteral{}
 		hash.Pairs = make(map[ast.Expression]ast.Expression)
-		for _, v := range value.Pairs {
+
+		
+		for _, hk := range value.Order { //hk:hash key
+			v, _ := value.Pairs[hk]
 			key := &ast.StringLiteral{Value: v.Key.Inspect()}
 			result := obj2Expression(v.Value)
 			if result == nil {

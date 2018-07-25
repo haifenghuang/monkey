@@ -127,12 +127,9 @@ type KeyValueObj struct {
 }
 
 func (kv *KeyValueObj) Inspect() string {
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-	if hashable, ok := kv.Key.(Hashable); ok {
-		hash.Pairs[hashable.HashKey()] = HashPair{Key: kv.Key, Value: kv.Value}
-	} else {
-		panic(NewError("", KEYERROR, kv.Key.Type()))
-	}
+	hash := NewHash()
+	hash.Push("", kv.Key, kv.Value)
+	//hash.Pairs[hashable.HashKey()] = HashPair{Key: kv.Key, Value: kv.Value}
 	return hash.Inspect()
 }
 
@@ -178,12 +175,9 @@ func (g *GroupObj) Inspect() string {
 	for _, v := range g.Group {
 		arr.Members = append(arr.Members, v)
 	}
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-	if hashable, ok := g.Key.(Hashable); ok {
-		hash.Pairs[hashable.HashKey()] = HashPair{Key: g.Key, Value: arr}
-	} else {
-		panic(NewError("", KEYERROR, g.Key.Type()))
-	}
+	hash := NewHash()
+	hash.Push("", g.Key, arr)
+	//hash.Pairs[hashable.HashKey()] = HashPair{Key: g.Key, Value: arr}
 	return hash.Inspect()
 }
 
@@ -459,23 +453,27 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 				}
 			}
 
-			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+			hash := NewHash()
 			//0 means the whole line
 			fieldIndex := NewInteger(0)
-			hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: l}
+			hash.Push(line, fieldIndex, l)
+			//hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: l}
 
 			lineNoKey := NewString("line")
-			hash.Pairs[lineNoKey.HashKey()] = HashPair{Key: lineNoKey, Value: NewInteger(lineNo)}
+			hash.Push(line, lineNoKey, NewInteger(lineNo))
+			//hash.Pairs[lineNoKey.HashKey()] = HashPair{Key: lineNoKey, Value: NewInteger(lineNo)}
 
 			//strArr := strings.Split(l.(*String).String, fsStr)
 			strArr := regexp.MustCompile(fsStr).Split(l.(*String).String, -1)
 
 			nfKey := NewString("nf") //nf : number of fields
-			hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(strArr)))}
+			hash.Push(line, nfKey, NewInteger(int64(len(strArr))))
+			//hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(strArr)))}
 
 			for idx, v := range strArr {
 				fieldIndex := NewInteger(int64(idx+1))
-				hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: NewString(v)}
+				hash.Push(line, fieldIndex, NewString(v))
+				//hash.Pairs[fieldIndex.HashKey()] = HashPair{Key: fieldIndex, Value: NewString(v)}
 			}
 			arr.Members = append(arr.Members, hash)
 
@@ -510,14 +508,16 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 		arr := &Array{}
 		str2DArr := obj.(*CsvObj).ReadAll(line)
 		for _, fieldArr := range str2DArr.(*Array).Members {
-			hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+			hash := NewHash()
 
 			nfKey := NewString("nf") //nf : number of fields
-			hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(fieldArr.(*Array).Members)))}
+			hash.Push(line, nfKey, NewInteger(int64(len(fieldArr.(*Array).Members))))
+			//hash.Pairs[nfKey.HashKey()] = HashPair{Key: nfKey, Value: NewInteger(int64(len(fieldArr.(*Array).Members)))}
 
 			for idx, field := range fieldArr.(*Array).Members {
 				fieldIdx := NewInteger(int64(idx+1))
-				hash.Pairs[fieldIdx.HashKey()] = HashPair{Key: fieldIdx, Value: field}
+				hash.Push(line, fieldIdx, field)
+				//hash.Pairs[fieldIdx.HashKey()] = HashPair{Key: fieldIdx, Value: field}
 			}
 			arr.Members = append(arr.Members, hash)
 		}
@@ -616,7 +616,8 @@ func (lq *LinqObj) From(line string, scope *Scope, args ...Object) Object {
 
 				keys := &Array{}
 				values := &Array{}
-				for _, pair := range hash.Pairs {
+				for _, hk := range hash.Order {
+					pair, _ := hash.Pairs[hk]
 					keys.Members = append(keys.Members, pair.Key)
 					values.Members = append(values.Members, pair.Value)
 				}
@@ -2892,7 +2893,7 @@ func (lq *LinqObj) ToMap(line string, scope *Scope, args ...Object) Object {
 	}
 
 	scop := NewScope(scope)
-	hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+	hash := NewHash()
 	next := lq.Query.Iterate()
 	for item, ok := next(); ok.Bool; item, ok = next() {
 

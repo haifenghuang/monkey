@@ -540,6 +540,7 @@ func (ul *UnlessExpression) String() string {
 ///////////////////////////////////////////////////////////
 type HashLiteral struct {
 	Token token.Token
+	Order []Expression //For keeping the order of the hash key
 	Pairs map[Expression]Expression
 	RBraceToken token.Token
 }

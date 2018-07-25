@@ -451,7 +451,7 @@ func hashBuiltin() *Builtin {
 		Fn: func(line string, args ...Object) Object {
 			if len(args) == 0 {
 				//returns an empty hash
-				return &Hash{Pairs: make(map[HashKey]HashPair)}
+				return NewHash()
 			}
 
 			if len(args) != 1 {
@@ -464,7 +464,7 @@ func hashBuiltin() *Builtin {
 				length := len(input.Members)
 				if length == 0 { //empty tuple
 					//return empty hash
-					return &Hash{Pairs: make(map[HashKey]HashPair)}
+					return NewHash()
 				}
 				newMembers := make([]Object, length)
 				copy(newMembers, input.Members)
@@ -474,10 +474,11 @@ func hashBuiltin() *Builtin {
 					newMembers = append(newMembers, NIL)
 				}
 
-				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+				hash := NewHash()
 				for i := 0; i <= length / 2; {
-					if hashable, ok := newMembers[i].(Hashable); ok {
-						hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
+					if _, ok := newMembers[i].(Hashable); ok {
+						hash.Push(line, newMembers[i], newMembers[i+1])
+						//hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
 						i = i + 2
 					} else {
 						panic(NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i)))
@@ -489,7 +490,7 @@ func hashBuiltin() *Builtin {
 				length := len(input.Members)
 				if length == 0 { //empty tuple
 					//return empty hash
-					return &Hash{Pairs: make(map[HashKey]HashPair)}
+					return NewHash()
 				}
 				newMembers := make([]Object, length)
 				copy(newMembers, input.Members)
@@ -499,10 +500,11 @@ func hashBuiltin() *Builtin {
 					newMembers = append(newMembers, NIL)
 				}
 
-				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
+				hash := NewHash()
 				for i := 0; i <= length / 2; {
-					if hashable, ok := newMembers[i].(Hashable); ok {
-						hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
+					if _, ok := newMembers[i].(Hashable); ok {
+						hash.Push(line, newMembers[i], newMembers[i+1])
+						//hash.Pairs[hashable.HashKey()] = HashPair{Key: newMembers[i], Value: newMembers[i+1]}
 						i = i + 2
 					} else {
 						panic(NewError(line, GENERICERROR, fmt.Sprintf("%d index is not hashable", i)))
@@ -802,13 +804,11 @@ func reverseBuiltin() *Builtin {
 				}
 				return reverse
 			case *Hash:
-				hash := &Hash{Pairs: make(map[HashKey]HashPair)}
-				for _, v := range input.Pairs {
-					if hashable, ok := v.Value.(Hashable); ok {
-						hash.Pairs[hashable.HashKey()] = HashPair{Key: v.Value, Value: v.Key}
-					} else {
-						panic(NewError(line, GENERICERROR, fmt.Sprintf("The hash's value(%s) is not hashable", v.Value.Inspect())))
-					}
+				hash := NewHash()
+				for _, hk := range input.Order { //hk:hash key
+					v, _ := input.Pairs[hk]
+					hash.Push(line, v.Value, v.Key)
+					//hash.Pairs[hashable.HashKey()] = HashPair{Key: v.Value, Value: v.Key}
 				}
 				return hash
 			default:
