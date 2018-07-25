@@ -1093,8 +1093,9 @@ println("Reverse str =", revStr)
 ```
 
 ### 哈希(Hash)
+在monkey中，哈希默认会保持Key的插入顺序，类似Python的orderedDict.
 
-在monkey中, 使用{}来创建一个空的哈希:
+你可以使用{}来创建一个空的哈希:
 
 ```swift
 emptyHash = {}
@@ -1110,6 +1111,7 @@ hashObj = {
     true   : 1,
     "Name" : "HHF"
 }
+hash["age"] = 12 // same as hash.age = 12
 println(hashObj)
 ```
 

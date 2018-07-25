@@ -1089,8 +1089,9 @@ println("Reverse str =", revStr)
 ```
 
 ### Hash
+In monkey, the builtin hash will keep the order of keys when they are added to the hash, just like python's orderedDict.
 
-In monkey, you could use {} to initialize an empty hash:
+You could use {} to initialize an empty hash:
 
 ```swift
 emptyHash = {}
