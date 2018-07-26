@@ -9,6 +9,9 @@ import (
 	"reflect"
 	"strings"
 )
+var (
+	errEOS = errors.New("End of slice")
+)
 
 type HashKey struct {
 	Type  ObjectType
@@ -63,17 +66,25 @@ func (h *Hash) Inspect() string {
 
 func (h *Hash) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
+	case "clear":
+		return h.Clear(line, args...)
+	case "exists", "has":
+		return h.Exists(line, args...)
+	case "find", "index":
+		return h.Index(line, args...)
 	case "filter":
 		return h.Filter(line, scope, args...)
 	case "get":
 		return h.Get(line, args...)
 	case "keys":
 		return h.Keys(line, args...)
+	case "len":
+		return h.Len(line, args...)
 	case "map":
 		return h.Map(line, scope, args...)
 	case "merge":
 		return h.Merge(line, args...)
-	case "pop", "delete":
+	case "pop", "delete", "remove":
 		return h.Pop(line, args...)
 	case "push", "set":
 		return h.Push(line, args...)
@@ -82,6 +93,37 @@ func (h *Hash) CallMethod(line string, scope *Scope, method string, args ...Obje
 	}
 
 	panic(NewError(line, NOMETHODERROR, method, h.Type()))
+}
+
+func (h *Hash) Clear(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	h.Order = nil
+	h.Pairs = nil
+
+	return NIL
+}
+
+func (h *Hash) Exists(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+
+	if len(h.Order) == 0 {
+		return FALSE
+	}
+	hashable, ok := args[0].(Hashable)
+	if !ok {
+		panic(NewError(line, KEYERROR, args[0].Type()))
+	}
+
+	_, ok = h.Pairs[hashable.HashKey()]
+	if ok {
+		return TRUE
+	}
+	return FALSE
 }
 
 func (h *Hash) Filter(line string, scope *Scope, args ...Object) Object {
@@ -109,6 +151,26 @@ func (h *Hash) Filter(line string, scope *Scope, args ...Object) Object {
 	return hash
 }
 
+func (h *Hash) Index(line string, args ...Object) Object {
+	if len(args) != 1 {
+		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
+	}
+	hashable, ok := args[0].(Hashable)
+	if !ok {
+		panic(NewError(line, KEYERROR, args[0].Type()))
+	}
+
+	hk := hashable.HashKey()
+	for idx, k := range h.Order {
+		r := reflect.DeepEqual(hk, k)
+		if r {
+			return NewInteger(int64(idx))
+		}
+	}
+
+	return NewInteger(-1)
+}
+
 func (h *Hash) Get(line string, args ...Object) Object {
 	if len(args) != 1 {
 		panic(NewError(line, ARGUMENTERROR, "1", len(args)))
@@ -133,6 +195,14 @@ func (h *Hash) Keys(line string, args ...Object) Object {
 		keys.Members = append(keys.Members, pair.Key)
 	}
 	return keys
+}
+
+func (h *Hash) Len(line string, args ...Object) Object {
+	if len(args) != 0 {
+		panic(NewError(line, ARGUMENTERROR, "0", len(args)))
+	}
+
+	return NewInteger(int64(len(h.Order)))
 }
 
 func (h *Hash) Map(line string, scope *Scope, args ...Object) Object {
@@ -295,24 +365,110 @@ func (h *Hash) MarshalJSON() ([]byte, error) {
 }
 
 func (h *Hash) UnmarshalJSON(b []byte) error {
-	if string(b) == "null" {
-		h = NewHash()
-		return nil
-	}
+	//Using Decoder to parse the bytes.
+	in := bytes.TrimSpace(b)
+	dec := json.NewDecoder(bytes.NewReader(in))
 
-	var obj interface{}
-	err := json.Unmarshal(b, &obj)
+	t, err := dec.Token()
 	if err != nil {
-		h = NewHash()
 		return err
 	}
 
-	if _, ok := obj.(map[string]interface{}); !ok {
-		h = NewHash()
-		return errors.New("object is not a hash")
+	// must open with a delim token '{'
+	if delim, ok := t.(json.Delim); !ok || delim != '{' {
+		return fmt.Errorf("expect JSON object open with '{'")
 	}
 
-	ret, err := unmarshalHashEx(b, obj.(map[string]interface{}))
-	h = ret.(*Hash)
+	h.unmarshalJSON(dec)
+
+	t, err = dec.Token() //'}'
+
 	return nil
+}
+
+func (h *Hash) unmarshalJSON(dec *json.Decoder) error {
+	for dec.More() { // Loop until it has no more tokens
+		t, err := dec.Token()
+		if err != nil {
+			return err
+		}
+
+		key, ok := t.(string)
+		if !ok {
+			return fmt.Errorf("key must be a string, got %T\n", t)
+		}
+
+		val, err := parseObject(dec)
+		if err != nil {
+			return err
+		}
+		h.Push("", NewString(key), val)
+	}
+	return nil
+}
+
+func parseObject(dec *json.Decoder) (Object, error) {
+	t, err := dec.Token()
+	if err != nil {
+		return NIL, err
+	}
+
+	switch tok := t.(type) {
+	case json.Delim:
+		switch tok {
+		case '[': // If it's an array
+			return parseArray(dec)
+		case '{': // If it's a map
+			h := NewHash()
+			err := h.unmarshalJSON(dec)
+			if err != nil {
+				return NIL, err
+			}
+			_, err = dec.Token() // }
+			if err != nil {
+				return NIL, err
+			}
+			return h, nil
+		case ']':
+			return NIL, errEOS
+		case '}':
+			return NIL, errors.New("unexpected '}'")
+		default:
+			return NIL, fmt.Errorf("Unexpected delimiter: %q", tok)
+		}
+	default:
+		var ret Object
+		// Check the type of the token, and convert it to monkey object
+		switch tok.(type) {
+		case float64:
+			ret = NewFloat(tok.(float64))
+		case bool:
+			b := tok.(bool)
+			if b {
+				ret = TRUE
+			} else {
+				ret = FALSE
+			}
+		case string:
+			ret = NewString(tok.(string))
+		case nil:
+			ret = NIL
+		}
+
+		return ret, nil
+	}
+}
+
+func parseArray(dec *json.Decoder) (Object, error) {
+	arr := &Array{}
+	for {
+		v, err := parseObject(dec)
+		if err == errEOS {
+			return arr, nil
+		}
+		if err != nil {
+			return NIL, err
+		}
+		arr.Members = append(arr.Members, v)
+	}
 }

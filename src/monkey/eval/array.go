@@ -365,9 +365,9 @@ func (a *Array) Tail(line string, args ...Object) Object {
 
 //Json marshal handling
 func (a *Array) MarshalJSON() ([]byte, error) {
-	if len(a.Members) == 0 {
-		return json.Marshal(nil)
-	}
+//	if len(a.Members) == 0 {
+//		return json.Marshal(nil)
+//	}
 
 	var out bytes.Buffer
 
@@ -406,7 +406,7 @@ func (a *Array) UnmarshalJSON(b []byte) error {
 		return errors.New("object is not a array")
 	}
 
-	ret, err := unmarshalArrayEx(b, obj.([]interface{}))
+	ret, err := unmarshalArray(obj.([]interface{}))
 	a = ret.(*Array)
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
-	"sort"
+	_ "sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -1220,76 +1220,6 @@ func marshalJsonObject(obj interface{}) (bytes.Buffer, error) {
 		return bytes.Buffer{}, errors.New("json error: maybe unsupported type or invalid data")
 	}
 	return out, nil
-}
-
-func unmarshalJsonObjectEx(b []byte, val interface{}) (Object, error) {
-	var ret Object
-	var err error = nil
-	switch val.(type) {
-	case []interface{}:
-		ret, err = unmarshalArrayEx(b, val.([]interface{}))
-	case map[string]interface{}:
-		ret, err = unmarshalHashEx(b, val.(map[string]interface{}))
-	case float64:
-		ret = NewFloat(val.(float64))
-	case bool:
-		b := val.(bool)
-		if b {
-			ret = TRUE
-		} else {
-			ret = FALSE
-		}
-	case string:
-		ret = NewString(val.(string))
-	case nil:
-		ret = NIL
-	}
-	return ret, err
-}
-
-func unmarshalArrayEx(b []byte, a []interface{}) (Object, error) {
-	arr := &Array{}
-
-	for _, v := range a {
-		item, err := unmarshalJsonObjectEx(b, v)
-		if err != nil {
-			return FALSE, err
-		}
-		arr.Members = append(arr.Members, item)
-	}
-
-	return arr, nil
-}
-
-func unmarshalHashEx(b []byte, m map[string]interface{}) (Object, error) {
-	hash := NewHash()
-
-	index:=make(map[string]int)
-	var keyOrder []string
-	for key, value := range m {
-		keyOrder = append(keyOrder, key)
-		esc ,_ := json.Marshal(key) //Escape the key
-		index[key] = bytes.Index(b,esc)
-
-		keyObj := NewString(key)
-		valObj, err := unmarshalJsonObjectEx(b, value)
-		if err != nil {
-			return FALSE, err
-		}
-
-		hash.Push("", keyObj, valObj)
-		//hash.Pairs[keyObj.HashKey()] = HashPair{Key: keyObj, Value: valObj}
-	} //end for
-
-	sort.Slice(keyOrder, func(i,j int) bool { return index[keyOrder[i]] < index[keyOrder[j]] })
-
-	// First, we need to free the Order array, because 'hash.Push' already added to the Order array.
-	hash.Order = nil
-	for _, key := range keyOrder {
-		keyObj := NewString(key)
-		hash.Order = append(hash.Order, keyObj.HashKey())
-	}
-	return hash, nil
 }
 
 func unmarshalJsonObject(val interface{}) (Object, error) {

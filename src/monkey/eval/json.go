@@ -116,18 +116,28 @@ func (j *Json) UnMarshal(line string, args ...Object) Object {
 	}
 
 	b := []byte(jsonStr.String)
+
 	var val interface{}
 	err := json.Unmarshal(b, &val)
 	if err != nil {
 		return NewNil(err.Error())
 	}
 
-	ret, err := unmarshalJsonObjectEx(b, val)
-	if err != nil {
-		return NewNil(err.Error())
+	switch val.(type) {
+	case map[string]interface{}:
+		h := NewHash()
+		err := h.UnmarshalJSON(b)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return h
+	default:
+		ret, err := unmarshalJsonObject(val)
+		if err != nil {
+			return NewNil(err.Error())
+		}
+		return ret
 	}
-
-	return ret
 }
 
 func (j *Json) Indent(line string, args ...Object) Object {
