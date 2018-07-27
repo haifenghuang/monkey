@@ -325,7 +325,7 @@ func (h *Hash) Values(line string, args ...Object) Object {
 //Json marshal handling
 func (h *Hash) MarshalJSON() ([]byte, error) {
 	if len(h.Pairs) == 0 {
-		return json.Marshal(nil)
+		return []byte("{}"), nil
 	}
 
 	var out bytes.Buffer
@@ -382,6 +382,12 @@ func (h *Hash) UnmarshalJSON(b []byte) error {
 	h.unmarshalJSON(dec)
 
 	t, err = dec.Token() //'}'
+	if err != nil {
+		return err
+	}
+	if delim, ok := t.(json.Delim); !ok || delim != '}' {
+		return fmt.Errorf("expect JSON object close with '}'")
+	}
 
 	return nil
 }
