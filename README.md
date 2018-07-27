@@ -2830,7 +2830,7 @@ Currently there are below kinds of syntax highlight for editors:
 
     [Sublime Text 3](misc/SublimeText3)
 
-## Futual Plans
+## Future Plans
 
 There are some other things i plan to do:
 
