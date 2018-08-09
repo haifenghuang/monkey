@@ -64,7 +64,7 @@ Table of Contents
   * [Useful Utilities](#useful-utilities)
   * [Document generator](#document-generator)
   * [Syntax Highlight](#syntax-highlight)
-  * [Futual Plans](#futual-plans)
+  * [Future Plans](#future-plans)
   * [License](#license)
 
 ## Summary
@@ -1086,6 +1086,20 @@ let str = "Hello world!"
 println("Source Str =", str)
 revStr = reverse(str)
 println("Reverse str =", revStr)
+```
+
+If you hava a string, you want to convert it to number, you could add a "+" prefix before the string.
+
+```swfit
+a = +"121314" // a is an int
+println(a) // result: 121314
+
+// Integer also support "0x"(hex), "0b"(binary), "0c"(octal) prefix
+a = +"0x10" // a is an int
+println(a) // result: 16
+
+a = +"121314.6789" // a is a float
+println(a) // result: 121314.6789
 ```
 
 ### Hash

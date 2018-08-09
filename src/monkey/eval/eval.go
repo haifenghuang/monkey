@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -1427,7 +1428,40 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 	case "!":
 		return evalBangOperatorExpression(right)
 	case "+":
-		return right
+		switch right.Type() {
+		case STRING_OBJ:
+			var n int64
+			var err error
+
+			var content = right.(*String).String
+			if content[len(content)-1] == 'u' {
+				content = content[:len(content)-1]
+			}
+
+			if strings.HasPrefix(content, "0b") {
+				n, err = strconv.ParseInt(content[2:], 2, 64)
+			} else if strings.HasPrefix(content, "0x") {
+				n, err = strconv.ParseInt(content[2:], 16, 64)
+			} else if strings.HasPrefix(content, "0c") {
+				n, err = strconv.ParseInt(content[2:], 8, 64)
+			} else {
+				n, err = strconv.ParseInt(content, 10, 64)
+				if err != nil {
+					// Check if it is a float
+					var f float64
+					f, err = strconv.ParseFloat(content, 64)
+					if err == nil {
+						return NewFloat(f)
+					}
+				}
+			}
+			if err != nil {
+				panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
+			}
+			return NewInteger(n)
+		default:
+			return right
+		}
 	case "-":
 		switch right.Type() {
 		case INTEGER_OBJ:
