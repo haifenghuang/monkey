@@ -1090,7 +1090,7 @@ println("Reverse str =", revStr)
 
 If you hava a string, you want to convert it to number, you could add a "+" prefix before the string.
 
-```swfit
+```swift
 a = +"121314" // a is an int
 println(a) // result: 121314
 
