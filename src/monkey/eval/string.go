@@ -143,11 +143,11 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.Reverse(line, args...)
 	case "upper":
 		return s.Upper(line, args...)
-	case "trimLeft":
+	case "trimLeft", "lstrip":
 		return s.TrimLeft(line, args...)
-	case "trimRight":
+	case "trimRight", "rstrip":
 		return s.TrimRight(line, args...)
-	case "trim":
+	case "trim", "strip":
 		return s.Trim(line, args...)
 	case "trimPrefix":
 		return s.TrimPrefix(line, args...)
@@ -173,11 +173,11 @@ func (s *String) CallMethod(line string, scope *Scope, method string, args ...Ob
 		return s.ContainsAny(line, args...)
 	case "fields":
 		return s.Fields(line, args...)
-	case "hasPrefix":
+	case "hasPrefix", "startswith":
 		return s.HasPrefix(line, args...)
-	case "hasSuffix":
+	case "hasSuffix", "endswith":
 		return s.HasSuffix(line, args...)
-	case "lastIndex":
+	case "lastIndex", "rindex", "rfind":
 		return s.LastIndex(line, args...)
 	case "repeat":
 		return s.Repeat(line, args...)
@@ -849,11 +849,11 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.Reverse(line, args...)
 	case "upper":
 		return s.Upper(line, args...)
-	case "trimLeft":
+	case "trimLeft", "lstrip":
 		return s.TrimLeft(line, args...)
-	case "trimRight":
+	case "trimRight", "rstrip":
 		return s.TrimRight(line, args...)
-	case "trim":
+	case "trim", "strip":
 		return s.Trim(line, args...)
 	case "trimPrefix":
 		return s.TrimPrefix(line, args...)
@@ -879,11 +879,11 @@ func (s *StringsObj) CallMethod(line string, scope *Scope, method string, args .
 		return s.ContainsAny(line, args...)
 	case "fields":
 		return s.Fields(line, args...)
-	case "hasPrefix":
+	case "hasPrefix", "startswith":
 		return s.HasPrefix(line, args...)
-	case "hasSuffix":
+	case "hasSuffix", "endswith":
 		return s.HasSuffix(line, args...)
-	case "lastIndex":
+	case "lastIndex", "rindex", "rfind":
 		return s.LastIndex(line, args...)
 	case "repeat":
 		return s.Repeat(line, args...)
