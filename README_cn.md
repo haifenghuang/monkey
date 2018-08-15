@@ -174,23 +174,11 @@ Property 'LastName' is not valid!
 * 增加了简单面向对象（oop)支持(索引器，操作符重载，属性，static方法,注解)
 * 更改了`string`模块(能够正确处理utf8字符编码)
 * 修改了`file`模块(包含一些新方法).
-* 增加了`math`模块
-* 增加了`sql(db)`模块(能够正确的处理`null`值)
-* 增加了`time`模块
-* 增加了`sort`模块
-* 增加了`os`模块
-* 增加了`log`模块
-* 增加了`net`模块
-* 增加了`http`模块
-* 增加了`filepath`模块
-* 增加了`flag`模块(用来处理命令行参数)
-* 增加了`json`模块(json序列化和反序列化)
-* 增加了`fmt`模块
-* 增加了`sync`模块
-* 增加了`list`模块
-* 增加了`linq`模块(代码来自[linq](https://github.com/ahmetb/go-linq)并进行了相应的更改)
-* 增加了`csv`模块
-* 增加了`template`模块
+* 增加了`math`，`time`, `sort`, `os`, `log`, `net`, `http`, `filepath`, `fmt`, `sync`, `list`, `csv`, `regexp`, `template`, 模块等
+* `sql(db)`模块(能够正确的处理`null`值)
+* `flag`模块(用来处理命令行参数)
+* `json`模块(json序列化和反序列化)
+* `linq`模块(代码来自[linq](https://github.com/ahmetb/go-linq)并进行了相应的更改)
 * 增加了`decimal`模块(代码来自[decimal](https://github.com/shopspring/decimal)并进行了相应的小幅度更改)
 * 正则表达式支持(部分类似于perl)
 * 管道(channel)(基于go语言的channel)
@@ -200,11 +188,12 @@ Property 'LastName' is not valid!
 * defer支持
 * spawn支持(goroutine)
 * enum支持
-* using支持
+* `using`支持(类似C#的using)
 * pipe操作符支持
 * 支持可变参数和缺省参数的函数
 * 支持列表推导(list comprehension)和哈希推导(hash comprehension)
-* 注册使用Go Package的方法(`RegisterFunctions`和`RegisterVars`)
+* 支持用户自定义操作符
+* 使用Go Package的方法(`RegisterFunctions`和`RegisterVars`)
 
 这个项目的目的主要有以下几点：
 
