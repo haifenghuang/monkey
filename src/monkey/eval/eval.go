@@ -1429,7 +1429,7 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 		return evalBangOperatorExpression(right)
 	case "+":
 		switch right.Type() {
-		case STRING_OBJ:
+		case STRING_OBJ: //convert string to number
 			var n int64
 			var err error
 
@@ -1459,6 +1459,16 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 				panic(NewError(p.Pos().Sline(), PREFIXOP, p, right.Type()))
 			}
 			return NewInteger(n)
+		case BOOLEAN_OBJ: //convert boolean to string
+			var b = right.(*Boolean)
+			if !b.Valid {
+				return NewString("false")
+			}
+
+			if b.Bool {
+				return NewString("true")
+			}
+			return NewString("false")
 		default:
 			return right
 		}

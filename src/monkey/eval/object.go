@@ -1028,6 +1028,10 @@ func (b *Boolean) CallMethod(line string, scope *Scope, method string, args ...O
 		return b.SetValid(line, args...)
 	case "message":
 		return b.Message(line, args...)
+	case "toYesNo":
+		return b.ToYesNo(line, args...)
+	case "toTrueFalse":
+		return b.ToTrueFalse(line, args...)
 	}
 	panic(NewError(line, NOMETHODERROR, method, b.Type()))
 }
@@ -1063,6 +1067,26 @@ func (b *Boolean) SetValid(line string, args ...Object) Object {
 	b.Bool, b.Valid = val.Bool, true
 
 	return b
+}
+
+func (b *Boolean) ToYesNo(line string, args ...Object) Object {
+	if !b.Valid {
+		return NewString("no")
+	}
+	if b.Bool {
+		return NewString("yes")
+	}
+	return NewString("no")
+}
+
+func (b *Boolean) ToTrueFalse(line string, args ...Object) Object {
+	if !b.Valid {
+		return NewString("false")
+	}
+	if b.Bool {
+		return NewString("true")
+	}
+	return NewString("false")
 }
 
 func (b *Boolean) HashKey() HashKey {
