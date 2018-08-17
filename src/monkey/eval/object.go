@@ -528,7 +528,7 @@ func (i *Integer) UnmarshalJSON(b []byte) error {
 		i.Int64, err = strconv.ParseInt(content[2:], 2, 64)
 	} else if strings.HasPrefix(content, "0x") {
 		i.Int64, err = strconv.ParseInt(content[2:], 16, 64)
-	} else if strings.HasPrefix(content, "0c") {
+	} else if strings.HasPrefix(content, "0o") {
 		i.Int64, err = strconv.ParseInt(content[2:], 8, 64)
 	} else {
 		i.Int64, err = strconv.ParseInt(content, 10, 64)
@@ -751,7 +751,7 @@ func (i *UInteger) UnmarshalJSON(b []byte) error {
 		i.UInt64, err = strconv.ParseUint(content[2:], 2, 64)
 	} else if strings.HasPrefix(content, "0x") {
 		i.UInt64, err = strconv.ParseUint(content[2:], 16, 64)
-	} else if strings.HasPrefix(content, "0c") {
+	} else if strings.HasPrefix(content, "0o") {
 		i.UInt64, err = strconv.ParseUint(content[2:], 8, 64)
 	} else {
 		i.UInt64, err = strconv.ParseUint(content, 10, 64)

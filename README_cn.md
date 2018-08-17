@@ -279,14 +279,14 @@ i1 = 10
 i2 = 20_000_000
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
-i5 = 0c127          // octal
+i5 = 0o127          // octal
 
 // Unsigned Integer literals
 ui1 = 10u
 ui2 = 20_000_000u     //for more readable
 ui3 = 0x80u           // hex
 ui4 = 0b10101u        // binary
-ui5 = 0c127u          // octal
+ui5 = 0o127u          // octal
 
 // Float literals
 f1 = 10.25
@@ -1087,7 +1087,7 @@ println("Reverse str =", revStr)
 a = +"121314" // a是一个整数
 println(a) // 结果：121314
 
-// 整数支持"0x"(十六进制), "0b"(二进制), "0c"(八进制)前缀
+// 整数支持"0x"(十六进制), "0b"(二进制), "0o"(八进制)前缀
 a = +"0x10" // a是一个整数
 println(a) // 结果：16
 

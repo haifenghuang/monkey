@@ -1442,7 +1442,7 @@ func evalPrefixExpression(p *ast.PrefixExpression, scope *Scope) Object {
 				n, err = strconv.ParseInt(content[2:], 2, 64)
 			} else if strings.HasPrefix(content, "0x") {
 				n, err = strconv.ParseInt(content[2:], 16, 64)
-			} else if strings.HasPrefix(content, "0c") {
+			} else if strings.HasPrefix(content, "0o") {
 				n, err = strconv.ParseInt(content[2:], 8, 64)
 			} else {
 				n, err = strconv.ParseInt(content, 10, 64)

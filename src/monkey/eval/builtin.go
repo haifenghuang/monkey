@@ -249,7 +249,7 @@ func intBuiltin() *Builtin {
 					n, err = strconv.ParseInt(content[2:], 2, 64)
 				} else if strings.HasPrefix(content, "0x") {
 					n, err = strconv.ParseInt(content[2:], 16, 64)
-				} else if strings.HasPrefix(content, "0c") {
+				} else if strings.HasPrefix(content, "0o") {
 					n, err = strconv.ParseInt(content[2:], 8, 64)
 				} else {
 					n, err = strconv.ParseInt(content, 10, 64)
@@ -300,7 +300,7 @@ func uintBuiltin() *Builtin {
 					n, err = strconv.ParseUint(content[2:], 2, 64)
 				} else if strings.HasPrefix(content, "0x") {
 					n, err = strconv.ParseUint(content[2:], 16, 64)
-				} else if strings.HasPrefix(content, "0c") {
+				} else if strings.HasPrefix(content, "0o") {
 					n, err = strconv.ParseUint(content[2:], 8, 64)
 				} else {
 					n, err = strconv.ParseUint(content, 10, 64)
@@ -355,7 +355,7 @@ func floatBuiltin() *Builtin {
 					if err == nil {
 						n = float64(k)
 					}
-				} else if strings.HasPrefix(input.String, "0c") {
+				} else if strings.HasPrefix(input.String, "0o") {
 					k, err = strconv.ParseInt(input.String[2:], 8, 64)
 					if err == nil {
 						n = float64(k)
@@ -557,7 +557,7 @@ func decimalBuiltin() *Builtin {
 					if err == nil {
 						n = float64(k)
 					}
-				} else if strings.HasPrefix(input.String, "0c") {
+				} else if strings.HasPrefix(input.String, "0o") {
 					k, err = strconv.ParseInt(input.String[2:], 8, 64)
 					if err == nil {
 						n = float64(k)
