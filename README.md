@@ -1001,6 +1001,14 @@ revArr = reverse(arr)
 println("Reverse Array =", revArr)
 ```
 
+
+Array also support `array multiplication operator`(*):
+
+```swift
+let arr = [3,4] * 3
+println(arr) // result: [3,4,3,4,3,4]
+```
+
 ### String
 
 In monkey, there are three types of `string`:

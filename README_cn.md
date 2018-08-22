@@ -1006,6 +1006,13 @@ revArr = reverse(arr)
 println("Reverse Array =", revArr)
 ```
 
+数组还支持使用`数组乘法运算符`（*）:
+
+```swift
+let arr = [3,4] * 3
+println(arr) // 结果: [3,4,3,4,3,4]
+```
+
 ### 字符串(String)
 
 在monkey中, 有三种类型的`string`:

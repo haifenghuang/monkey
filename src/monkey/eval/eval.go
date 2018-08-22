@@ -2162,6 +2162,18 @@ func evalMixedTypeInfixExpression(node *ast.InfixExpression, left Object, right 
 //array << item (<< item)
 func evalArrayInfixExpression(node *ast.InfixExpression, left Object, right Object, scope *Scope) Object {
 	switch node.Operator {
+	case "*": // [1,2,3] * 2 = [1,2,3,1,2,3]
+		if left.Type() == ARRAY_OBJ && right.Type() == INTEGER_OBJ {
+			leftVals := left.(*Array).Members
+			rightVal := right.(*Integer).Int64
+
+			var i int64
+			result := &Array{}
+			for i = 0; i < rightVal; i++ {
+				result.Members = append(result.Members, leftVals...)
+			}
+			return result
+		}
 	case "+":
 		if left.Type() == ARRAY_OBJ {
 			leftVals := left.(*Array).Members
