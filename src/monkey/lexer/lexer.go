@@ -578,7 +578,7 @@ func (l *Lexer) readNumber() (string, bool, error) {
 	ret = append(ret, ch)
 	l.readNext()
 
-	if ch == '0' && (l.ch == 'x' || l.ch == 'b' || l.ch == 'c') { //support '0x'(hex) and '0b'(bin) and '0c'(octal)
+	if ch == '0' && (l.ch == 'x' || l.ch == 'b' || l.ch == 'o') { //support '0x'(hex) and '0b'(bin) and '0o'(octal)
 		savedCh := l.ch
 		ret = append(ret, l.ch)
 		l.readNext()
@@ -600,7 +600,7 @@ func (l *Lexer) readNumber() (string, bool, error) {
 				ret = append(ret, l.ch)
 				l.readNext()
 			}
-		} else if savedCh == 'c' {
+		} else if savedCh == 'o' {
 			for isOct(l.ch) || l.ch == '_' {
 				if l.ch == '_' {
 					l.readNext()

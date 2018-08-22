@@ -245,7 +245,7 @@ func (h *Highlighter) processNumber() error {
 	ret = append(ret, ch)
 	if h.next() == 0 { goto end	}
 
-	if ch == '0' && (h.input[h.pos] == 'x' || h.input[h.pos] == 'b' || h.input[h.pos] == 'c') { //support '0x'(hex) and '0b'(bin) and '0c'(octal)
+	if ch == '0' && (h.input[h.pos] == 'x' || h.input[h.pos] == 'b' || h.input[h.pos] == 'o') { //support '0x'(hex) and '0b'(bin) and '0o'(octal)
 		savedCh := h.input[h.pos]
 		ret = append(ret, h.input[h.pos])
 		if h.next() == 0 { goto end }
@@ -269,7 +269,7 @@ func (h *Highlighter) processNumber() error {
 				ret = append(ret, h.input[h.pos])
 				if h.next() == 0 { goto end	}
 			}
-		} else if savedCh == 'c' {
+		} else if savedCh == 'o' {
 			for isOct(h.input[h.pos]) || h.input[h.pos] == '_' {
 				if h.input[h.pos] == '_' {
 					ret = append(ret, h.input[h.pos])

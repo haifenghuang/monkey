@@ -27,9 +27,9 @@ func (j *Json) Type() ObjectType { return JSON_OBJ }
 
 func (j *Json) CallMethod(line string, scope *Scope, method string, args ...Object) Object {
 	switch method {
-	case "marshal", "toJson":
+	case "marshal", "toJson", "stringify":
 		return j.Marshal(line, args...)
-	case "unmarshal", "fromJson":
+	case "unmarshal", "fromJson", "parse":
 		return j.UnMarshal(line, args...)
 	case "indent":
 		return j.Indent(line, args...)

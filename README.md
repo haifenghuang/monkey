@@ -272,14 +272,14 @@ i1 = 10
 i2 = 20_000_000     //for more readable
 i3 = 0x80           // hex
 i4 = 0b10101        // binary
-i5 = 0c127          // octal
+i5 = 0o127          // octal
 
 // Unsigned Integer literals
 ui1 = 10u
 ui2 = 20_000_000u     //for more readable
 ui3 = 0x80u           // hex
 ui4 = 0b10101u        // binary
-ui5 = 0c127u          // octal
+ui5 = 0o127u          // octal
 
 // Float literals
 f1 = 10.25
@@ -1090,7 +1090,7 @@ If you hava a string, you want to convert it to number, you could add a "+" pref
 a = +"121314" // a is an int
 println(a) // result: 121314
 
-// Integer also support "0x"(hex), "0b"(binary), "0c"(octal) prefix
+// Integer also support "0x"(hex), "0b"(binary), "0o"(octal) prefix
 a = +"0x10" // a is an int
 println(a) // result: 16
 

@@ -1232,7 +1232,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 		value, err = strconv.ParseInt(p.curToken.Literal[2:], 2, 64)
 	} else if strings.HasPrefix(p.curToken.Literal, "0x") {
 		value, err = strconv.ParseInt(p.curToken.Literal[2:], 16, 64)
-	} else if strings.HasPrefix(p.curToken.Literal, "0c") {
+	} else if strings.HasPrefix(p.curToken.Literal, "0o") {
 		value, err = strconv.ParseInt(p.curToken.Literal[2:], 8, 64)
 	} else {
 		value, err = strconv.ParseInt(p.curToken.Literal, 10, 64)
@@ -1257,7 +1257,7 @@ func (p *Parser) parseUIntegerLiteral() ast.Expression {
 		value, err = strconv.ParseUint(p.curToken.Literal[2:], 2, 64)
 	} else if strings.HasPrefix(p.curToken.Literal, "0x") {
 		value, err = strconv.ParseUint(p.curToken.Literal[2:], 16, 64)
-	} else if strings.HasPrefix(p.curToken.Literal, "0c") {
+	} else if strings.HasPrefix(p.curToken.Literal, "0o") {
 		value, err = strconv.ParseUint(p.curToken.Literal[2:], 8, 64)
 	} else {
 		value, err = strconv.ParseUint(p.curToken.Literal, 10, 64)
