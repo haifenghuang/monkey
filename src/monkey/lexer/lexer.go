@@ -237,7 +237,8 @@ func (l *Lexer) NextToken() token.Token {
 					prevToken.Type == token.RBRACKET || // a[3] / b
 					prevToken.Type == token.IDENT || // a / b
 					prevToken.Type == token.INT || // 3 / b
-					prevToken.Type == token.FLOAT { // 3.5 / b
+					prevToken.Type == token.FLOAT || // 3.5 / b
+					prevToken.Type == token.FUNCTION { // e.g. fn /() - operator overloading
 					if l.peek() == '=' {
 						tok = token.Token{Type: token.SLASH_A, Literal: string(l.ch) + string(l.peek())}
 						l.readNext()
