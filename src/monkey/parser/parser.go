@@ -1096,7 +1096,7 @@ func (p *Parser) parseCForLoopExpression(curToken token.Token) ast.Expression {
 		loop.Block = p.parseBlockStatement()
 		result = loop
 	} else {
-		loop := &ast.ForLoop{Token: curToken}
+		loop := &ast.ForLoop{Token: curToken, Init:init, Cond:cond, Update:update}
 		loop.Block = p.parseBlockStatement()
 		result = loop
 	}
