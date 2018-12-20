@@ -1,3 +1,8 @@
+# Deprecation Notice
+This project is no longer being maintained. All the contents have been
+moved to [magpie](https://github.com/haifenghuang/magpie).
+
+
 # Monkey Programming Language
 
 Chinese version: [中文](README_cn.md)

@@ -1,3 +1,7 @@
+# 弃用通知
+此项目已不再维护，所有内容已经移至[magpie](https://github.com/haifenghuang/magpie)。
+
+
 # Monkey程序语言
 
 Table of Contents
